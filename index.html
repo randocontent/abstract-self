@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8" />
+		<title>ABSTRACT YOU</title>
+		<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+		<meta
+			name="viewport"
+			content="width=device-width, initial-scale=1, shrink-to-fit=no"
+		/>
+
+		<!-- P5 and ml5 -->
+		<script src="https://unpkg.com/ml5@0.4.3/dist/ml5.min.js"></script>
+		<script
+			type="text/javascript"
+			src="https://cdn.jsdelivr.net/npm/p5@1.0.0/lib/p5.js"
+		></script>
+		<!-- <script defer src="sketch.js" type="text/javascript"></script> -->
+		<script defer src="script.js" type="text/javascript"></script>
+
+		<!-- Bootstrap -->
+		<!-- https://bootswatch.com/darkly/ -->
+		<link rel="stylesheet" href="bootstrap.css" />
+
+		<link rel="stylesheet" href="style.css" />
+	</head>
+
+	<body>
+		<div class="container-lg step" id="step-1">
+			<div class="row justify-content-between pb-5">
+				<div class="col-5 align-self-end">
+					<h1 class="">
+						This is <span class="font-weight-bold font-italic white">You</span>.
+					</h1>
+				</div>
+				<div class="col-5 align-self-end">
+					<p>
+						Now we are about to create the
+						<span class="font-weight-bold font-italic white">Abstract You</span>.
+					</p>
+				</div>
+			</div>
+
+			<div class="row justify-content-between pb-5">
+				<div class="col-5">
+					<div class="text-center">
+						<img
+							src="https://source.unsplash.com/380x380/?face,portrait"
+							width="380"
+							height="380"
+							alt=""
+							class="rounded-lg"
+						/>
+					</div>
+				</div>
+				<div class="col-5">
+					<div class="text-center">
+						<!-- <img
+							src="https://source.unsplash.com/380x380/?geometric,white,lines"
+							width="380"
+							height="380"
+							alt=""
+							class="rounded"
+						/> -->
+						<div class="abstract-preview rounded-lg">
+
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<div class="controls text-center row pt-5">
+				<div class="col">
+					<button id="begin" class="btn btn-secondary text-uppercase" type="button">
+						Press Here to Begin
+					</button>
+				</div>
+			</div>
+		</div>
+
+		<div class="container step d-none" id="step-2">
+			<div class="row">
+				<div id="left-column" class="col-4">
+					<header class="container">
+						<div class="row justify-content-between">
+							<div class="col">
+								<h1 class="font-weight-normal text-uppercase">Abstract you</h1>
+							</div>
+							<div class="col">
+								<div class="is-uppercase">Step #</div>
+							</div>
+						</div>
+					</header>
+
+					<div class="tile is-vertical">
+						<section
+							class="box has-text-light has-background-dark"
+							id="directions"
+						>
+							<p class="is-italic">
+								Stand back from the camera so your whole body is in the frame.
+							</p>
+						</section>
+
+						<section id="webcam-preview">
+							<div id="webcam-preview-placeholder">
+								<div class="container py-6 has-text-centered">
+									(video preview placeholder)
+								</div>
+								<!-- <img src="../images/ming.jpg" alt="webcam preview" /> -->
+							</div>
+						</section>
+					</div>
+				</div>
+
+				<div id="right-column" class="col-8">
+					<div class="tile is-child">
+						<section id="abstract" class="box">
+							<div id="sketch-placeholder">
+								<!-- <p>Loading</p> -->
+							</div>
+						</section>
+					</div>
+					<div class="tile is-child">
+						<section class="box" id="status"></section>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<!-- Bootstrap -->
+		<script
+			src="https://code.jquery.com/jquery-3.5.1.slim.min.js"
+			integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj"
+			crossorigin="anonymous"
+		></script>
+		<script
+			src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
+			integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo"
+			crossorigin="anonymous"
+		></script>
+		<script
+			src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js"
+			integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI"
+			crossorigin="anonymous"
+		></script>
+	</body>
+</html>

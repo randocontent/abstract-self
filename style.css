@@ -1,0 +1,56 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap');
+
+html,
+body {
+	font-family: 'Space Mono', monospace;
+}
+
+#webcam-preview-placeholder video {
+	object-fit: cover;
+}
+
+h1,h2,h3,h4,h5,h6,p,div {
+	font-size: 1.125rem; /* 18px */
+	line-height: 1.7rem; /* 27px */
+	letter-spacing: 1.5px;
+}
+
+h1 span {
+	letter-spacing: normal;
+}
+
+.white {
+	color: #fff !important;
+}
+
+button.btn {
+	font-size: 1rem;
+	letter-spacing: 4px;
+	padding: 1.5rem 3rem;
+	border-radius: 0.5rem;
+}
+
+button.btn-secondary:hover {
+	background: #101010;
+}
+
+.rounded-lg {
+	border-radius: 0.56em !important;
+}
+
+/* Step 1 */
+
+
+body > #step-1 {
+	padding-top: 10rem;
+}
+
+#step-1 .controls {
+	margin: 50px !important;
+}
+
+#step-1 .abstract-preview {
+	background-color: white;
+	width: 380px;
+	height: 380px;
+}
