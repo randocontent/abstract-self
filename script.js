@@ -1,5 +1,5 @@
 // Set this to `true` to enable deep-linking to specific steps, for testing 
-let deepLinks = true;
+let deepLinks = false;
 
 // We try to use any hash we get on load, but in practice this will always just
 // clear it from the URL because the 'started' variable won't be set. This is a
