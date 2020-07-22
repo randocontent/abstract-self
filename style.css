@@ -1,5 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap');
-
+@import url('https://fonts.googleapis.com/css2?family=Lora:ital@0;1&family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap');
 html,
 body {
 	font-family: 'Space Mono', monospace;
@@ -38,19 +37,43 @@ button.btn-secondary:hover {
 	border-radius: 0.56em !important;
 }
 
-/* Step 1 */
+.directions {
+	background: #101010;
+}
+/* Step 0 */
 
 
-body > #step-1 {
+body > #step-0 {
 	padding-top: 10rem;
 }
 
-#step-1 .controls {
+#step-0 .controls {
 	margin: 50px !important;
 }
 
-#step-1 .abstract-preview {
+#step-0 .abstract-preview {
 	background-color: white;
 	width: 380px;
 	height: 380px;
+}
+
+
+.abstract {
+	height: 100%
+}
+.sketch-placeholder {
+	width: 100%;
+	height: 100%;
+	background-color: #f8f9fa;
+}
+
+/* Step 3 */
+
+.out-loud {
+	font-family: 'Lora', serif;
+}
+.card {
+	background: #E0E0E0;
+
+	color: black;
 }
