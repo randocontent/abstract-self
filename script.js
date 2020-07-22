@@ -1,10 +1,12 @@
 let started = false;
 
+// We try to run any hash we get on load, but in practice this will always just clear it from the URL because the 'started' variable won't be set
 $(document).ready(function () {
 	gotoStep(getStep());
 });
 
 $('button.next-step').on('click', function (e) {
+	// This has to be set to true or we'll go back to the begining
 	started = true;
 	let step = getStep();
 	step++;
@@ -24,13 +26,13 @@ function gotoStep(step) {
 			history.pushState('', 'step ' + step, '#' + step);
 		}
 	} else {
-			// First hide everything
-			$('.step').addClass('d-none');
-			// Then show just step 0
-			$('#step-0').removeClass('d-none');
-			// Then clear the bad hash
-				history.pushState("", document.title, window.location.pathname + window.location.search);
-
+		// First hide everything
+		$('.step').addClass('d-none');
+		// Then show just step 0
+		$('#step-0').removeClass('d-none');
+		// Then clear the bad hash
+		history.pushState("", document.title, window.location.pathname + window.location.search);
+		
 	}
 }
 
