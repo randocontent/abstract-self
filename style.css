@@ -8,7 +8,14 @@ body {
 	object-fit: cover;
 }
 
-h1,h2,h3,h4,h5,h6,p,div {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p,
+div {
 	font-size: 1.125rem; /* 18px */
 	line-height: 1.7rem; /* 27px */
 	letter-spacing: 1.5px;
@@ -40,8 +47,13 @@ button.btn-secondary:hover {
 .directions {
 	background: #101010;
 }
-/* Step 0 */
 
+header div, header h1 {
+	font-size: 0.8125rem;
+}
+
+
+/* Step 0 */
 
 body > #step-0 {
 	padding-top: 10rem;
@@ -57,9 +69,8 @@ body > #step-0 {
 	height: 380px;
 }
 
-
 .abstract {
-	height: 100%
+	height: 100%;
 }
 .sketch-placeholder {
 	width: 100%;
@@ -73,7 +84,7 @@ body > #step-0 {
 	font-family: 'Lora', serif;
 }
 .card {
-	background: #E0E0E0;
+	background: #e0e0e0;
 
 	color: black;
 }
