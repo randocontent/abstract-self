@@ -1,4 +1,4 @@
-let step = 3;
+let step = 0;
 setStep(step);
 
 $('button.next-step').on('click',function(e){
