@@ -48,12 +48,14 @@ function setup() {
 	
 	// Start the webcam on load
 	getNewWebcam();
+	mic = new p5.AudioIn();
+	mic.start();
 
 	// noLoop();
 }
 
 function draw() {
-
+status.html(mic.getLevel)
 	// Crude way to assign slider values to anchors
 	anchors.forEach(a=>{
 		a.topSpeed = speedSlider.value()
@@ -89,11 +91,11 @@ function draw() {
 			// a.show();
 		});
 
-		// noStroke();
-		// fill(255, 100, 255, 50);
-		// for (p of points) {
-		// 	ellipse(p.position.x, p.position.y, 8);
-		// }
+		noStroke();
+		fill('red');
+		for (p of points) {
+			ellipse(p.position.x, p.position.y, 8);
+		}
 
 		// Draw black outline around anchors
 		strokeWeight(1.5);
@@ -113,8 +115,6 @@ function draw() {
 
 function audioSetup() {
 recording = true;
-	mic = new p5.AudioIn();
-	mic.start();
 
 	recorder = new p5.SoundRecorder();
 	recorder.setInput(mic);
