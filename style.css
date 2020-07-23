@@ -1,7 +1,21 @@
 @import url('https://fonts.googleapis.com/css2?family=Lora:ital@0;1&family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap');
+$font-family-sans-serif
+SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace
+
+'Space Mono', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji"
+
 html,
 body {
 	font-family: 'Space Mono', monospace;
+}
+
+.h-100,div.h-100 {
+	height: 100vh !important;
+	min-height: 100vh !important;
+}
+
+a.text-muted {
+color: #8E8C84;
 }
 
 #webcam-preview-placeholder video {
