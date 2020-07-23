@@ -11,86 +11,79 @@ let yoff = 1;
 let yoffStep = 0.02;
 let zoff = 0;
 let zoffSetp = 0.03;
+let noiseRange = 5;
 
-let sldr = {};
+let anchors = [];
 
 function setup() {
+	// Create a variable we can later use to control the canvas
 	var canvas = createCanvas(640, 480);
-
-	// Put the canvas in its placeholder element so it works within the layout of the page
-	// canvas.parent('sketch-placeholder');
 
 	// Use the status variable to send messages
 	status = select('#status');
 
-	// Set up sliders to play around with variables
-	rSldr = createSlider(1, 50, 1, 0.1);
-	xSldr = createSlider(0, 1, 0.01, 0.001);
-	ySldr = createSlider(0, 1, 0.01, 0.001);
-	zSldr = createSlider(0, 1, 0.01, 0.001);
-
-	rSldr.style('width: 200px');
-	let radiusLabel = createDiv('Random range');
-	rSldr.parent(radiusLabel);
-
-	xSldr.style('width: 200px');
-	let xLabel = createDiv('x step');
-	xSldr.parent(xLabel);
-
-	ySldr.style('width: 200px');
-	let yLabel = createDiv('y step');
-	ySldr.parent(yLabel);
-
-	zSldr.style('width: 200px');
-	let zLabel = createDiv('z step');
-	zSldr.parent(zLabel);
+	// Create six anchor points
+	for (let i = 0; i < 16; i++) {
+		let anchor = new Anchor(width/2,height/2);
+		anchors.push(anchor)
+	}
 
 	// Start the webcam on load
 	getNewWebcam();
-	noLoop()
+	// noLoop();
 }
 
 function draw() {
 	background('white');
 
 	if (poses[0]) {
-		// status.html(frameCount)
-		// Draw small pink circles on each keypoint
-		let points = poses[0].pose.keypoints;
-		noStroke();
-		fill(255, 100, 255, 50);
-		for (p of points) {
-			ellipse(p.position.x, p.position.y, 8);
-		}
+		// status.html(frameRate());
 
-		// Draw black outline around body
+		// Get an array of all points
+		let points = poses[0].pose.keypoints;
+
+		// make an array of hull points
 		let vpoints = makeVectorArray(points);
 		let hullPoints = convexHull(vpoints);
+
+		anchors.forEach((a, i) => {
+			if (hullPoints[i]) {
+				a.setTarget(hullPoints[i])
+			} else {
+				a.setTarget(anchors[0].target)
+			}
+			a.behaviors();
+			a.update();
+			// a.show();
+		});
+
+		// noStroke();
+		// fill(255, 100, 255, 50);
+		// for (p of points) {
+		// 	ellipse(p.position.x, p.position.y, 8);
+		// }
+
+		// Draw black around anchors
 		strokeWeight(1.5);
 		stroke('black');
 		noFill();
 		beginShape();
-		for (p of hullPoints) {
-			let rx =
-				p.x + map(noise(xoff, zoff), 0, 1, -rSldr.value(), rSldr.value());
-			let ry =
-				p.y + map(noise(yoff, zoff), 0, 1, -rSldr.value(), rSldr.value());
-			vertex(rx, ry);
-			xoff += xSldr.value();
-			yoff += ySldr.value();
+		for (a of anchors) {
+			curveVertex(a.pos.x, a.pos.y);
 		}
 		endShape(CLOSE);
 	}
-	zoff += zSldr.value();
+
 }
+
 function Anchor(x, y) {
-	this.pos = createVector(random(width),random(height))
+	this.pos = createVector(x, y);
 	this.target = createVector(x, y);
 	this.vel = p5.Vector.random2D();
 	this.acc = createVector();
 	this.r = 10;
-	this.topSpeed = 9;
-	this.maxForce = 0.9;
+	this.topSpeed = 5;
+	this.maxForce = 0.5;
 }
 
 Anchor.prototype.update = function () {
@@ -100,8 +93,8 @@ Anchor.prototype.update = function () {
 };
 
 Anchor.prototype.show = function () {
-	noStroke()
-	fill('orange')
+	noStroke();
+	fill('orange');
 	ellipse(this.pos.x, this.pos.y, this.r);
 };
 
@@ -109,18 +102,14 @@ Anchor.prototype.addVertex = function () {
 	curveVertex(this.pos.x, this.pos.y);
 };
 
-// Runs behaviors 
+Anchor.prototype.setTarget = function (v) {
+	this.target = v;
+}
+
+// Runs behaviors
 Anchor.prototype.behaviors = function () {
 	let goto = this.arrive(this.target);
-	let mouse = createVector(mouseX,mouseY)
-	let flee = this.flee(mouse)
-	
-	// Weighting forces 
-	goto.mult(1)
-	flee.mult(5)
-
 	this.applyForce(goto);
-	this.applyForce(flee)
 };
 
 // Applies forces returned by the bejavior functions
@@ -128,7 +117,7 @@ Anchor.prototype.applyForce = function (f) {
 	this.acc.add(f);
 };
 
-// Returns a force 
+// Returns a force
 Anchor.prototype.seek = function (target) {
 	let desired = p5.Vector.sub(target, this.pos);
 	desired.setMag(this.topSpeed);
@@ -136,22 +125,22 @@ Anchor.prototype.seek = function (target) {
 	return steer.limit(this.maxForce);
 };
 
-// Returns a force 
+// Returns a force
 Anchor.prototype.flee = function (target) {
 	let desired = p5.Vector.sub(target, this.pos);
-	if ( desired.mag() < 90 ) {
-	desired.setMag(this.topSpeed);
-	// Reverse direction
-	desired.mult(-1)
-	let steer = p5.Vector.sub(desired, this.vel);
-	steer.limit(this.maxForce);
-	return steer
-} else {
-	return createVector(0,0)
-}
+	if (desired.mag() < 90) {
+		desired.setMag(this.topSpeed);
+		// Reverse direction
+		desired.mult(-1);
+		let steer = p5.Vector.sub(desired, this.vel);
+		steer.limit(this.maxForce);
+		return steer;
+	} else {
+		return createVector(0, 0);
+	}
 };
 
-// Returns a force 
+// Returns a force
 Anchor.prototype.arrive = function (target) {
 	let desired = p5.Vector.sub(target, this.pos);
 	let distance = desired.mag();
@@ -165,6 +154,18 @@ Anchor.prototype.arrive = function (target) {
 };
 
 /**
+ * Gets an array of keypoints from PoseNet
+ * Creates an array of p5 vectors
+ */
+function makeVectorArray(arr) {
+	let newArr = [];
+	for (const p of arr) {
+		newArr.push(createVector(p.position.x, p.position.y));
+	}
+	return newArr;
+}
+
+/**
  * Starts the webcam and calls webcamReady()
  *
  */
@@ -172,6 +173,7 @@ function getNewWebcam() {
 	status.html('in getNewWebcam()');
 	// Todo: disable buttons until we're ready to try again
 	sample = createCapture(VIDEO, webcamReady);
+	sample.hide();
 }
 
 /**
@@ -195,18 +197,6 @@ function webcamReady() {
  */
 function modelReady() {
 	status.html('Model ready');
-}
-
-/**
- * Gets an array of keypoints from PoseNet
- * Creates an array of p5 vectors
- */
-function makeVectorArray(arr) {
-	let newArr = [];
-	for (const p of arr) {
-		newArr.push(createVector(p.position.x, p.position.y));
-	}
-	return newArr;
 }
 
 /**
