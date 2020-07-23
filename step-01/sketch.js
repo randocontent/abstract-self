@@ -23,7 +23,7 @@ function setup() {
 	// status = select('#status');
 
 	// Create six anchor points
-	for (let i = 0; i < 16; i++) {
+	for (let i = 0; i < 10; i++) {
 		let anchor = new Anchor(width/2,height/2);
 		anchors.push(anchor)
 	}
