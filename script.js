@@ -1,39 +1,50 @@
-// Set this to `true` to enable deep-linking to specific steps, for testing 
+// Set this to `true` to enable deep-linking to specific steps, for testing
 let deepLinks = false;
+let hidden = 'd-none'
 
 // We try to use any hash we get on load, but in practice this will always just
 // clear it from the URL because the 'started' variable won't be set. This is a
 // very simple way to keep people from deep-linking into the flow and skiping
 // steps.
-$(document).ready(function () {
+window.onload = function () {
 	gotoStep(getStep());
-});
+};
 
-$('button.next-step').on('click', function (e) {
+// This is just a placeholder until I add recording. For now the Record buttons
+// simply load the next step
+document.querySelectorAll('button.next-step').forEach(el => {
+	el.addEventListener('click', function(e) {
 	// This has to be set to true or we'll go back to the begining
 	deepLinks = true;
 	let step = getStep();
 	step++;
 	gotoStep(step);
+	})
 });
 
 function gotoStep(step) {
-	// Only move ahead if "started" is true (otherwise reset back to step 0)
+	// Try to detect deep linking. `deepLinks` will be set to false when you load
+	// the page, but we set it to true when you start the flow.
 	if (deepLinks) {
 		// Only move ahead if the requested step is valid
 		if (step === 0 || step === 1 || step === 2 || step === 3) {
 			// First hide everything
-			$('.step').addClass('d-none');
+			document.querySelectorAll('.step').forEach(el => {
+				el.classList.add(hidden);
+			});
 			// Then show just the step we wanted
-			$('#step-' + step).removeClass('d-none');
+			document.getElementById('step-' + step).classList.remove(hidden);
 			// Then update the URL with the new state
 			history.pushState('', 'step ' + step, '#' + step);
 		}
 	} else {
+		// Start from the beginning if you're trying to skip
 		// First hide everything
-		$('.step').addClass('d-none');
+			document.querySelectorAll('.step').forEach(el => {
+				el.classList.add(hidden);
+			});
 		// Then show just step 0
-		$('#step-0').removeClass('d-none');
+			document.getElementById('step-0').classList.remove(hidden);
 		// Then clear the bad hash
 		history.pushState(
 			'',
@@ -43,6 +54,7 @@ function gotoStep(step) {
 	}
 }
 
+// TODO: Should I clean up this input somehow?
 function getStep() {
 	let url = new URL(window.location.href);
 	let hash = url.hash.substring(1);

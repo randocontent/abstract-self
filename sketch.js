@@ -5,56 +5,24 @@ let options = { minConfidence: 0.9, maxPoseDetections: 1 };
 let sample;
 let status;
 
-let xoff = 0;
-let xoffStep = 0.01;
-let yoff = 1;
-let yoffStep = 0.02;
-let zoff = 0;
-let zoffSetp = 0.03;
-
-let sldr = {};
-
 function setup() {
 	var canvas = createCanvas(640, 480);
 
 	// Put the canvas in its placeholder element so it works within the layout of the page
-	// canvas.parent('sketch-placeholder');
+	canvas.parent('sketch-placeholder');
 
 	// Use the status variable to send messages
 	status = select('#status');
 
-	// Set up sliders to play around with variables
-	rSldr = createSlider(1, 50, 1, 0.1);
-	xSldr = createSlider(0, 1, 0.01, 0.001);
-	ySldr = createSlider(0, 1, 0.01, 0.001);
-	zSldr = createSlider(0, 1, 0.01, 0.001);
-
-	rSldr.style('width: 200px');
-	let radiusLabel = createDiv('Random range');
-	rSldr.parent(radiusLabel);
-
-	xSldr.style('width: 200px');
-	let xLabel = createDiv('x step');
-	xSldr.parent(xLabel);
-
-	ySldr.style('width: 200px');
-	let yLabel = createDiv('y step');
-	ySldr.parent(yLabel);
-
-	zSldr.style('width: 200px');
-	let zLabel = createDiv('z step');
-	zSldr.parent(zLabel);
-
-	// Start the webcam on load
-	getNewWebcam();
-	noLoop()
+	// Uncomment to avoid needlessly looping while testing, for e.g. to more
+	// easily read values logged out to console. 
+	// noLoop()
 }
 
 function draw() {
 	background('white');
 
 	if (poses[0]) {
-		// status.html(frameCount)
 		// Draw small pink circles on each keypoint
 		let points = poses[0].pose.keypoints;
 		noStroke();
@@ -71,17 +39,10 @@ function draw() {
 		noFill();
 		beginShape();
 		for (p of hullPoints) {
-			let rx =
-				p.x + map(noise(xoff, zoff), 0, 1, -rSldr.value(), rSldr.value());
-			let ry =
-				p.y + map(noise(yoff, zoff), 0, 1, -rSldr.value(), rSldr.value());
-			vertex(rx, ry);
-			xoff += xSldr.value();
-			yoff += ySldr.value();
+			vertex(p.x, p.y);
 		}
 		endShape(CLOSE);
 	}
-	zoff += zSldr.value();
 }
 function Anchor(x, y) {
 	this.pos = createVector(random(width),random(height))
