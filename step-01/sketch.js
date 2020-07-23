@@ -17,10 +17,10 @@ let anchors = [];
 
 function setup() {
 	// Create a variable we can later use to control the canvas
-	var canvas = createCanvas(640, 480);
+	var canvas = createCanvas(windowWidth, windowHeight);
 
 	// Use the status variable to send messages
-	status = select('#status');
+	// status = select('#status');
 
 	// Create six anchor points
 	for (let i = 0; i < 16; i++) {
@@ -35,6 +35,10 @@ function setup() {
 
 function draw() {
 	background('white');
+	image(sample,0,0,width,height)
+	noStroke()
+	fill(255,200)
+	rect(0,0,width,height)
 
 	if (poses[0]) {
 		// status.html(frameRate());
@@ -73,7 +77,6 @@ function draw() {
 		}
 		endShape(CLOSE);
 	}
-
 }
 
 function Anchor(x, y) {
@@ -170,9 +173,10 @@ function makeVectorArray(arr) {
  *
  */
 function getNewWebcam() {
-	status.html('in getNewWebcam()');
+	// status.html('in getNewWebcam()');
 	// Todo: disable buttons until we're ready to try again
 	sample = createCapture(VIDEO, webcamReady);
+	sample.size(width,height)
 	sample.hide();
 }
 
@@ -180,7 +184,7 @@ function getNewWebcam() {
  * Handles the webcam feed
  */
 function webcamReady() {
-	status.html('in webcamReady()');
+	// status.html('in webcamReady()');
 
 	// select('#webcam-preview-placeholder').html('');
 	// sample.parent('webcam-preview-placeholder');
@@ -196,7 +200,7 @@ function webcamReady() {
  * There's not much to do at that point since it sets up its own loop.
  */
 function modelReady() {
-	status.html('Model ready');
+	// status.html('Model ready');
 }
 
 /**
