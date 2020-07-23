@@ -67,7 +67,7 @@ Anchor.prototype.show = function () {
 };
 
 Anchor.prototype.addVertex = function () {
-	curveVertex(this.pos.x, this.pos.y);
+	vertex(this.pos.x, this.pos.y);
 };
 
 // Runs behaviors 

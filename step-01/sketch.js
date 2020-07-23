@@ -2,6 +2,9 @@ let poseNet;
 let poses = [];
 let options = { minConfidence: 0.9, maxPoseDetections: 1 };
 
+let forceSlider;
+let speedSlider;
+
 let sample;
 let status;
 
@@ -17,10 +20,16 @@ let anchors = [];
 
 function setup() {
 	// Create a variable we can later use to control the canvas
-	var canvas = createCanvas(windowWidth, windowHeight);
+	var canvas = createCanvas(800,600);
+	canvas.parent('canvas')
 
 	// Use the status variable to send messages
 	// status = select('#status');
+
+	speedSlider = createSlider(1, 20, 1, 0.1)
+	speedSlider.parent('speed-slider')
+	forceSlider = createSlider(0.1, 10, 0.1, 0.1);
+	forceSlider.parent('force-slider')
 
 	// Create six anchor points
 	for (let i = 0; i < 10; i++) {
@@ -34,6 +43,12 @@ function setup() {
 }
 
 function draw() {
+
+	anchors.forEach(a=>{
+		a.topSpeed = speedSlider.value()
+		a.maxForce = forceSlider.value()
+	})
+
 	background('white');
 	image(sample,0,0,width,height)
 	noStroke()
@@ -85,8 +100,8 @@ function Anchor(x, y) {
 	this.vel = p5.Vector.random2D();
 	this.acc = createVector();
 	this.r = 10;
-	this.topSpeed = 5;
-	this.maxForce = 0.5;
+	this.topSpeed = 1;
+	this.maxForce = 0.1;
 }
 
 Anchor.prototype.update = function () {
