@@ -1,6 +1,9 @@
+// TODO expand posenet points to circle 
+// TODO try without convex hull
+// TODO try to connect outline points to specific body parts
 let poseNet;
 let poses = [];
-let options = { minConfidence: 0.9, maxPoseDetections: 1 };
+let options = { minConfidence: 0.9, maxPoseDetections: 2 };
 
 let forceSlider;
 let speedSlider;
@@ -26,13 +29,13 @@ function setup() {
 	// Use the status variable to send messages
 	// status = select('#status');
 
-	speedSlider = createSlider(1, 20, 1, 0.1)
+	speedSlider = createSlider(1, 20, 5, 0.1)
 	speedSlider.parent('speed-slider')
-	forceSlider = createSlider(0.1, 10, 0.1, 0.1);
+	forceSlider = createSlider(0.1, 10, 0.5, 0.1);
 	forceSlider.parent('force-slider')
 
 	// Create six anchor points
-	for (let i = 0; i < 10; i++) {
+	for (let i = 0; i < 16; i++) {
 		let anchor = new Anchor(width/2,height/2);
 		anchors.push(anchor)
 	}
@@ -52,7 +55,7 @@ function draw() {
 	background('white');
 	image(sample,0,0,width,height)
 	noStroke()
-	fill(255,200)
+	fill(255,150)
 	rect(0,0,width,height)
 
 	if (poses[0]) {
@@ -76,11 +79,11 @@ function draw() {
 			// a.show();
 		});
 
-		// noStroke();
-		// fill(255, 100, 255, 50);
-		// for (p of points) {
-		// 	ellipse(p.position.x, p.position.y, 8);
-		// }
+		noStroke();
+		fill('red');
+		for (p of points) {
+			ellipse(p.position.x, p.position.y, 8);
+		}
 
 		// Draw black around anchors
 		strokeWeight(1.5);
@@ -88,7 +91,7 @@ function draw() {
 		noFill();
 		beginShape();
 		for (a of anchors) {
-			curveVertex(a.pos.x, a.pos.y);
+			vertex(a.pos.x, a.pos.y);
 		}
 		endShape(CLOSE);
 	}
