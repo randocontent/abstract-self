@@ -82,7 +82,9 @@ class Anchor {
 		for (const p of arr) {
 			let x = p.position.x;
 			let y = p.position.y;
-			newArr.push(createVector(p.position.x, p.position.y));
+			let newP = createVector(p.position.x, p.position.y);
+			newP.part = p.part;
+			newArr.push(newP);
 		}
 		return newArr;
 	}
@@ -90,22 +92,44 @@ class Anchor {
 	static expandPoints(arr, r) {
 		let newArr = [];
 		arr.forEach(p => {
-			push();
 			let px = p.x;
 			let py = p.y;
 			for (let angle = 0; angle < 360; angle += 37) {
-				let x = px+r * sin(angle);
-				let y = py+r * cos(angle);
-				let newP = createVector(x,y)
+				let x = px + r * sin(angle);
+				let y = py + r * cos(angle);
+				let newP = createVector(x, y);
 				newP.px = px;
 				newP.py = py;
 				newArr.push(newP);
 			}
-			pop();
 		});
 		return newArr;
 	}
 
+	static expandHeadPoints(arr, r) {
+		let newArr = [];
+		arr.forEach(p => {
+			if (p.part === 'nose' || p.part === 'leftEye' || p.part === 'rightEye') {
+				let px = p.x;
+				let py = p.y;
+				for (let angle = 0; angle < 360; angle += 37) {
+					let x = px + r * sin(angle);
+					let y = py + r * cos(angle);
+					let newP = createVector(x, y);
+					newP.px = px;
+					newP.py = py;
+					newArr.push(newP);
+				}
+			} else {
+				let newP = createVector(p.x, p.y);
+				newP.px = p.x;
+				newP.py = p.y;
+				newP.part = p.part;
+				newArr.push(newP);
+			}
+		});
+		return newArr;
+	}
 	/**
 	 * Get an array of points.
 	 * Return points to draw a convex hull around them.

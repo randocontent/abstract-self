@@ -20,7 +20,6 @@ let videos = [
 	'../videos/video15.mp4',
 	'../videos/video16.mp4',
 ];
-
 let poseNet;
 let poses = [];
 let options = { maxPoseDetections: 1 };
@@ -33,6 +32,7 @@ let sample;
 let status;
 
 let points = [];
+let anchors = [];
 let zpoints = [];
 let expandedPoints = [];
 let hullPoints = [];
@@ -44,10 +44,11 @@ let showPreview = true;
 
 let isHeadOnly = false;
 
-let headPoints = [];
+let showAnchors = true;
+
 
 function setup() {
-	let canvas = createCanvas(853, 600);
+	let canvas = createCanvas(852, 600);
 	canvas.parent('canvas-container');
 
 	// Use the status variable to send messages
@@ -121,6 +122,12 @@ function setup() {
 	videoButton = select('#video-button');
 	videoButton.mousePressed(getNewVideo);
 
+	// Prepare anchor points
+	for (let i = 0; i < 16; i++) {
+		let anchor = new Anchor(width / 2, height / 2);
+		anchors.push(anchor);
+	}
+
 	// Start on load
 	// getNewImage();
 }
@@ -176,14 +183,51 @@ function draw() {
 			// Outline hull points with a blue line
 			noFill();
 			stroke('blue');
-			strokeWeight(2);
+			strokeWeight(0.5);
 			beginShape();
 			hullPoints.forEach(p => {
 				vertex(p.x, p.y);
 			});
 			endShape(CLOSE);
 		}
+
+		anchors.forEach((a, i) => {
+			a.setTarget(hullPoints[i]);
+			a.behaviors();
+			a.update();
+			a.show();
+		});
+
+		// // make an array of hull points
+		// let vpoints = makeVectorArray(points);
+		// console.table(vpoints);
+		// zpoints = expandPoints(vpoints, 20);
+		// console.table(zpoints);
+		// let hullPoints = convexHull(zpoints);
+		// console.table(hullPoints);
+
+		// a.behaviors();
+		// a.update();
+		// // a.show();
+		// // });
+
+		// noStroke();
+		// fill('red');
+		// for (p of points) {
+		// 	ellipse(p.position.x, p.position.y, 8);
+		// }
+
+		// // Draw black around anchors
+		// strokeWeight(1.5);
+		// stroke('black');
+		// noFill();
+		// beginShape();
+		// for (a of anchors) {
+		// 	vertex(a.pos.x, a.pos.y);
+		// }
+		// endShape(CLOSE);
 	}
+	// noLoop();
 }
 
 /**
