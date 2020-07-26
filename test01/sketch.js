@@ -1,234 +1,217 @@
-// TODO expand posenet points to circle 
+// TODO expand posenet points to circle
 // TODO try without convex hull
 // TODO try to connect outline points to specific body parts
+
 let poseNet;
 let poses = [];
-let options = { minConfidence: 0.9, maxPoseDetections: 2 };
+let options = { maxPoseDetections: 1 };
 
-let forceSlider;
-let speedSlider;
+let webcamButton;
+let imageButton;
+let stopWebcamButton;
 
 let sample;
 let status;
 
-let xoff = 0;
-let xoffStep = 0.01;
-let yoff = 1;
-let yoffStep = 0.02;
-let zoff = 0;
-let zoffSetp = 0.03;
-let noiseRange = 5;
-
 let anchors = [];
-
 let zpoints = [];
+let expandedPoints = [];
+let hullPoints = [];
+
+let showPoseNet = true;
+let showExpanded = true;
+let showHull = true;
+let showPreview = true;
 
 function setup() {
-	// Create a variable we can later use to control the canvas
-	var canvas = createCanvas(800,600);
-	canvas.parent('canvas')
+	let canvas = createCanvas(800, 600);
+	canvas.parent('canvas-container');
 
 	// Use the status variable to send messages
-	// status = select('#status');
+	status = select('#status');
 
-	speedSlider = createSlider(1, 20, 5, 0.1)
-	speedSlider.parent('speed-slider')
-	forceSlider = createSlider(0.1, 10, 0.5, 0.1);
-	forceSlider.parent('force-slider')
+	// Toggle marker points
+	select('#toggle-preview').mousePressed(() => {
+		switch (showPreview) {
+			case true:
+				showPreview = false;
+				break;
+			case false:
+				showPreview = true;
+			default:
+				break;
+		}
+	});
+	select('#toggle-posenet').mousePressed(() => {
+		switch (showPoseNet) {
+			case true:
+				showPoseNet = false;
+				break;
+			case false:
+				showPoseNet = true;
+			default:
+				break;
+		}
+	});
+	select('#toggle-expanded').mousePressed(() => {
+		switch (showExpanded) {
+			case true:
+				showExpanded = false;
+				break;
+			case false:
+				showExpanded = true;
+			default:
+				break;
+		}
+	});
+	select('#toggle-hull').mousePressed(() => {
+		switch (showHull) {
+			case true:
+				showHull = false;
+				break;
+			case false:
+				showHull = true;
+			default:
+				break;
+		}
+	});
+
+	stopWebcamButton = select('#stop-webcam');
+	stopWebcamButton.mousePressed(stopWebcam);
+
+	// Set up test controls
+
+	webcamButton = select('#webcam-button');
+	webcamButton.mousePressed(getNewWebcam);
+	imageButton = select('#image-button');
+	imageButton.mousePressed(getNewImage);
 
 	// Create six anchor points
 	for (let i = 0; i < 16; i++) {
-		let anchor = new Anchor(width/2,height/2);
-		anchors.push(anchor)
+		let anchor = new Anchor(width / 2, height / 2);
+		anchors.push(anchor);
 	}
 
-	// Start the webcam on load
-	getNewWebcam();
-	// noLoop();
+	// Start on load
+	// getNewImage();
 }
 
 function draw() {
+	background(0);
+	translate(width, 0);
+	scale(-1, 1);
+	if (sample && showPreview) {
+		image(sample, 0, 0);
+	}
 
-	anchors.forEach(a=>{
-		a.topSpeed = speedSlider.value()
-		a.maxForce = forceSlider.value()
-	})
+	if (poses[0]) {
+		status.html(frameRate());
 
-	background('white');
-	image(sample,0,0,width,height)
-	filter(GRAY)
-	noStroke()
-	fill(255,150)
-	// rect(0,0,width,height)
+		// Convert PoseNet points to P5 points
+		let points = Anchor.makeVectorArray(poses[0].pose.keypoints);
 
-	if (poses[0]) { 
-		// status.html(frameRate());
-
-		// Get an array of all points
-		let points = poses[0].pose.keypoints;
-
-		// make an array of hull points
-		let vpoints = makeVectorArray(points);
-		console.table(vpoints)
-		zpoints = expandPoints(vpoints,20);
-		console.table(zpoints)
-		let hullPoints = convexHull(zpoints);
-		console.table(hullPoints)
-
-			a.behaviors();
-			a.update();
-			// a.show();
-		// });
-
-		noStroke();
-		fill('red');
-		for (p of points) {
-			ellipse(p.position.x, p.position.y, 8);
+		// Mark PoseNet points with a Red dot
+		if (showPoseNet) {
+			stroke('red');
+			strokeWeight(10);
+			points.forEach(p => {
+				point(p);
+			});
 		}
 
-		// Draw black around anchors
-		strokeWeight(1.5);
-		stroke('black');
-		noFill();
+		// Expand PoseNet points
+		expandedPoints = Anchor.expandPoints(points, 100);
+		// console.table(expandedPoints)
+
+		// Mark expanded points with Green dots
+		if (showExpanded) {
+		stroke('green');
+		strokeWeight(5);
 		beginShape();
-		for (a of anchors) {
-			vertex(a.pos.x, a.pos.y);
-		}
+		expandedPoints.forEach(p => {
+			point(p.x, p.y);
+		});
 		endShape(CLOSE);
 	}
+
+		// Find convex hull for all points
+		hullPoints = Anchor.convexHull(expandedPoints);
+
+		if (showHull) {
+		// console.table(hullPoints)
+		// Outline hull points with a blue line
+		noFill();
+		stroke('blue');
+		strokeWeight(2);
+		beginShape();
+		hullPoints.forEach(p => {
+			vertex(p.x, p.y);
+		});
+		endShape(CLOSE);
+}
+		// // make an array of hull points
+		// let vpoints = makeVectorArray(points);
+		// console.table(vpoints);
+		// zpoints = expandPoints(vpoints, 20);
+		// console.table(zpoints);
+		// let hullPoints = convexHull(zpoints);
+		// console.table(hullPoints);
+
+		// a.behaviors();
+		// a.update();
+		// // a.show();
+		// // });
+
+		// noStroke();
+		// fill('red');
+		// for (p of points) {
+		// 	ellipse(p.position.x, p.position.y, 8);
+		// }
+
+		// // Draw black around anchors
+		// strokeWeight(1.5);
+		// stroke('black');
+		// noFill();
+		// beginShape();
+		// for (a of anchors) {
+		// 	vertex(a.pos.x, a.pos.y);
+		// }
+		// endShape(CLOSE);
+	}
+	// noLoop();
 }
 
 /**
- * Gets an array of keypoints from PoseNet
- * Creates an array of p5 vectors
+ * Gets a new image from Unsplash and runs it through PoseNet.
+ *
  */
-function makeVectorArray(arr) {
-	let newArr = [];
-	for (const p of arr) {
-		let x = p.position.x
-		let y = p.position.y
-		newArr.push(createVector(p.position.x, p.position.y));
-	}
-	return newArr;
-}
 
-function expandPoints(arr, r) {
-	let newArr = [];
-	arr.forEach(p => {
-		push();
-		let px = p.x;
-		let py = p.y;
-		translate(p);
-		for (let angle = 0; angle < 360; angle += 37) {
-			let x = r * sin(angle);
-			let y = r * cos(angle);
-			ellipse(x, y, r);
-			newArr.push({ x: x, y: y, px: px, py: py });
+function getNewImage() {
+	sample = loadImage(
+		`https://source.unsplash.com/${width}x${height}/?body,person`,
+		() => {
+			// Run when image is ready
+			poseNet = '';
+			poseNet = ml5.poseNet(options, () => {
+				// Run when model is ready
+				console.log('Model loaded for image');
+				poseNet.singlePose(sample);
+			});
+			poseNet.on('pose', function (results) {
+				poses = results;
+			});
 		}
-		pop();
-	});
-	return newArr;
-}
-
-
-function Anchor(x, y) {
-	this.pos = createVector(x, y);
-	this.target = createVector(x, y);
-	this.vel = p5.Vector.random2D();
-	this.acc = createVector();
-	this.r = 10;
-	this.topSpeed = 1;
-	this.maxForce = 0.1;
-}
-
-Anchor.prototype.update = function () {
-	this.pos.add(this.vel);
-	this.vel.add(this.acc);
-	this.acc.mult(0);
-};
-
-Anchor.prototype.show = function () {
-	noStroke();
-	fill('orange');
-	ellipse(this.pos.x, this.pos.y, this.r);
-};
-
-Anchor.prototype.addVertex = function () {
-	curveVertex(this.pos.x, this.pos.y);
-};
-
-Anchor.prototype.setTarget = function (v) {
-	this.target = v;
-}
-
-// Runs behaviors
-Anchor.prototype.behaviors = function () {
-	let goto = this.arrive(this.target);
-	this.applyForce(goto);
-};
-
-// Applies forces returned by the bejavior functions
-Anchor.prototype.applyForce = function (f) {
-	this.acc.add(f);
-};
-
-// Returns a force
-Anchor.prototype.seek = function (target) {
-	let desired = p5.Vector.sub(target, this.pos);
-	desired.setMag(this.topSpeed);
-	let steer = p5.Vector.sub(desired, this.vel);
-	return steer.limit(this.maxForce);
-};
-
-// Returns a force
-Anchor.prototype.flee = function (target) {
-	let desired = p5.Vector.sub(target, this.pos);
-	if (desired.mag() < 90) {
-		desired.setMag(this.topSpeed);
-		// Reverse direction
-		desired.mult(-1);
-		let steer = p5.Vector.sub(desired, this.vel);
-		steer.limit(this.maxForce);
-		return steer;
-	} else {
-		return createVector(0, 0);
-	}
-};
-
-// Returns a force
-Anchor.prototype.arrive = function (target) {
-	let desired = p5.Vector.sub(target, this.pos);
-	let distance = desired.mag();
-	let speed = this.topSpeed;
-	if (distance < 100) {
-		speed = map(distance, 0, 100, 0, this.topSpeed);
-	}
-	desired.setMag(speed);
-	let steer = p5.Vector.sub(desired, this.vel);
-	return steer.limit(this.maxForce);
-};
-
-/**
- * Gets an array of keypoints from PoseNet
- * Creates an array of p5 vectors
- */
-function makeVectorArray(arr) {
-	let newArr = [];
-	for (const p of arr) {
-		newArr.push(createVector(p.position.x, p.position.y));
-	}
-	return newArr;
+	);
 }
 
 /**
  * Starts the webcam and calls webcamReady()
- *
  */
 function getNewWebcam() {
 	// status.html('in getNewWebcam()');
 	// Todo: disable buttons until we're ready to try again
 	sample = createCapture(VIDEO, webcamReady);
-	sample.size(width,height)
+	// sample.size(width);
 	sample.hide();
 }
 
@@ -237,10 +220,8 @@ function getNewWebcam() {
  */
 function webcamReady() {
 	// status.html('in webcamReady()');
-
 	// select('#webcam-preview-placeholder').html('');
 	// sample.parent('webcam-preview-placeholder');
-
 	poseNet = ml5.poseNet(sample, options, modelReady);
 	poseNet.on('pose', function (results) {
 		poses = results;
@@ -255,68 +236,8 @@ function modelReady() {
 	// status.html('Model ready');
 }
 
-/**
- * convexhull-js
- * Copyright (c) 2015 Andrey Naumenko
- * https://github.com/indy256/convexhull-js
- * See license below
- */
-
-/**
- * Get an array of points.
- * Return points to draw a convex hull around them.
- */
-function convexHull(points) {
-	function removeMiddle(a, b, c) {
-		var cross = (a.x - b.x) * (c.y - b.y) - (a.y - b.y) * (c.x - b.x);
-		var dot = (a.x - b.x) * (c.x - b.x) + (a.y - b.y) * (c.y - b.y);
-		return cross < 0 || (cross == 0 && dot <= 0);
-	}
-	points.sort(function (a, b) {
-		return a.x != b.x ? a.x - b.x : a.y - b.y;
-	});
-
-	var n = points.length;
-	var hull = [];
-
-	for (var i = 0; i < 2 * n; i++) {
-		var j = i < n ? i : 2 * n - 1 - i;
-		while (
-			hull.length >= 2 &&
-			removeMiddle(hull[hull.length - 2], hull[hull.length - 1], points[j])
-		)
-			hull.pop();
-		hull.push(points[j]);
-	}
-
-	hull.pop();
-	return hull;
+function stopWebcam() {
+	poseNet.removeAllListeners();
+	poses[0] = null;
+	sample.stop();
 }
-
-/**
- * License for convexhull-js
- *
-
-The MIT License (MIT)
-
-Copyright (c) 2015 Andrey Naumenko
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-
-*/
