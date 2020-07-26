@@ -5,8 +5,8 @@ class Anchor {
 		this.vel = p5.Vector.random2D();
 		this.acc = createVector();
 		this.r = 10;
-		this.topSpeed = 1;
-		this.maxForce = 0.1;
+		this.topSpeed = 5;
+		this.maxForce = 0.5;
 	}
 
 	update() {

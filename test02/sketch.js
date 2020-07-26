@@ -2,7 +2,7 @@
 // TODO try without convex hull
 // TODO try to connect outline points to specific body parts
 
-let videos = [
+const videos = [
 	'../videos/video01.mp4',
 	'../videos/video02.mp4',
 	'../videos/video03.mp4',
@@ -20,6 +20,9 @@ let videos = [
 	'../videos/video15.mp4',
 	'../videos/video16.mp4',
 ];
+
+const numAnchors = 20;
+
 let poseNet;
 let poses = [];
 let options = { maxPoseDetections: 1 };
@@ -37,15 +40,21 @@ let zpoints = [];
 let expandedPoints = [];
 let hullPoints = [];
 
-let showPoseNet = true;
-let showExpanded = true;
-let showHull = true;
+let showPoseNet = false;
+let showExpanded = false;
+let showHull = false;
 let showPreview = true;
+
+
+let radiusSlider;
+let speedSlider;
+let forceSlider;
 
 let isHeadOnly = false;
 
-let showAnchors = true;
-
+let showAnchors = false;
+let showAbstract = true;
+let showAbstractFill = false;
 
 function setup() {
 	let canvas = createCanvas(852, 600);
@@ -53,6 +62,10 @@ function setup() {
 
 	// Use the status variable to send messages
 	status = select('#status');
+
+	radiusSlider = createSlider(1, 300, 50, 1);
+	radiusSlider.parent(select("#radius-slider-label"))
+	select('#update-anchors').mousePressed(updateAnchors);
 
 	// Toggle marker points
 	select('#toggle-preview').mousePressed(() => {
@@ -110,6 +123,39 @@ function setup() {
 				break;
 		}
 	});
+	select('#toggle-anchors').mousePressed(() => {
+		switch (showAnchors) {
+			case true:
+				showAnchors = false;
+				break;
+			case false:
+				showAnchors = true;
+			default:
+				break;
+		}
+	});
+	select('#toggle-abstract').mousePressed(() => {
+		switch (showAbstract) {
+			case true:
+				showAbstract = false;
+				break;
+			case false:
+				showAbstract = true;
+			default:
+				break;
+		}
+	});
+	select('#toggle-abstract-fill').mousePressed(() => {
+		switch (showAbstractFill) {
+			case true:
+				showAbstractFill = false;
+				break;
+			case false:
+				showAbstractFill = true;
+			default:
+				break;
+		}
+	});
 	stopWebcamButton = select('#stop-webcam');
 	stopWebcamButton.mousePressed(stopEverything);
 
@@ -123,13 +169,14 @@ function setup() {
 	videoButton.mousePressed(getNewVideo);
 
 	// Prepare anchor points
-	for (let i = 0; i < 16; i++) {
-		let anchor = new Anchor(width / 2, height / 2);
+	for (let i = 0; i < numAnchors; i++) {
+		let anchor = new Anchor(width/2, height/2);
 		anchors.push(anchor);
 	}
 
 	// Start on load
 	// getNewImage();
+	getNewVideo()
 }
 
 function draw() {
@@ -157,9 +204,9 @@ function draw() {
 
 		// Expand PoseNet points
 		if (isHeadOnly) {
-			expandedPoints = Anchor.expandHeadPoints(points, 100);
+			expandedPoints = Anchor.expandHeadPoints(points, radiusSlider.value());
 		} else {
-			expandedPoints = Anchor.expandPoints(points, 100);
+			expandedPoints = Anchor.expandPoints(points, radiusSlider.value());
 		}
 
 		// console.table(expandedPoints)
@@ -178,9 +225,9 @@ function draw() {
 		// Find convex hull for all points
 		hullPoints = Anchor.convexHull(expandedPoints);
 
+		// Outline hull points with a blue line
 		if (showHull) {
 			// console.table(hullPoints)
-			// Outline hull points with a blue line
 			noFill();
 			stroke('blue');
 			strokeWeight(0.5);
@@ -191,12 +238,35 @@ function draw() {
 			endShape(CLOSE);
 		}
 
+		// Set up anchors to follow hull outline
 		anchors.forEach((a, i) => {
-			a.setTarget(hullPoints[i]);
+			if (hullPoints[i]) {
+				a.setTarget(hullPoints[i]);
+			} else {
+				a.setTarget(hullPoints[0]);
+			}
 			a.behaviors();
 			a.update();
-			a.show();
+			if (showAnchors) a.show();
 		});
+
+
+		// Draw abstract shape
+		if (showAbstract){
+		if (showAbstractFill) {
+			stroke('black')
+			strokeWeight(8)
+			fill(255,150)
+		} else {
+			stroke('white')
+			strokeWeight(6)
+			noFill();
+		}
+		beginShape()
+		anchors.forEach(a => {
+			curveVertex(a.pos.x, a.pos.y)
+		});
+		endShape(CLOSE)}
 
 		// // make an array of hull points
 		// let vpoints = makeVectorArray(points);
@@ -301,4 +371,10 @@ function videoReady() {
 		// console.log('Poses Ready')
 		poses = results;
 	});
+}
+
+function updateAnchors() {
+	anchors.forEach(a => {
+		a.r = radiusSlider.value()
+	})
 }
