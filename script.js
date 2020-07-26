@@ -1,9 +1,11 @@
+// Set this to `true` to enable deep-linking to specific steps, for testing
+let deepLinks = false;
+
 // Toggle test list
 document.getElementById('testing').addEventListener('click', function(e) {
 	document.getElementById('test-list').classList.toggle('invisible')
 })
-// Set this to `true` to enable deep-linking to specific steps, for testing
-let deepLinks = false;
+
 let hidden = 'd-none'
 
 // We try to use any hash we get on load, but in practice this will always just

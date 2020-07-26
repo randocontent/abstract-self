@@ -21,6 +21,8 @@ let noiseRange = 5;
 
 let anchors = [];
 
+let zpoints = [];
+
 function setup() {
 	// Create a variable we can later use to control the canvas
 	var canvas = createCanvas(800,600);
@@ -54,11 +56,12 @@ function draw() {
 
 	background('white');
 	image(sample,0,0,width,height)
+	filter(GRAY)
 	noStroke()
 	fill(255,150)
-	rect(0,0,width,height)
+	// rect(0,0,width,height)
 
-	if (poses[0]) {
+	if (poses[0]) { 
 		// status.html(frameRate());
 
 		// Get an array of all points
@@ -66,18 +69,16 @@ function draw() {
 
 		// make an array of hull points
 		let vpoints = makeVectorArray(points);
-		let hullPoints = convexHull(vpoints);
+		console.table(vpoints)
+		zpoints = expandPoints(vpoints,20);
+		console.table(zpoints)
+		let hullPoints = convexHull(zpoints);
+		console.table(hullPoints)
 
-		anchors.forEach((a, i) => {
-			if (hullPoints[i]) {
-				a.setTarget(hullPoints[i])
-			} else {
-				a.setTarget(anchors[0].target)
-			}
 			a.behaviors();
 			a.update();
 			// a.show();
-		});
+		// });
 
 		noStroke();
 		fill('red');
@@ -96,6 +97,39 @@ function draw() {
 		endShape(CLOSE);
 	}
 }
+
+/**
+ * Gets an array of keypoints from PoseNet
+ * Creates an array of p5 vectors
+ */
+function makeVectorArray(arr) {
+	let newArr = [];
+	for (const p of arr) {
+		let x = p.position.x
+		let y = p.position.y
+		newArr.push(createVector(p.position.x, p.position.y));
+	}
+	return newArr;
+}
+
+function expandPoints(arr, r) {
+	let newArr = [];
+	arr.forEach(p => {
+		push();
+		let px = p.x;
+		let py = p.y;
+		translate(p);
+		for (let angle = 0; angle < 360; angle += 37) {
+			let x = r * sin(angle);
+			let y = r * cos(angle);
+			ellipse(x, y, r);
+			newArr.push({ x: x, y: y, px: px, py: py });
+		}
+		pop();
+	});
+	return newArr;
+}
+
 
 function Anchor(x, y) {
 	this.pos = createVector(x, y);

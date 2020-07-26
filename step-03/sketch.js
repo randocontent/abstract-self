@@ -1,3 +1,6 @@
+// TODO average out volume to get a personal signature
+// TODO average out fft to get a personal signature
+// TODO average out both?
 let mic, recorder, soundFile, fft, amp;
 let recording = false;
 let audioButton;
@@ -24,51 +27,53 @@ let anchors = [];
 
 function setup() {
 	// Create a variable we can later use to control the canvas
-	var canvas = createCanvas(800,600);
-	canvas.parent('canvas')
+	var canvas = createCanvas(800, 600);
+	canvas.parent('canvas');
 
 	// Use the status variable to send messages
 	status = select('#status');
 
-	// Sliders to play around with the anchor paramaters 
-	speedSlider = createSlider(1, 20, 1, 0.1)
-	speedSlider.parent('speed-slider')
-	forceSlider = createSlider(0.1, 10, 0.1, 0.1);
-	forceSlider.parent('force-slider')
+	// Sliders to play around with the anchor paramaters
+	speedSlider = createSlider(1, 20, 5, 0.1);
+	speedSlider.parent('speed-slider');
+	forceSlider = createSlider(0.1, 10, 2, 0.1);
+	forceSlider.parent('force-slider');
 
 	// Set up anchors
 	for (let i = 0; i < 10; i++) {
-		let anchor = new Anchor(width/2,height/2);
-		anchors.push(anchor)
+		let anchor = new Anchor(width / 2, height / 2);
+		anchors.push(anchor);
 	}
 
 	// Set up audio
-	audioButton = createButton('Start Audio')
-	audioButton.mousePressed(audioSetup)
-	
+	audioButton = createButton('Start Audio');
+	audioButton.mousePressed(audioSetup);
+
 	// Start the webcam on load
 	getNewWebcam();
 	mic = new p5.AudioIn();
 	mic.start();
-
+	fft = new p5.FFT();
+	fft.setInput(mic);
 	// noLoop();
 }
 
 function draw() {
-status.html(mic.getLevel)
+	// console.log(spectrum)
+	// status.html(mic.getLevel()*1000)
 	// Crude way to assign slider values to anchors
-	anchors.forEach(a=>{
-		a.topSpeed = speedSlider.value()
-		a.maxForce = forceSlider.value()
-	})
+	anchors.forEach(a => {
+		a.topSpeed = speedSlider.value();
+		a.maxForce = forceSlider.value();
+	});
 
 	// Show the webcam input in the background, tint it white
 	// (should probably use a filter instead)
 	background('white');
-	image(sample,0,0,width,height)
-	noStroke()
-	fill(255,200)
-	rect(0,0,width,height)
+	image(sample, 0, 0, width, height);
+	noStroke();
+	fill(255, 200);
+	rect(0, 0, width, height);
 
 	if (poses[0]) {
 		// status.html(frameRate());
@@ -82,9 +87,9 @@ status.html(mic.getLevel)
 
 		anchors.forEach((a, i) => {
 			if (hullPoints[i]) {
-				a.setTarget(hullPoints[i])
+				a.setTarget(hullPoints[i]);
 			} else {
-				a.setTarget(anchors[0].target)
+				a.setTarget(anchors[0].target);
 			}
 			a.behaviors();
 			a.update();
@@ -103,28 +108,21 @@ status.html(mic.getLevel)
 		noFill();
 		beginShape();
 		for (a of anchors) {
+			nx = a.pos.x * mic.getLevel();
+			ny = a.pos.y * mic.getLevel();
 			curveVertex(a.pos.x, a.pos.y);
 		}
 		endShape(CLOSE);
 	}
 
-	if (recording) {
-	status.html(amp.getLevel());
-}
-}
-
-function audioSetup() {
-recording = true;
-
-	recorder = new p5.SoundRecorder();
-	recorder.setInput(mic);
-
-	fft = new p5.FFT();
-	fft.setInput(mic);
-
-	soundFile = new p5.SoundFile();
-	
-	amp = new p5.Amplitude();
+	spectrum = fft.analyze();
+	noStroke();
+	fill(255, 0, 255);
+	for (let i = 0; i < spectrum.length; i++) {
+		let x = map(i, 0, spectrum.length, 0, width);
+		let h = -height + map(spectrum[i], 0, 255, height, 0);
+		rect(x, height, width / spectrum.length, h);
+	}
 }
 
 function Anchor(x, y) {
@@ -155,7 +153,7 @@ Anchor.prototype.addVertex = function () {
 
 Anchor.prototype.setTarget = function (v) {
 	this.target = v;
-}
+};
 
 // Runs behaviors
 Anchor.prototype.behaviors = function () {
@@ -224,7 +222,7 @@ function getNewWebcam() {
 	// status.html('in getNewWebcam()');
 	// Todo: disable buttons until we're ready to try again
 	sample = createCapture(VIDEO, webcamReady);
-	sample.size(width,height)
+	sample.size(width, height);
 	sample.hide();
 }
 

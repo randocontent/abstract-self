@@ -1,38 +1,43 @@
-// let amplitude;
-// function setup(){
-// 	mic = new p5.AudioIn();
-// 	mic.start();
-// 	amplitude = new p5.Amplitude();
-// 	amplitude.input(mic)
-
-// }
-
-// function draw(){
-// console.log(amplitude.getLevel())
-// }
-
-let mic;
+let points;
+let hullPoints;
 
 function setup() {
-  createCanvas(710, 200);
-
-  // Create an Audio input
-  mic = new p5.AudioIn();
-
-  // start the Audio Input.
-  // By default, it does not .connect() (to the computer speakers)
-  mic.start();
+	createCanvas(500, 500);
+	points = [
+		createVector(random(width), random(height)),
+		createVector(random(width), random(height)),
+		createVector(random(width), random(height)),
+		createVector(random(width), random(height)),
+	];
 }
 
 function draw() {
-  background(200);
+	points.forEach(p => {
+		p.x += random(-1, 1);
+		p.y += random(-1, 1);
+	});
+	background(50);
+	stroke('white');
+	strokeWeight(0.5);
+	noFill();
+	expandPoint(points, 20);
+	// noLoop()
+}
 
-  // Get the overall volume (between 0 and 1.0)
-  let vol = mic.getLevel();
-  fill(127);
-  stroke(0);
-
-  // Draw an ellipse with height based on volume
-  let h = map(vol, 0, 1, height, 0);
-  ellipse(width / 2, h - 25, 50, 50);
+let newArr = [];
+function expandPoint(arr, r) {
+	newArr = [];
+	arr.forEach(p => {
+		push();
+		let px = p.x;
+		let py = p.y;
+		translate(p);
+		for (let angle = 0; angle < 360; angle += 37) {
+			let x = r * sin(angle);
+			let y = r * cos(angle);
+			ellipse(x, y, r);
+			newArr.push({ x: x, y: y, px: px, py: py });
+		}
+		pop();
+	});
 }
