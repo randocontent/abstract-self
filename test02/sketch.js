@@ -3,22 +3,19 @@
 // TODO try to connect outline points to specific body parts
 
 const videos = [
-	'../videos/video01.mp4',
-	'../videos/video02.mp4',
-	'../videos/video03.mp4',
-	'../videos/video04.mp4',
-	'../videos/video05.mp4',
-	'../videos/video06.mp4',
-	'../videos/video07.mp4',
-	'../videos/video08.mp4',
-	'../videos/video09.mp4',
-	'../videos/video10.mp4',
-	'../videos/video11.mp4',
-	'../videos/video12.mp4',
-	'../videos/video13.mp4',
-	'../videos/video14.mp4',
-	'../videos/video15.mp4',
-	'../videos/video16.mp4',
+	'../videos/body/video01.mp4',
+	'../videos/body/video02.mp4',
+	'../videos/body/video03.mp4',
+	'../videos/body/video05.mp4',
+	'../videos/body/video06.mp4',
+	'../videos/body/video08.mp4',
+	'../videos/body/video09.mp4',
+	'../videos/body/video10.mp4',
+	'../videos/body/video11.mp4',
+	'../videos/body/video12.mp4',
+	'../videos/body/video13.mp4',
+	'../videos/body/video15.mp4',
+	'../videos/body/video16.mp4',
 ];
 
 const numAnchors = 20;
@@ -45,7 +42,6 @@ let showExpanded = false;
 let showHull = false;
 let showPreview = true;
 
-
 let radiusSlider;
 let speedSlider;
 let forceSlider;
@@ -55,16 +51,41 @@ let isHeadOnly = false;
 let showAnchors = false;
 let showAbstract = true;
 let showAbstractFill = false;
+let showCurves = false;
 
 function setup() {
 	let canvas = createCanvas(852, 600);
 	canvas.parent('canvas-container');
 
+	// Prepare anchor points
+	for (let i = 0; i < numAnchors; i++) {
+		let anchor = new Anchor(width / 2, height / 2);
+		anchors.push(anchor);
+	}
+
 	// Use the status variable to send messages
 	status = select('#status');
 
+	// Set up test controls
+
+	webcamButton = select('#webcam-button');
+	webcamButton.mousePressed(getNewWebcam);
+	imageButton = select('#image-button');
+	imageButton.mousePressed(getNewImage);
+	videoButton = select('#video-button');
+	videoButton.mousePressed(getNewVideo);
+	stopWebcamButton = select('#stop-everything');
+	stopWebcamButton.mousePressed(stopEverything);
+
 	radiusSlider = createSlider(1, 300, 50, 1);
-	radiusSlider.parent(select("#radius-slider-label"))
+	radiusSlider.parent(select('#radius-slider-label'));
+	speedSlider = createSlider(1, 30, 5, 0.1);
+	speedSlider.size(300);
+	speedSlider.parent(select('#speed-slider-label'));
+	forceSlider = createSlider(0.1, 5, 0.5, 0.01);
+	forceSlider.size(300);
+	forceSlider.parent(select('#force-slider-label'));
+
 	select('#update-anchors').mousePressed(updateAnchors);
 
 	// Toggle marker points
@@ -156,23 +177,17 @@ function setup() {
 				break;
 		}
 	});
-	stopWebcamButton = select('#stop-webcam');
-	stopWebcamButton.mousePressed(stopEverything);
-
-	// Set up test controls
-
-	webcamButton = select('#webcam-button');
-	webcamButton.mousePressed(getNewWebcam);
-	imageButton = select('#image-button');
-	imageButton.mousePressed(getNewImage);
-	videoButton = select('#video-button');
-	videoButton.mousePressed(getNewVideo);
-
-	// Prepare anchor points
-	for (let i = 0; i < numAnchors; i++) {
-		let anchor = new Anchor(width/2, height/2);
-		anchors.push(anchor);
-	}
+	select('#toggle-curves').mousePressed(() => {
+		switch (showCurves) {
+			case true:
+				showCurves = false;
+				break;
+			case false:
+				showCurves = true;
+			default:
+				break;
+		}
+	});
 
 	// Start on load
 	// getNewImage();
@@ -250,23 +265,27 @@ function draw() {
 			if (showAnchors) a.show();
 		});
 
-
 		// Draw abstract shape
-		if (showAbstract){
-		if (showAbstractFill) {
-			stroke('black')
-			strokeWeight(8)
-			fill(255,150)
-		} else {
-			stroke('white')
-			strokeWeight(6)
-			noFill();
+		if (showAbstract) {
+			if (showAbstractFill) {
+				stroke('black');
+				strokeWeight(10);
+				fill(255);
+			} else {
+				stroke('white');
+				strokeWeight(8);
+				noFill();
+			}
+			beginShape();
+			anchors.forEach(a => {
+				if (showCurves) {
+					curveVertex(a.pos.x, a.pos.y);
+				} else {
+					vertex(a.pos.x, a.pos.y);
+				}
+			});
+			endShape(CLOSE);
 		}
-		beginShape()
-		anchors.forEach(a => {
-			curveVertex(a.pos.x, a.pos.y)
-		});
-		endShape(CLOSE)}
 
 		// // make an array of hull points
 		// let vpoints = makeVectorArray(points);
@@ -375,6 +394,7 @@ function videoReady() {
 
 function updateAnchors() {
 	anchors.forEach(a => {
-		a.r = radiusSlider.value()
-	})
+		a.topSpeed = speedSlider.value();
+		a.maxForce = forceSlider.value();
+	});
 }

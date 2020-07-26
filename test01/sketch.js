@@ -3,22 +3,19 @@
 // TODO try to connect outline points to specific body parts
 
 let videos = [
-	'../videos/video01.mp4',
-	'../videos/video02.mp4',
-	'../videos/video03.mp4',
-	'../videos/video04.mp4',
-	'../videos/video05.mp4',
-	'../videos/video06.mp4',
-	'../videos/video07.mp4',
-	'../videos/video08.mp4',
-	'../videos/video09.mp4',
-	'../videos/video10.mp4',
-	'../videos/video11.mp4',
-	'../videos/video12.mp4',
-	'../videos/video13.mp4',
-	'../videos/video14.mp4',
-	'../videos/video15.mp4',
-	'../videos/video16.mp4',
+	'../videos/body/video01.mp4',
+	'../videos/body/video02.mp4',
+	'../videos/body/video03.mp4',
+	'../videos/body/video05.mp4',
+	'../videos/body/video06.mp4',
+	'../videos/body/video08.mp4',
+	'../videos/body/video09.mp4',
+	'../videos/body/video10.mp4',
+	'../videos/body/video11.mp4',
+	'../videos/body/video12.mp4',
+	'../videos/body/video13.mp4',
+	'../videos/body/video15.mp4',
+	'../videos/body/video16.mp4',
 ];
 
 let poseNet;
