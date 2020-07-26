@@ -176,7 +176,7 @@ function setup() {
 
 	// Start on load
 	// getNewImage();
-	getNewVideo()
+	// getNewVideo()
 }
 
 function draw() {
