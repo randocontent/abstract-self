@@ -26,20 +26,20 @@ let isSurprisedP;
 let showPreview = true;
 
 const videos = [
-	'../videos/face/video01.mp4',
-	'../videos/face/video02.mp4',
-	'../videos/face/video03.mp4',
-	'../videos/face/video04.mp4',
-	'../videos/face/video05.mp4',
-	'../videos/face/video06.mp4',
-	'../videos/face/video08.mp4',
-	'../videos/face/video09.mp4',
-	'../videos/face/video10.mp4',
-	'../videos/face/video11.mp4',
-	'../videos/face/video12.mp4',
-	'../videos/face/video13.mp4',
-	'../videos/face/video14.mp4',
-	'../videos/face/video15.mp4',
+	'../assets/face/video01.mp4',
+	'../assets/face/video02.mp4',
+	'../assets/face/video03.mp4',
+	'../assets/face/video04.mp4',
+	'../assets/face/video05.mp4',
+	'../assets/face/video06.mp4',
+	'../assets/face/video08.mp4',
+	'../assets/face/video09.mp4',
+	'../assets/face/video10.mp4',
+	'../assets/face/video11.mp4',
+	'../assets/face/video12.mp4',
+	'../assets/face/video13.mp4',
+	'../assets/face/video14.mp4',
+	'../assets/face/video15.mp4',
 ];
 
 const faceOptions = {

@@ -15,11 +15,13 @@ Space Mono is a fixed-width font with four weights:
 	--recording: #ff5151;
 }
 
-html,
 body {
-	font-family: 'Space Mono', monospace;
 	background-color: var(--black);
 	color: var(--primary);
+}
+main.container {
+
+	font-family: 'Space Mono', monospace;
 }
 
 h1,
@@ -29,7 +31,6 @@ h4,
 h5,
 h6,
 p,
-div,
 button {
 	font-size: 1.125rem; /* 18px */
 	line-height: 1.7rem; /* 27px */
@@ -42,6 +43,7 @@ a {
 a:hover {
 	text-decoration: underline;
 }
+
 
 #status {
 	color: var(--secondary);
@@ -109,8 +111,8 @@ button:hover {
 
 /* For expression graph */
 table th {
-text-align: left;
-padding-right: 2rem;
+	text-align: left;
+	padding-right: 2rem;
 }
 
 .directions {

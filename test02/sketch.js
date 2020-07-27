@@ -3,19 +3,19 @@
 // TODO try to connect outline points to specific body parts
 
 const videos = [
-	'../videos/body/video01.mp4',
-	'../videos/body/video02.mp4',
-	'../videos/body/video03.mp4',
-	'../videos/body/video05.mp4',
-	'../videos/body/video06.mp4',
-	'../videos/body/video08.mp4',
-	'../videos/body/video09.mp4',
-	'../videos/body/video10.mp4',
-	'../videos/body/video11.mp4',
-	'../videos/body/video12.mp4',
-	'../videos/body/video13.mp4',
-	'../videos/body/video15.mp4',
-	'../videos/body/video16.mp4',
+	'../assets/body/video01.mp4',
+	'../assets/body/video02.mp4',
+	'../assets/body/video03.mp4',
+	'../assets/body/video05.mp4',
+	'../assets/body/video06.mp4',
+	'../assets/body/video08.mp4',
+	'../assets/body/video09.mp4',
+	'../assets/body/video10.mp4',
+	'../assets/body/video11.mp4',
+	'../assets/body/video12.mp4',
+	'../assets/body/video13.mp4',
+	'../assets/body/video15.mp4',
+	'../assets/body/video16.mp4',
 ];
 
 const numAnchors = 20;
