@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!-- <!DOCTYPE html> -->
 <html>
 	<head>
 		<meta charset="UTF-8" />
@@ -9,30 +9,20 @@
 			content="width=device-width, initial-scale=1, shrink-to-fit=no"
 		/>
 
-		<!-- P5 and ml5 -->
-		<!-- <script
-			type="text/javascript"
-			src="https://unpkg.com/ml5@0.4.3/dist/ml5.min.js"
-		></script> -->
+		<!-- ml5 -->
+		<!-- An old version of ml5 with expression estimation, helpfully found here: -->
+		<!-- https://editor.p5js.org/ima_ml/sketches/fCsz7tb6w -->
 		<script
-			src="https://unpkg.com/ml5@0.5.0/dist/ml5.min.js"
 			type="text/javascript"
+			src="../ml5-with-expressions.min.js"
 		></script>
 
-		<script
-			type="text/javascript"
-			src="https://cdn.jsdelivr.net/npm/p5@1.0.0/lib/p5.js"
-		></script>
+		<!-- P5 -->
+		<script type="text/javascript" src="../p5.js"></script>
+
 		<script defer src="sketch.js" type="text/javascript"></script>
-		<script defer src="../Anchor.class.js" type="text/javascript"></script>
-		<!-- <script defer src="../script.js" type="text/javascript"></script> -->
 
-		<!-- Bootstrap -->
-		<!-- Customized for Abstract Self project -->
-		<!-- https://bootstrap.build/ -->
-		<!-- <link rel="stylesheet" href="../bootstrap.css" /> -->
-
-		<link rel="stylesheet" href="../style-nolib.css" />
+		<link rel="stylesheet" href="../app.css" />
 	</head>
 
 	<body>
@@ -42,7 +32,7 @@
 				<div id="status"></div>
 			</div>
 			<div id="test-details">
-				<h1>Test 03 (ml5 0.5.0)</h1>
+				<h1>Test 03 (old ml5 build)</h1>
 				<p>Expressions.</p>
 			</div>
 			<div id="test-controls">
@@ -54,15 +44,16 @@
 						<button id="video-button">Random Video</button>
 					</label>
 					<a id="stop-everything">Stop (before changing)</a><br /><br />
-					<label for="image-button" id="image-button-label">
-						<button id="image-button">Random Image</button>
-					</label>
 				</div>
 				<div class="sketch-controls">
-					<div class="group">Sketch controls</div>
+					<div class="group">
+						<div id="framerate" class="centered">FPS: </div>
+					</div>
 				</div>
 				<div class="sketch-controls">
-					<div class="group">Sketch controls</div>
+					<div class="group">
+
+					</div>
 				</div>
 			</div>
 		</main>

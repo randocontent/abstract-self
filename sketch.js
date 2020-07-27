@@ -132,13 +132,13 @@ Anchor.prototype.arrive = function (target) {
 function getNewWebcam() {
 	status.html('in getNewWebcam()');
 	// Todo: disable buttons until we're ready to try again
-	sample = createCapture(VIDEO, webcamReady);
+	sample = createCapture(VIDEO, videoReady);
 }
 
 /**
  * Handles the webcam feed
  */
-function webcamReady() {
+function videoReady() {
 	status.html('in webcamReady()');
 
 	// select('#webcam-preview-placeholder').html('');

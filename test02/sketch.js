@@ -346,14 +346,14 @@ function getNewImage() {
  * Starts the webcam and calls webcamReady()
  */
 function getNewWebcam() {
-	sample = createCapture(VIDEO, webcamReady);
+	sample = createCapture(VIDEO, videoReady);
 	sample.hide();
 }
 
 /**
  * Handles the webcam feed
  */
-function webcamReady() {
+function videoReady() {
 	poseNet = ml5.poseNet(sample, options, modelReady);
 	poseNet.on('pose', function (results) {
 		poses = results;
