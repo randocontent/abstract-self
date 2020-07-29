@@ -1,237 +1,145 @@
-let poseNet;
-let poses = [];
-let options = { minConfidence: 0.9, maxPoseDetections: 1 };
+let canvas, status;
+let webcamPreview;
 
-let sample;
-let status;
+// function setup() {
+// 	canvas = createCanvas(640, 480);
+// 	canvas.parent('#canvas-container');
+
+// 	// Use the status variable to send messages with the status.html method
+// 	status = select('#status');
+
+// }
+
+// function draw() {
+// 	background(0);
+
+// }
+
+let mgr;
 
 function setup() {
-	var canvas = createCanvas(640, 480);
+	let canvas = createCanvas(800, 500);
+	canvas.parent('#step01-canvas');
+	background(51);
 
-	// Put the canvas in its placeholder element so it works within the layout of the page
-	canvas.parent('sketch-placeholder');
+	mgr = new SceneManager();
 
-	// Use the status variable to send messages
-	status = select('#status');
+	// Preload scenes. Preloading is normally optional
+	// ... but needed if showNextScene() is used.
+	mgr.addScene(intro);
+	mgr.addScene(step01);
+	mgr.addScene(Animation2);
+	mgr.addScene(Animation3);
 
-	// Uncomment to avoid needlessly looping while testing, for e.g. to more
-	// easily read values logged out to console. 
-	// noLoop()
+	mgr.showScene(step01);
 }
 
 function draw() {
-	background('white');
+	mgr.draw();
+}
 
-	if (poses[0]) {
-		// Draw small pink circles on each keypoint
-		let points = poses[0].pose.keypoints;
-		noStroke();
-		fill(255, 100, 255, 50);
-		for (p of points) {
-			ellipse(p.position.x, p.position.y, 8);
+function mousePressed() {
+	mgr.handleEvent('mousePressed');
+}
+
+function keyPressed() {
+	// You can optionaly handle the key press at global level...
+	switch (key) {
+		case '1':
+			mgr.showScene(intro);
+			break;
+		case '2':
+			mgr.showScene(Animation2);
+			break;
+		case '3':
+			mgr.showScene(Animation3);
+			break;
+	}
+
+	// ... then dispatch via the SceneManager.
+	mgr.handleEvent('keyPressed');
+}
+
+// =============================================================
+// =                         BEGIN SCENES                      =
+// =============================================================
+
+function step01() {
+	this.setup = function () {
+		sample = createCapture(VIDEO, this.webcamReady);
+	};
+	this.draw = function () {
+		ellipse(100, 100, 100);
+	};
+	this.webcamReady = function () {
+		console.log('webcamReady');
+		sample.parent('#step01-webcam');
+	};
+}
+
+function intro() {
+	this.enter = function () {
+		background(51);
+
+		text('intro', 100, 100);
+	};
+
+	this.keyPressed = function () {
+		text(keyCode, textX, (textY += 10));
+		if (textY > height) {
+			textX += 20;
+			textY = 0;
 		}
+	};
 
-		// Draw black outline around body
-		let vpoints = makeVectorArray(points);
-		let hullPoints = convexHull(vpoints);
-		strokeWeight(1.5);
-		stroke('black');
-		noFill();
-		beginShape();
-		for (p of hullPoints) {
-			vertex(p.x, p.y);
-		}
-		endShape(CLOSE);
+	this.mousePressed = function () {
+		this.sceneManager.showNextScene();
+	};
+}
+
+function Animation2() {
+	this.y = 0;
+
+	this.draw = function () {
+		background('teal');
+
+		line(0, this.y, width, this.y);
+		this.y++;
+
+		if (this.y > height) this.y = 0;
+	};
+
+	this.mousePressed = function () {
+		this.sceneManager.showNextScene();
+	};
+}
+
+// When defining scenes, you can also
+// put the setup, draw, etc. methods on prototype
+function Animation3() {
+	this.oAnim1 = null;
+}
+
+Animation3.prototype.setup = function () {
+	// access a different scene using the SceneManager
+	oAnim1 = this.sceneManager.findScene(Animation2);
+};
+
+Animation3.prototype.draw = function () {
+	background('lightblue');
+
+	var r = sin(frameCount * 0.01);
+
+	fill('white');
+	ellipse(width / 2, height / 2, map(r, 0, 1, 100, 200));
+
+	if (oAnim1 != null) {
+		fill('black');
+		textAlign(LEFT);
+		text('Scene1 y: ' + oAnim1.oScene.y, 10, height - 20);
 	}
-}
-function Anchor(x, y) {
-	this.pos = createVector(random(width),random(height))
-	this.target = createVector(x, y);
-	this.vel = p5.Vector.random2D();
-	this.acc = createVector();
-	this.r = 10;
-	this.topSpeed = 9;
-	this.maxForce = 0.9;
-}
-
-Anchor.prototype.update = function () {
-	this.pos.add(this.vel);
-	this.vel.add(this.acc);
-	this.acc.mult(0);
 };
 
-Anchor.prototype.show = function () {
-	noStroke()
-	fill('orange')
-	ellipse(this.pos.x, this.pos.y, this.r);
+Animation3.prototype.mousePressed = function () {
+	this.sceneManager.showNextScene();
 };
-
-Anchor.prototype.addVertex = function () {
-	vertex(this.pos.x, this.pos.y);
-};
-
-// Runs behaviors 
-Anchor.prototype.behaviors = function () {
-	let goto = this.arrive(this.target);
-	let mouse = createVector(mouseX,mouseY)
-	let flee = this.flee(mouse)
-	
-	// Weighting forces 
-	goto.mult(1)
-	flee.mult(5)
-
-	this.applyForce(goto);
-	this.applyForce(flee)
-};
-
-// Applies forces returned by the bejavior functions
-Anchor.prototype.applyForce = function (f) {
-	this.acc.add(f);
-};
-
-// Returns a force 
-Anchor.prototype.seek = function (target) {
-	let desired = p5.Vector.sub(target, this.pos);
-	desired.setMag(this.topSpeed);
-	let steer = p5.Vector.sub(desired, this.vel);
-	return steer.limit(this.maxForce);
-};
-
-// Returns a force 
-Anchor.prototype.flee = function (target) {
-	let desired = p5.Vector.sub(target, this.pos);
-	if ( desired.mag() < 90 ) {
-	desired.setMag(this.topSpeed);
-	// Reverse direction
-	desired.mult(-1)
-	let steer = p5.Vector.sub(desired, this.vel);
-	steer.limit(this.maxForce);
-	return steer
-} else {
-	return createVector(0,0)
-}
-};
-
-// Returns a force 
-Anchor.prototype.arrive = function (target) {
-	let desired = p5.Vector.sub(target, this.pos);
-	let distance = desired.mag();
-	let speed = this.topSpeed;
-	if (distance < 100) {
-		speed = map(distance, 0, 100, 0, this.topSpeed);
-	}
-	desired.setMag(speed);
-	let steer = p5.Vector.sub(desired, this.vel);
-	return steer.limit(this.maxForce);
-};
-
-/**
- * Starts the webcam and calls webcamReady()
- *
- */
-function getNewWebcam() {
-	status.html('in getNewWebcam()');
-	// Todo: disable buttons until we're ready to try again
-	sample = createCapture(VIDEO, videoReady);
-}
-
-/**
- * Handles the webcam feed
- */
-function videoReady() {
-	status.html('in webcamReady()');
-
-	// select('#webcam-preview-placeholder').html('');
-	// sample.parent('webcam-preview-placeholder');
-
-	poseNet = ml5.poseNet(sample, options, modelReady);
-	poseNet.on('pose', function (results) {
-		poses = results;
-	});
-}
-
-/**
- * Called when the PoseNet model is ready.
- * There's not much to do at that point since it sets up its own loop.
- */
-function modelReady() {
-	status.html('Model ready');
-}
-
-/**
- * Gets an array of keypoints from PoseNet
- * Creates an array of p5 vectors
- */
-function makeVectorArray(arr) {
-	let newArr = [];
-	for (const p of arr) {
-		newArr.push(createVector(p.position.x, p.position.y));
-	}
-	return newArr;
-}
-
-/**
- * convexhull-js
- * Copyright (c) 2015 Andrey Naumenko
- * https://github.com/indy256/convexhull-js
- * See license below
- */
-
-/**
- * Get an array of points.
- * Return points to draw a convex hull around them.
- */
-function convexHull(points) {
-	function removeMiddle(a, b, c) {
-		var cross = (a.x - b.x) * (c.y - b.y) - (a.y - b.y) * (c.x - b.x);
-		var dot = (a.x - b.x) * (c.x - b.x) + (a.y - b.y) * (c.y - b.y);
-		return cross < 0 || (cross == 0 && dot <= 0);
-	}
-	points.sort(function (a, b) {
-		return a.x != b.x ? a.x - b.x : a.y - b.y;
-	});
-
-	var n = points.length;
-	var hull = [];
-
-	for (var i = 0; i < 2 * n; i++) {
-		var j = i < n ? i : 2 * n - 1 - i;
-		while (
-			hull.length >= 2 &&
-			removeMiddle(hull[hull.length - 2], hull[hull.length - 1], points[j])
-		)
-			hull.pop();
-		hull.push(points[j]);
-	}
-
-	hull.pop();
-	return hull;
-}
-
-/**
- * License for convexhull-js
- *
-
-The MIT License (MIT)
-
-Copyright (c) 2015 Andrey Naumenko
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-
-*/

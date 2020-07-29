@@ -50,6 +50,25 @@ main {
 	place-items: center;
 }
 
+.step {
+display: grid;
+grid-template-columns: 50% 50%;
+grid-template-areas: 
+"sidebar abstract"
+"controls controls"
+}
+
+.sidebar {
+grid-area: sidebar;
+}
+.abstract {
+	grid-area: abstract;
+}
+.controls {
+	grid-area: controls;
+}
+
+
 /* ==P5 Helpers ************************************************* */
 /* ************************************************************** */
 
@@ -60,7 +79,6 @@ main {
 
 /* ==Controls  ************************************************** */
 /* ************************************************************** */
-
 
 
 label {
@@ -77,20 +95,29 @@ button,
 	border-radius: 0.5rem;
 	border: 2px solid var(--primary);
 	min-width: 16rem;
+	text-align: center;
+	text-transform: uppercase;
 }
 
 button:hover,
 .btn:hover {
 	background-color: var(--dark);
 	color: var(--primary);
+	text-decoration: none;
 }
 
 
 /* ==Utilities  ************************************************* */
 /* ************************************************************** */
 
-a.text-muted {
+.text-muted, a.text-muted {
 	color: #8e8c84;
+}
+
+strong {
+	color: white;
+	font-weight: bold;
+	font-style: italic;
 }
 
 .nolist {
