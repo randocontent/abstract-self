@@ -87,11 +87,11 @@ function draw() {
 	strokeWeight(1);
 
 	// Draw model shape for reference
-	beginShape();
-	modelShape.forEach(p => {
-		vertex(p.x, p.y);
-	});
-	endShape(CLOSE);
+	// beginShape();
+	// modelShape.forEach(p => {
+	// 	vertex(p.x, p.y);
+	// });
+	// endShape(CLOSE);
 
 	if (sample) {
 		if (sample.isPlaying()) {

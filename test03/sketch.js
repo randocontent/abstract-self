@@ -70,6 +70,7 @@ function setup() {
 	stopWebcamButton = select('#stop-everything');
 	stopWebcamButton.mousePressed(stopEverything);
 
+	getNewWebcam()
 	// getNewVideo()
 	// getNewImage();
 }
@@ -133,7 +134,6 @@ function framerateIndicator(el) {
 	el.html('FPS: ' + fr);
 }
 
-// Draw everything
 function draw() {
 	framerateIndicator(frCounter);
 
@@ -169,15 +169,8 @@ function draw() {
 	if (expressions) {
 		sortedExpressions = Object.entries(expressions);
 		sortedExpressions.sort((a,b)=> {
-			return a[1] - b[1]
+			return b[1] - a[1]
 		})
-		status.html(`
-		${sortedExpressions[0]}<br>
-		${sortedExpressions[1]}<br>
-		${sortedExpressions[2]}<br>
-		${sortedExpressions[3]}<br>
-		${sortedExpressions[4]}<br>
-		${sortedExpressions[5]}<br>
-		`)
+		status.html(sortedExpressions[0][0])
 	}
 }

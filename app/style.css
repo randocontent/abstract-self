@@ -1,10 +1,7 @@
 /* 
-Space Mono is a fixed-width font with four weights: 
-- 400
-- 400 Italic
-- 700
-- 700 Italic
+Space Mono is a fixed-width font with four weights: 400, 400 Italic, 700, 700 Italic
 */
+
 @import url('https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap');
 
 :root {
@@ -15,13 +12,21 @@ Space Mono is a fixed-width font with four weights:
 	--recording: #ff5151;
 }
 
+/* ==Basics 	*************************************************** */
+/* ************************************************************** */
+
 body {
 	background-color: var(--black);
 	color: var(--primary);
-}
-main.container {
-
 	font-family: 'Space Mono', monospace;
+}
+
+a {
+	color: var(--primary);
+	text-decoration: none;
+}
+a:hover {
+	text-decoration: underline;
 }
 
 h1,
@@ -36,27 +41,73 @@ button {
 	line-height: 1.7rem; /* 27px */
 	letter-spacing: 1.5px;
 }
-a {
-	color: var(--primary);
-	text-decoration: none;
-}
-a:hover {
-	text-decoration: underline;
-}
 
-
-#status {
-	color: var(--secondary);
-	margin: 0.25em 0 1.25em;
-}
-a.text-muted {
-	color: #8e8c84;
-}
+/* ==Layout  **************************************************** */
+/* ************************************************************** */
 
 main {
 	display: grid;
 	place-items: center;
 }
+
+/* ==P5 Helpers ************************************************* */
+/* ************************************************************** */
+
+#status {
+	color: var(--secondary);
+	margin: 0.25em 0 1.25em;
+}
+
+/* ==Controls  ************************************************** */
+/* ************************************************************** */
+
+
+
+label {
+	display: block;
+	padding-bottom: 1em;
+}
+
+button,
+.btn {
+	background-color: var(--primary);
+	color: var(--dark);
+	letter-spacing: 4px;
+	padding: 1.25rem 3rem;
+	border-radius: 0.5rem;
+	border: 2px solid var(--primary);
+	min-width: 16rem;
+}
+
+button:hover,
+.btn:hover {
+	background-color: var(--dark);
+	color: var(--primary);
+}
+
+
+/* ==Utilities  ************************************************* */
+/* ************************************************************** */
+
+a.text-muted {
+	color: #8e8c84;
+}
+
+.nolist {
+	list-style: none;
+margin: 0;
+padding: 0;
+}
+
+
+.centered {
+	text-align: center;
+}
+
+/* ==  *************************************************** */
+/* ************************************************************** */
+
+
 #test-controls {
 	display: grid;
 	grid-template-columns: repeat(3, 1fr);
@@ -85,30 +136,6 @@ div.sketch-controls .group {
 .white {
 	color: #fff !important;
 }
-
-label {
-	display: block;
-	padding-bottom: 1em;
-}
-
-button {
-	background-color: var(--primary);
-	color: var(--dark);
-	letter-spacing: 4px;
-	padding: 1.25rem 3rem;
-	border-radius: 0.5rem;
-	border: 2px solid var(--primary);
-}
-
-button:hover {
-	background-color: var(--dark);
-	color: var(--primary);
-}
-
-.centered {
-	text-align: center;
-}
-
 /* For expression graph */
 table th {
 	text-align: left;

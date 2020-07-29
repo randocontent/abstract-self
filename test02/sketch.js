@@ -22,7 +22,7 @@ const numAnchors = 20;
 
 let poseNet;
 let poses = [];
-let options = { maxPoseDetections: 1 };
+let options = { maxPoseDetections: 2 };
 
 let webcamButton;
 let imageButton;
@@ -77,12 +77,12 @@ function setup() {
 	stopWebcamButton = select('#stop-everything');
 	stopWebcamButton.mousePressed(stopEverything);
 
-	radiusSlider = createSlider(1, 300, 50, 1);
+	radiusSlider = createSlider(1, 300, 100, 1);
 	radiusSlider.parent(select('#radius-slider-label'));
-	speedSlider = createSlider(1, 30, 5, 0.1);
+	speedSlider = createSlider(1, 10, 5, 0.1);
 	speedSlider.size(300);
 	speedSlider.parent(select('#speed-slider-label'));
-	forceSlider = createSlider(0.1, 5, 0.5, 0.01);
+	forceSlider = createSlider(0.1, 10, 0.5, 0.01);
 	forceSlider.size(300);
 	forceSlider.parent(select('#force-slider-label'));
 

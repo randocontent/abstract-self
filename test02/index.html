@@ -9,22 +9,18 @@
 			content="width=device-width, initial-scale=1, shrink-to-fit=no"
 		/>
 
-		<!-- P5 and ml5 -->
-		<script src="https://unpkg.com/ml5@0.4.3/dist/ml5.min.js"></script>
-		<script
-			type="text/javascript"
-			src="https://cdn.jsdelivr.net/npm/p5@1.0.0/lib/p5.js"
-		></script>
+		<script type="text/javascript" src="../lib/dat.gui.js"></script>
+		<script type="text/javascript" src="../lib/p5.js"></script>
+		<script type="text/javascript" src="../lib/p5.sound.js"></script>
+		<script type="text/javascript" src="../lib/scenemanager.js"></script>
+		<script type="text/javascript" src="../lib/ml5-0.5.0.js"></script>
+
+		<script defer src="../app/Anchor.class.js" type="text/javascript"></script>
 		<script defer src="sketch.js" type="text/javascript"></script>
-		<script defer src="../Anchor.class.js" type="text/javascript"></script>
-		<!-- <script defer src="../script.js" type="text/javascript"></script> -->
+		<!-- <script defer src="app/app.js" type="text/javascript"></script> -->
 
-		<!-- Bootstrap -->
-		<!-- Customized for Abstract Self project -->
-		<!-- https://bootstrap.build/ -->
-		<!-- <link rel="stylesheet" href="../bootstrap.css" /> -->
+		<link rel="stylesheet" href="../app/style.css" />
 
-		<link rel="stylesheet" href="../app.css" />
 	</head>
 
 	<body>
@@ -42,15 +38,15 @@
 			<div id="test-controls">
 				<div id="source-controls">
 					<label for="webcam-button" id="webcam-button-label">
-						<button id="webcam-button">Start Webcam</button>
+						<button id="webcam-button">Webcam</button>
 					</label>
 					<label for="video-button" id="video-button-label">
-						<button id="video-button">Random Video</button>
+						<button id="video-button">Video</button>
+					</label>
+					<label for="image-button" id="image-button-label">
+						<button id="image-button">Image</button>
 					</label>
 					<a id="stop-everything">Stop (before changing)</a><br /><br>
-					<label for="image-button" id="image-button-label">
-						<button id="image-button">Random Image</button>
-					</label>
 				</div>
 				<div class="sketch-controls">
 					<div class="group">
@@ -71,14 +67,17 @@
 				</div>
 				<div class="sketch-controls">
 					<div class="group">
-						<a id="toggle-body">Expand head or whole body</a>
+						<div class="group">
+
+							<a id="toggle-body">Expand head or whole body</a>
+							<a id="toggle-curves">Curves or angles</a>
+						</div>
 						<label id="radius-slider-label">
 							<span class="slider-label">Radius for expanded points</span>
 						</label>
 					</div>
 
 					<div class="group">
-						<a id="toggle-curves">Curves or angles</a>
 					</div>
 
 					<div class="group">

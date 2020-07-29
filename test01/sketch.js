@@ -1,7 +1,3 @@
-// TODO expand posenet points to circle
-// TODO try without convex hull
-// TODO try to connect outline points to specific body parts
-
 let videos = [
 	'../assets/body/video01.mp4',
 	'../assets/body/video02.mp4',

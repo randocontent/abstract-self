@@ -9,30 +9,28 @@
 			content="width=device-width, initial-scale=1, shrink-to-fit=no"
 		/>
 
-		<!-- ml5 -->
-		<!-- An old version of ml5 with expression estimation, helpfully found here: -->
-		<!-- https://editor.p5js.org/ima_ml/sketches/fCsz7tb6w -->
-		<script
-			type="text/javascript"
-			src="../ml5-expressions.min.js"
-		></script>
+		<script type="text/javascript" src="../lib/dat.gui.js"></script>
+		<script type="text/javascript" src="../lib/p5.js"></script>
+		<script type="text/javascript" src="../lib/p5.sound.js"></script>
+		<script type="text/javascript" src="../lib/scenemanager.js"></script>
+		<script type="text/javascript" src="../lib/ml5-expressions.min.js"></script>
 
-		<!-- P5 -->
-		<script type="text/javascript" src="../p5.js"></script>
-
+		<script defer src="../app/Anchor.class.js" type="text/javascript"></script>
 		<script defer src="sketch.js" type="text/javascript"></script>
+		<!-- <script defer src="app/app.js" type="text/javascript"></script> -->
 
-		<link rel="stylesheet" href="../app.css" />
+		<link rel="stylesheet" href="../app/style.css" />
+
 	</head>
+
 
 	<body>
 		<main class="container">
 			<div id="canvas-container"></div>
 			<div id="test-status">
-				<div id="status"></div>
 			</div>
 			<div id="test-details">
-				<h1>Test 03 (old ml5 build)</h1>
+				<h1>Test 03</h1>
 				<p>Expressions.</p>
 			</div>
 			<div id="test-controls">
@@ -52,7 +50,9 @@
 				</div>
 				<div class="sketch-controls">
 					<div class="group">
-
+Top? 
+							<span id="status"></span>
+						</p>
 					</div>
 				</div>
 			</div>
