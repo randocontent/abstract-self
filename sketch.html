@@ -13,8 +13,10 @@
 		<script type="text/javascript" src="lib/p5.js"></script>
 		<script type="text/javascript" src="lib/p5.sound.js"></script>
 		<script type="text/javascript" src="lib/scenemanager.js"></script>
-		<script type="text/javascript" src="lib/ml5-0.5.0.js"></script>
+		<!-- <script type="text/javascript" src="lib/ml5-0.5.0.js"></script> -->
+		<script type="text/javascript" src="lib/ml5-expressions.min.js"></script>
 
+		<script defer src="../app/Anchor.class.js" type="text/javascript"></script>
 		<script defer src="app/sketch.js" type="text/javascript"></script>
 		<!-- <script defer src="app/app.js" type="text/javascript"></script> -->
 
@@ -23,31 +25,59 @@
 
 	<body>
 		<main class="container">
-			<div id="step01" class="step">
-
+			<div id="scene-01" class="fullscreen">
 				<div class="sidebar">
-					<section>
+					<section class="title">
 						<p>This is <strong>You</strong>.</p>
 					</section>
-					<section>
-						<div id="step01-webcam" class="webcam-container" width="320" height="240"></div>
+					<section class="webcam-monitor-container">
+						<div id="webcam-monitor-01"></div>
 					</section>
 				</div>
 
 				<div class="abstract">
-					<section>
-						<p>Now, we are about to create the <strong>Abstract You</strong>.</p>
+					<section class="title">
+						<p>
+							Now, we are about to create the <strong>Abstract You</strong>.
+						</p>
 					</section>
-					<section>
-						<div id="step01-canvas" class="canvas-container" width="852"></div>
-						<div class="status"></div>
+					<section class="canvas-container">
+						<div id="canvas-01"></div>
 					</section>
 				</div>
 
 				<div class="controls">
-					<button>Press here to begin</button>
+					<button id="begin-button">Press here to begin</button>
+				</div>
+			</div>
+
+			<div id="scene-02" class="hidden fullscreen">
+				<div class="sidebar">
+					<section class="title">
+						<p class="row">Abstract you</p>
+						<p class="row">1: Body Movement</p>
+					</section>
+
+					<section class="directions">
+						<p class="col">
+							Press record, then starting from the mark,
+							<strong> begin walking towards the camera </strong>.
+						</p>
+					</section>
+					<section class="webcam-monitor-container">
+						<div id="webcam-monitor-02"></div>
+					</section>
+					<div class="controls">
+						<button col="row" id="record-button-02">Record</button>
+						<span class="row btn counter" id="counter-02">0:15</span>
+					</div>
 				</div>
 
+				<div class="abstract">
+					<section class="canvas-container">
+						<div id="canvas-02"></div>
+					</section>
+				</div>
 			</div>
 		</main>
 	</body>

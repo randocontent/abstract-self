@@ -287,36 +287,7 @@ function draw() {
 			endShape(CLOSE);
 		}
 
-		// // make an array of hull points
-		// let vpoints = makeVectorArray(points);
-		// console.table(vpoints);
-		// zpoints = expandPoints(vpoints, 20);
-		// console.table(zpoints);
-		// let hullPoints = convexHull(zpoints);
-		// console.table(hullPoints);
-
-		// a.behaviors();
-		// a.update();
-		// // a.show();
-		// // });
-
-		// noStroke();
-		// fill('red');
-		// for (p of points) {
-		// 	ellipse(p.position.x, p.position.y, 8);
-		// }
-
-		// // Draw black around anchors
-		// strokeWeight(1.5);
-		// stroke('black');
-		// noFill();
-		// beginShape();
-		// for (a of anchors) {
-		// 	vertex(a.pos.x, a.pos.y);
-		// }
-		// endShape(CLOSE);
 	}
-	// noLoop();
 }
 
 /**
@@ -329,13 +300,13 @@ function getNewImage() {
 		`https://source.unsplash.com/${width}x${height}/?body,person`,
 		() => {
 			// Run when image is ready
-			poseNet = '';
-			poseNet = ml5.poseNet(options, () => {
+			posenet = '';
+			posenet = ml5.poseNet(options, () => {
 				// Run when model is ready
 				console.log('Model loaded for image');
-				poseNet.singlePose(sample);
+				posenet.singlePose(sample);
 			});
-			poseNet.on('pose', function (results) {
+			posenet.on('pose', function (results) {
 				poses = results;
 			});
 		}
@@ -354,8 +325,8 @@ function getNewWebcam() {
  * Handles the webcam feed
  */
 function videoReady() {
-	poseNet = ml5.poseNet(sample, options, modelReady);
-	poseNet.on('pose', function (results) {
+	posenet = ml5.poseNet(sample, options, modelReady);
+	posenet.on('pose', function (results) {
 		poses = results;
 	});
 }
@@ -369,7 +340,7 @@ function modelReady() {
 }
 
 function stopEverything() {
-	poseNet.removeAllListeners();
+	posenet.removeAllListeners();
 	poses[0] = null;
 	sample.stop();
 }
@@ -385,8 +356,8 @@ function getNewVideo() {
 
 function videoReady() {
 	console.log('Video Ready');
-	poseNet = ml5.poseNet(sample, options, modelReady);
-	poseNet.on('pose', function (results) {
+	posenet = ml5.poseNet(sample, options, modelReady);
+	posenet.on('pose', function (results) {
 		// console.log('Poses Ready')
 		poses = results;
 	});

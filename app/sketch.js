@@ -1,145 +1,325 @@
+class Paramaterize {
+	constructor() {
+		this.scene = 2;
+		this.minR = 33;
+		this.maxR = 66;
+		this.xNoiseMax = 2;
+		this.yNoiseMax = 2;
+		this.zNoiseOffset = 0.01;
+		this.phaseOffset = 0.001;
+		this.inc = 26;
+		this.blobR = 100
+		this.showPoseNet = false;
+		this.showExpanded = false;
+		this.showHull = false
+		this.showPreview = false
+		this.showAnchors = false
+		this.showAbstract = true
+		this.showAbstractFill = false
+		this.showCurves = true
+		this.isHeadOnly = true
+		this.numAnchors = 20
+	}
+}
+
 let canvas, status;
 let webcamPreview;
 
-// function setup() {
-// 	canvas = createCanvas(640, 480);
-// 	canvas.parent('#canvas-container');
+let recording = false;
 
-// 	// Use the status variable to send messages with the status.html method
-// 	status = select('#status');
+let posenet;
+let poses = [];
+let posesHistory = []
+let options = { maxPoseDetections: 2 };
 
-// }
+let phase = 0.0;
+let noiseMax = 1;
+let zoff = 0.0;
 
-// function draw() {
-// 	background(0);
+let mgr, g;
 
-// }
-
-let mgr;
+let numAnchors = 20;
+let points = [];
+let anchors = [];
+let zpoints = [];
+let expandedPoints = [];
+let hullPoints = [];
 
 function setup() {
-	let canvas = createCanvas(800, 500);
-	canvas.parent('#step01-canvas');
-	background(51);
+	canvas = createCanvas(350, 350);
+	canvas.parent('#canvas-01');
+	background(255);
+
+	par = new Paramaterize();
+
+	let gui = new dat.GUI();
+
+	let sceneGui = gui.add(par, 'scene');
+	sceneGui.onFinishChange(() => {
+		gotoScene();
+	});
+	gui.add(par, 'minR');
+	gui.add(par, 'minR');
+	gui.add(par, 'maxR');
+	gui.add(par, 'xNoiseMax');
+	gui.add(par, 'yNoiseMax');
+	gui.add(par, 'zNoiseOffset');
+	gui.add(par, 'phaseOffset');
+	gui.add(par, 'inc');
+	gui.add(par, 'blobR');
+	gui.add(par, 'showPoseNet');
+	gui.add(par, 'showExpanded')
+	gui.add(par, 'showHull')
+	gui.add(par, 'showPreview')
+	gui.add(par, 'showAnchors')
+	gui.add(par, 'showAbstract')
+	gui.add(par, 'showAbstractFill')
+	gui.add(par, 'showCurves')
+	gui.add(par, 'isHeadOnly')
+	gui.add(par, 'numAnchors')
 
 	mgr = new SceneManager();
 
 	// Preload scenes. Preloading is normally optional
 	// ... but needed if showNextScene() is used.
-	mgr.addScene(intro);
-	mgr.addScene(step01);
-	mgr.addScene(Animation2);
-	mgr.addScene(Animation3);
+	mgr.addScene(scene01);
+	mgr.addScene(scene02);
 
-	mgr.showScene(step01);
+	select('#begin-button').mousePressed(() => {
+		mgr.showScene(scene02);
+	});
+select('#record-button-02').mousePressed(()=>{
+	recording = true;
+	select('#record-button-02').addClass('rec')
+}) 
+
+	startWebcam(false, 467, 350);
+	gotoScene();
 }
 
 function draw() {
 	mgr.draw();
 }
 
-function mousePressed() {
-	mgr.handleEvent('mousePressed');
-}
-
-function keyPressed() {
-	// You can optionaly handle the key press at global level...
-	switch (key) {
-		case '1':
-			mgr.showScene(intro);
+function gotoScene() {
+	switch (par.scene) {
+		case 1:
+			mgr.showScene(scene01);
 			break;
-		case '2':
-			mgr.showScene(Animation2);
+		case 2:
+			mgr.showScene(scene02);
 			break;
-		case '3':
-			mgr.showScene(Animation3);
+		default:
 			break;
 	}
+}
 
-	// ... then dispatch via the SceneManager.
-	mgr.handleEvent('keyPressed');
+function startWebcam(autoSize, sw, sh) {
+	sample = createCapture(VIDEO, webcamReady);
+	if (!autoSize) {
+		sample.size(sw, sh);
+	}
+	// TODO - too ugly
+	sample.parent('#webcam-monitor-0' + par.scene);
+}
+
+function webcamReady() {
+	console.log('webcamReady');
+	posenet = ml5.poseNet(sample, options, modelReady);
+	posenet.on('pose', function (results) {
+		poses = results;
+	});
+}
+
+function modelReady() {
+	console.log('modelReady');
 }
 
 // =============================================================
 // =                         BEGIN SCENES                      =
 // =============================================================
 
-function step01() {
-	this.setup = function () {
-		sample = createCapture(VIDEO, this.webcamReady);
+// --1
+
+function scene01() {
+	this.enter = function () {
+		select('#scene-02').addClass('hidden');
+		select('#scene-01').removeClass('hidden');
+		canvas.parent('#canvas-01');
+		// move the webcam monitor over
+		sample.parent('#webcam-monitor-01');
+		sample.size(467, 350);
 	};
+
+	this.setup = function () {};
+
 	this.draw = function () {
-		ellipse(100, 100, 100);
-	};
-	this.webcamReady = function () {
-		console.log('webcamReady');
-		sample.parent('#step01-webcam');
+		background(255);
+		if (poses[0]) {
+			let p = createVector(poses[0].pose.nose.x, poses[0].pose.nose.y);
+			push();
+			let pad = constrain(par.maxR * 2, 0, width / 3);
+			let fx = map(p.x, 0, width, width, 0);
+			let cx = constrain(fx, pad, width - pad);
+			let cy = constrain(p.y, pad, height - pad);
+
+			translate(cx, cy);
+			stroke(0);
+			strokeWeight(2);
+			noFill();
+			beginShape();
+			for (let a = 0; a < TWO_PI; a += radians(par.inc)) {
+				let xoff = map(cos(a + phase), -1, 1, 0, par.xNoiseMax);
+				let yoff = map(sin(a + phase), -1, 1, 0, par.yNoiseMax);
+				let r = map(noise(xoff, yoff, zoff), 0, 1, par.minR, par.maxR);
+				let x = r * cos(a);
+				x = x;
+				let y = r * sin(a);
+				curveVertex(x, y);
+			}
+
+			endShape(CLOSE);
+			phase += par.phaseOffset;
+			zoff += par.zNoiseOffset;
+			pop();
+		}
 	};
 }
 
-function intro() {
-	this.enter = function () {
-		background(51);
+// --2
 
-		text('intro', 100, 100);
+function scene02() {
+	// Will run when entering the scene, seems like a good place to do clean up
+	// from the previous one
+	this.enter = function () {
+		// hide the other scenes
+		select('#scene-01').addClass('hidden');
+		// show this scene
+		select('#scene-02').removeClass('hidden');
+		// move the canvas over
+		canvas.parent('#canvas-02');
+		resizeCanvas(820, 820);
+		// move the webcam monitor over
+		sample.parent('#webcam-monitor-02');
+		sample.size(666, 500);
 	};
 
-	this.keyPressed = function () {
-		text(keyCode, textX, (textY += 10));
-		if (textY > height) {
-			textX += 20;
-			textY = 0;
+	this.setup = function () {
+		// Prepare anchors to chase the shape
+		for (let i = 0; i < numAnchors; i++) {
+			let anchor = new Anchor(width / 2, height / 2);
+			anchors.push(anchor);
 		}
 	};
 
-	this.mousePressed = function () {
-		this.sceneManager.showNextScene();
-	};
-}
-
-function Animation2() {
-	this.y = 0;
 
 	this.draw = function () {
-		background('teal');
+	background(255);
+	translate(width, 0);
+	scale(-1, 1);
+	// if (sample && showPreview) {
+	// 	image(sample, 0, 0);
+	// }
 
-		line(0, this.y, width, this.y);
-		this.y++;
-
-		if (this.y > height) this.y = 0;
-	};
-
-	this.mousePressed = function () {
-		this.sceneManager.showNextScene();
-	};
-}
-
-// When defining scenes, you can also
-// put the setup, draw, etc. methods on prototype
-function Animation3() {
-	this.oAnim1 = null;
-}
-
-Animation3.prototype.setup = function () {
-	// access a different scene using the SceneManager
-	oAnim1 = this.sceneManager.findScene(Animation2);
-};
-
-Animation3.prototype.draw = function () {
-	background('lightblue');
-
-	var r = sin(frameCount * 0.01);
-
-	fill('white');
-	ellipse(width / 2, height / 2, map(r, 0, 1, 100, 200));
-
-	if (oAnim1 != null) {
-		fill('black');
-		textAlign(LEFT);
-		text('Scene1 y: ' + oAnim1.oScene.y, 10, height - 20);
+	if (recording) {
+		posesHistory.push(poses[0].pose)
+		if (posesHistory.length > 100) {
+			recording = false
+			console.log(posesHistory)
+			select('#record-button-02').removeClass('rec')
+		}
 	}
-};
 
-Animation3.prototype.mousePressed = function () {
-	this.sceneManager.showNextScene();
-};
+
+	if (poses[0]) {
+		// status.html('framerate: ' + frameRate());
+
+		// Convert PoseNet points to P5 points
+		points = Anchor.makeVectorArray(poses[0].pose.keypoints);
+
+		// Mark PoseNet points with a Red dot
+		if (par.showPoseNet) {
+			stroke('red');
+			strokeWeight(10);
+			points.forEach(p => {
+				point(p);
+			});
+		}
+
+		// Expand PoseNet points
+		if (par.isHeadOnly) {
+			expandedPoints = Anchor.expandHeadPoints(points, par.blobR);
+		} else {
+			expandedPoints = Anchor.expandPoints(points, par.blobR);
+		}
+
+		// console.table(expandedPoints)
+
+		// Mark expanded points with Green dots
+		if (par.showExpanded) {
+			stroke('green');
+			strokeWeight(5);
+			beginShape();
+			expandedPoints.forEach(p => {
+				point(p.x, p.y);
+			});
+			endShape(CLOSE);
+		}
+
+		// Find convex hull for all points
+		hullPoints = Anchor.convexHull(expandedPoints);
+
+		// Outline hull points with a blue line
+		if (par.showHull) {
+			// console.table(hullPoints)
+			noFill();
+			stroke('blue');
+			strokeWeight(0.5);
+			beginShape();
+			hullPoints.forEach(p => {
+				vertex(p.x, p.y);
+			});
+			endShape(CLOSE);
+		}
+
+		// Set up anchors to follow hull outline
+		anchors.forEach((a, i) => {
+			if (hullPoints[i]) {
+				a.setTarget(hullPoints[i]);
+			} else {
+				a.setTarget(hullPoints[0]);
+			}
+			a.behaviors();
+			a.update();
+			if (par.showAnchors) a.show();
+		});
+
+		// Draw abstract shape
+		if (par.showAbstract) {
+			if (par.showAbstractFill) {
+				stroke(0);
+				strokeWeight(10);
+				fill(255);
+			} else {
+				stroke(0);
+				strokeWeight(8);
+				noFill();
+			}
+			beginShape();
+			anchors.forEach(a => {
+				if (par.showCurves) {
+					curveVertex(a.pos.x, a.pos.y);
+				} else {
+					vertex(a.pos.x, a.pos.y);
+				}
+			});
+			endShape(CLOSE);
+		}
+
+	}
+
+	};
+	this.counter = function () {
+
+	}
+}
