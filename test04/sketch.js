@@ -30,14 +30,6 @@ class Tweak {
 	}
 }
 
-class Color {
-	constructor() {
-		this.h = random(360);
-		this.s = random(100);
-		this.b = random(70, 90);
-	}
-}
-
 function setup() {
 	let canvas = createCanvas(852, 600);
 	canvas.parent('canvas-container');
@@ -66,7 +58,6 @@ function setup() {
 		createVector(width / 2, 300),
 	];
 
-	colors = new Color();
 	tweak = new Tweak();
 	fft = new p5.FFT();
 
