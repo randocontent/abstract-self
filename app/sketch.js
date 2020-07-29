@@ -1,6 +1,6 @@
 class Paramaterize {
 	constructor() {
-		this.scene = 2;
+		this.scene = 1;
 		this.minR = 33;
 		this.maxR = 66;
 		this.xNoiseMax = 2;
@@ -8,20 +8,21 @@ class Paramaterize {
 		this.zNoiseOffset = 0.01;
 		this.phaseOffset = 0.001;
 		this.inc = 26;
-		this.blobR = 100
+		this.blobR = 100;
 		this.showPoseNet = false;
 		this.showExpanded = false;
-		this.showHull = false
-		this.showPreview = false
-		this.showAnchors = false
-		this.showAbstract = true
-		this.showAbstractFill = false
-		this.showCurves = true
-		this.isHeadOnly = true
-		this.numAnchors = 20
+		this.showHull = false;
+		this.showPreview = false;
+		this.showAnchors = false;
+		this.showAbstract = true;
+		this.showAbstractFill = false;
+		this.showCurves = true;
+		this.isHeadOnly = true;
+		this.numAnchors = 20;
 	}
 }
 
+let recorded = false;
 let canvas, status;
 let webcamPreview;
 
@@ -29,7 +30,7 @@ let recording = false;
 
 let posenet;
 let poses = [];
-let posesHistory = []
+let posesHistory = [];
 let options = { maxPoseDetections: 2 };
 
 let phase = 0.0;
@@ -68,15 +69,16 @@ function setup() {
 	gui.add(par, 'inc');
 	gui.add(par, 'blobR');
 	gui.add(par, 'showPoseNet');
-	gui.add(par, 'showExpanded')
-	gui.add(par, 'showHull')
-	gui.add(par, 'showPreview')
-	gui.add(par, 'showAnchors')
-	gui.add(par, 'showAbstract')
-	gui.add(par, 'showAbstractFill')
-	gui.add(par, 'showCurves')
-	gui.add(par, 'isHeadOnly')
-	gui.add(par, 'numAnchors')
+	gui.add(par, 'showExpanded');
+	gui.add(par, 'showHull');
+	gui.add(par, 'showPreview');
+	gui.add(par, 'showAnchors');
+	gui.add(par, 'showAbstract');
+	gui.add(par, 'showAbstractFill');
+	gui.add(par, 'showCurves');
+	gui.add(par, 'isHeadOnly');
+	gui.add(par, 'numAnchors');
+	gui.close()
 
 	mgr = new SceneManager();
 
@@ -88,10 +90,11 @@ function setup() {
 	select('#begin-button').mousePressed(() => {
 		mgr.showScene(scene02);
 	});
-select('#record-button-02').mousePressed(()=>{
-	recording = true;
-	select('#record-button-02').addClass('rec')
-}) 
+	select('#record-button-02').mousePressed(() => {
+		recording = true;
+		console.log('recording started')
+		select('#record-button-02').addClass('rec');
+	});
 
 	startWebcam(false, 467, 350);
 	gotoScene();
@@ -212,114 +215,123 @@ function scene02() {
 		}
 	};
 
-
 	this.draw = function () {
-	background(255);
-	translate(width, 0);
-	scale(-1, 1);
-	// if (sample && showPreview) {
-	// 	image(sample, 0, 0);
-	// }
+		background(255);
+		translate(width, 0);
+		scale(-1, 1);
+		// if (sample && showPreview) {
+		// 	image(sample, 0, 0);
+		// }
 
-	if (recording) {
-		posesHistory.push(poses[0].pose)
-		if (posesHistory.length > 100) {
-			recording = false
-			console.log(posesHistory)
-			select('#record-button-02').removeClass('rec')
-		}
-	}
-
-
-	if (poses[0]) {
-		// status.html('framerate: ' + frameRate());
-
-		// Convert PoseNet points to P5 points
-		points = Anchor.makeVectorArray(poses[0].pose.keypoints);
-
-		// Mark PoseNet points with a Red dot
-		if (par.showPoseNet) {
-			stroke('red');
-			strokeWeight(10);
-			points.forEach(p => {
-				point(p);
-			});
-		}
-
-		// Expand PoseNet points
-		if (par.isHeadOnly) {
-			expandedPoints = Anchor.expandHeadPoints(points, par.blobR);
-		} else {
-			expandedPoints = Anchor.expandPoints(points, par.blobR);
-		}
-
-		// console.table(expandedPoints)
-
-		// Mark expanded points with Green dots
-		if (par.showExpanded) {
-			stroke('green');
-			strokeWeight(5);
-			beginShape();
-			expandedPoints.forEach(p => {
-				point(p.x, p.y);
-			});
-			endShape(CLOSE);
-		}
-
-		// Find convex hull for all points
-		hullPoints = Anchor.convexHull(expandedPoints);
-
-		// Outline hull points with a blue line
-		if (par.showHull) {
-			// console.table(hullPoints)
-			noFill();
-			stroke('blue');
-			strokeWeight(0.5);
-			beginShape();
-			hullPoints.forEach(p => {
-				vertex(p.x, p.y);
-			});
-			endShape(CLOSE);
-		}
-
-		// Set up anchors to follow hull outline
-		anchors.forEach((a, i) => {
-			if (hullPoints[i]) {
-				a.setTarget(hullPoints[i]);
-			} else {
-				a.setTarget(hullPoints[0]);
+		if (recording) {
+			posesHistory.push(poses[0].pose.keypoints);
+			if (posesHistory.length > 1000) {
+				console.log('recording ended')
+				console.log(posesHistory);
+				recording = false;
+				recorded = true;
+				select('#record-button-02').removeClass('rec');
 			}
-			a.behaviors();
-			a.update();
-			if (par.showAnchors) a.show();
-		});
+		}
 
-		// Draw abstract shape
-		if (par.showAbstract) {
-			if (par.showAbstractFill) {
-				stroke(0);
+		if (recorded) {
+			let cp = frameCount % posesHistory.length;
+			console.log(cp)
+			let np = posesHistory[cp];
+			console.log(np);
+			point(np[0].position.x, np[0].position.y);
+			point(np[1].position.x, np[1].position.y);
+			point(np[2].position.x, np[2].position.y);
+			if (cp === posesHistory.length-1) {
+				recorded = false;
+			}
+		}
+
+		if (poses[0] && !recorded) {
+			// status.html('framerate: ' + frameRate());
+
+			// Convert PoseNet points to P5 points
+			points = Anchor.makeVectorArray(poses[0].pose.keypoints);
+
+			// Mark PoseNet points with a Red dot
+			if (par.showPoseNet) {
+				stroke('red');
 				strokeWeight(10);
-				fill(255);
-			} else {
-				stroke(0);
-				strokeWeight(8);
-				noFill();
+				points.forEach(p => {
+					point(p);
+				});
 			}
-			beginShape();
-			anchors.forEach(a => {
-				if (par.showCurves) {
-					curveVertex(a.pos.x, a.pos.y);
+
+			// Expand PoseNet points
+			if (par.isHeadOnly) {
+				expandedPoints = Anchor.expandHeadPoints(points, par.blobR);
+			} else {
+				expandedPoints = Anchor.expandPoints(points, par.blobR);
+			}
+
+			// console.table(expandedPoints)
+
+			// Mark expanded points with Green dots
+			if (par.showExpanded) {
+				stroke('green');
+				strokeWeight(5);
+				beginShape();
+				expandedPoints.forEach(p => {
+					point(p.x, p.y);
+				});
+				endShape(CLOSE);
+			}
+
+			// Find convex hull for all points
+			hullPoints = Anchor.convexHull(expandedPoints);
+
+			// Outline hull points with a blue line
+			if (par.showHull) {
+				// console.table(hullPoints)
+				noFill();
+				stroke('blue');
+				strokeWeight(0.5);
+				beginShape();
+				hullPoints.forEach(p => {
+					vertex(p.x, p.y);
+				});
+				endShape(CLOSE);
+			}
+
+			// Set up anchors to follow hull outline
+			anchors.forEach((a, i) => {
+				if (hullPoints[i]) {
+					a.setTarget(hullPoints[i]);
 				} else {
-					vertex(a.pos.x, a.pos.y);
+					a.setTarget(hullPoints[0]);
 				}
+				a.behaviors();
+				a.update();
+				if (par.showAnchors) a.show();
 			});
-			endShape(CLOSE);
+
+			// Draw abstract shape
+			if (par.showAbstract) {
+				if (par.showAbstractFill) {
+					stroke(0);
+					strokeWeight(10);
+					fill(255);
+				} else {
+					stroke(0);
+					strokeWeight(8);
+					noFill();
+				}
+				beginShape();
+				anchors.forEach(a => {
+					if (par.showCurves) {
+						curveVertex(a.pos.x, a.pos.y);
+					} else {
+						vertex(a.pos.x, a.pos.y);
+					}
+				});
+				endShape(CLOSE);
+			}
 		}
-
-	}
-
 	};
-	this.counter = function () {
-
-	}
+	this.counter = function () {};
 }

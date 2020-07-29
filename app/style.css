@@ -157,6 +157,13 @@ button:hover,
 	text-decoration: none;
 }
 
+.btn-primary {
+	background-color: var(--primary);
+	color: var(--dark);
+	border-color: var(--primary)
+
+}
+
 /* ==Utilities  ************************************************* */
 /* ************************************************************** */
 .rec {
