@@ -98,7 +98,7 @@ function setup() {
 
 	status = select('#status');
 
-	loadSample();
+	// loadSample();
 }
 
 function draw() {
