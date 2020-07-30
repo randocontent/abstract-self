@@ -7,8 +7,8 @@ class Paramaters {
 		this.noiseStep = 0.001;
 		this.autoRadius = true;
 		this.autoRadiusRatio = 1.8;
-		this.noseRadius = 100;
-		this.noseAngles = 10;
+		this.radius = 100;
+		this.angles = 10;
 		this.leftHandRadius = 100;
 		this.leftHandAngles = 10;
 		this.rightHandRadius = 100;
@@ -35,8 +35,8 @@ gui.add(par, 'showExpanded');
 gui.add(par, 'noiseStep');
 gui.add(par, 'autoRadius');
 gui.add(par, 'autoRadiusRatio');
-gui.add(par, 'noseRadius');
-gui.add(par, 'noseAngles');
+gui.add(par, 'radius');
+gui.add(par, 'angles');
 gui.add(par, 'leftHandRadius');
 gui.add(par, 'rightHandRadius');
 gui.add(par, 'leftHandAngles');
@@ -51,19 +51,13 @@ let options = { maxPoseDetections: 2 };
 let eyeDistance;
 
 const videos = [
-	'../assets/body/video01.mp4',
 	'../assets/body/video02.mp4',
 	'../assets/body/video03.mp4',
-	'../assets/body/video05.mp4',
-	'../assets/body/video06.mp4',
 	'../assets/body/video08.mp4',
 	'../assets/body/video09.mp4',
 	'../assets/body/video10.mp4',
 	'../assets/body/video11.mp4',
-	'../assets/body/video12.mp4',
 	'../assets/body/video13.mp4',
-	'../assets/body/video15.mp4',
-	'../assets/body/video16.mp4',
 ];
 
 function setup() {
@@ -135,7 +129,7 @@ function expandAllPoints(pose) {
 	let xoff = 0.0
 	let yoff = 0.0
 	pose.forEach(p => {
-		for (let angle = 0; angle < 360; angle += par.noseAngles) {
+		for (let angle = 0; angle < 360; angle += par.angles) {
 			let x, y;
 			let n = noise(xoff,yoff)
 			// console.log(n)
@@ -144,8 +138,8 @@ function expandAllPoints(pose) {
 				x = p.position.x + n + radius * sin(angle);
 				y = p.position.y + n + radius * cos(angle);
 			} else {
-				x = p.position.x + n + par.noseRadius * sin(angle);
-				y = p.position.y + n + par.noseRadius * cos(angle);
+				x = p.position.x + n + par.radius * sin(angle);
+				y = p.position.y + n + par.radius * cos(angle);
 			}
 			let newP = [x, y];
 			newArr.push(newP);
@@ -192,15 +186,15 @@ function expandPoints(pose) {
 	let part;
 	// Expand nose
 	part = { x: pose[0].position.x, y: pose[0].position.y };
-	for (let angle = 0; angle < 360; angle += par.noseAngles) {
+	for (let angle = 0; angle < 360; angle += par.angles) {
 		let x, y;
 		if (par.autoRadius) {
 			let radius = eyeDistance * par.autoRadiusRatio;
 			x = part.x + radius * sin(angle);
 			y = part.y + radius * cos(angle);
 		} else {
-			x = part.x + par.noseRadius * sin(angle);
-			y = part.y + par.noseRadius * cos(angle);
+			x = part.x + par.radius * sin(angle);
+			y = part.y + par.radius * cos(angle);
 		}
 		let newP = [x, y];
 		newArr.push(newP);
