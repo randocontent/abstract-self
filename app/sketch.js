@@ -41,7 +41,7 @@ let zoff = 0.0;
 
 let mgr, g;
 
-let numAnchors = 20;
+let numAnchors = 50;
 let points = [];
 let anchors = [];
 let zpoints = [];
@@ -52,6 +52,7 @@ function setup() {
 	canvas = createCanvas(350, 350);
 	canvas.parent('#canvas-01');
 	background(255);
+	// hull()
 
 	par = new Paramaterize();
 
@@ -149,9 +150,14 @@ function retargetAnchors(targets) {
 		// Should add something like anchors.makeFit(n)
 		// with n being the number of anchors we need
 		if (targets[i]) {
-			a.setTarget(targets[i]);
+			// console.log(targets[i])
+			// console.log(targets[i])
+			// TODO: convert this array back to vectors closer to where we get it back from hull()
+			let v = createVector(targets[i][0],targets[i][1])
+			a.setTarget(v);
 		} else {
-			a.setTarget(targets[0]);
+			let v = createVector(targets[0][0],targets[0][1])
+			a.setTarget(v);
 		}
 		a.behaviors();
 		a.update();
@@ -186,6 +192,15 @@ function abstractShape() {
 		}
 	});
 	endShape(CLOSE);
+}
+
+function makePointSet(vArr) {
+	let set = [];
+	vArr.forEach(v => {
+		let pt = [v.x, v.y];
+		set.push(pt);
+	});
+	return set;
 }
 
 // =============================================================
@@ -299,11 +314,11 @@ function scene02() {
 			// point(np[1].position.x, np[1].position.y);
 			// point(np[2].position.x, np[2].position.y);
 
-						// Set up anchors to follow hull outline
-						retargetAnchors(np)
+			// Set up anchors to follow hull outline
+			retargetAnchors(np);
 
-						// Draw abstract shape
-						abstractShape();
+			// Draw abstract shape
+			abstractShape();
 
 			if (cp === posesHistory.length - 1) {
 				recorded = false;
@@ -345,8 +360,11 @@ function scene02() {
 				endShape(CLOSE);
 			}
 
+			// Prepare points (again?)
+			let pointSet = makePointSet(expandedPoints);
 			// Find convex hull for all points
-			hullPoints = Anchor.convexHull(expandedPoints);
+			hullPoints = hull(pointSet,1);
+			
 
 			// Store a "frame" in the recording as the position of hull points
 			if (recording) {
@@ -367,7 +385,7 @@ function scene02() {
 			}
 
 			// Set up anchors to follow hull outline
-			retargetAnchors(hullPoints)
+			retargetAnchors(hullPoints);
 
 			// Draw abstract shape
 			if (par.showAbstract) abstractShape();
