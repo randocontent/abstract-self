@@ -22,6 +22,8 @@ class Paramaterize {
 	}
 }
 
+let sceneReady = false;
+
 let recorded = false;
 let canvas, status;
 let webcamPreview;
@@ -53,7 +55,9 @@ function setup() {
 
 	par = new Paramaterize();
 
-	let gui = new dat.GUI();
+	let gui = new dat.GUI({ autoPlace: false });
+	let customContainer = document.getElementById('dat-gui-container');
+	customContainer.appendChild(gui.domElement);
 
 	let sceneGui = gui.add(par, 'scene');
 	sceneGui.onFinishChange(() => {
@@ -78,7 +82,7 @@ function setup() {
 	gui.add(par, 'showCurves');
 	gui.add(par, 'isHeadOnly');
 	gui.add(par, 'numAnchors');
-	gui.close()
+	gui.close();
 
 	mgr = new SceneManager();
 
@@ -92,7 +96,7 @@ function setup() {
 	});
 	select('#record-button-02').mousePressed(() => {
 		recording = true;
-		console.log('recording started')
+		console.log('recording started');
 		select('#record-button-02').addClass('rec');
 	});
 
@@ -131,11 +135,57 @@ function webcamReady() {
 	posenet = ml5.poseNet(sample, options, modelReady);
 	posenet.on('pose', function (results) {
 		poses = results;
+		sceneReady = true;
 	});
 }
 
 function modelReady() {
 	console.log('modelReady');
+}
+
+function retargetAnchors(targets) {
+	anchors.forEach((a, i) => {
+		// TODO: really need to add/remove anchors dynamically here
+		// Should add something like anchors.makeFit(n)
+		// with n being the number of anchors we need
+		if (targets[i]) {
+			a.setTarget(targets[i]);
+		} else {
+			a.setTarget(targets[0]);
+		}
+		a.behaviors();
+		a.update();
+		if (par.showAnchors) a.show();
+	});
+}
+
+function refreshAnchors() {
+	anchors.forEach(a => {
+		a.behaviors();
+		a.update();
+		if (par.showAnchors) a.show();
+	});
+}
+
+function abstractShape() {
+	if (par.showAbstractFill) {
+		stroke(0);
+		strokeWeight(10);
+		fill(255);
+	} else {
+		stroke(0);
+		strokeWeight(8);
+		noFill();
+	}
+	beginShape();
+	anchors.forEach(a => {
+		if (par.showCurves) {
+			curveVertex(a.pos.x, a.pos.y);
+		} else {
+			vertex(a.pos.x, a.pos.y);
+		}
+	});
+	endShape(CLOSE);
 }
 
 // =============================================================
@@ -157,34 +207,36 @@ function scene01() {
 	this.setup = function () {};
 
 	this.draw = function () {
-		background(255);
-		if (poses[0]) {
-			let p = createVector(poses[0].pose.nose.x, poses[0].pose.nose.y);
-			push();
-			let pad = constrain(par.maxR * 2, 0, width / 3);
-			let fx = map(p.x, 0, width, width, 0);
-			let cx = constrain(fx, pad, width - pad);
-			let cy = constrain(p.y, pad, height - pad);
+		if (sceneReady) {
+			background(255);
+			if (poses[0]) {
+				let p = createVector(poses[0].pose.nose.x, poses[0].pose.nose.y);
+				push();
+				let pad = constrain(par.maxR * 2, 0, width / 3);
+				let fx = map(p.x, 0, width, width, 0);
+				let cx = constrain(fx, pad, width - pad);
+				let cy = constrain(p.y, pad, height - pad);
 
-			translate(cx, cy);
-			stroke(0);
-			strokeWeight(2);
-			noFill();
-			beginShape();
-			for (let a = 0; a < TWO_PI; a += radians(par.inc)) {
-				let xoff = map(cos(a + phase), -1, 1, 0, par.xNoiseMax);
-				let yoff = map(sin(a + phase), -1, 1, 0, par.yNoiseMax);
-				let r = map(noise(xoff, yoff, zoff), 0, 1, par.minR, par.maxR);
-				let x = r * cos(a);
-				x = x;
-				let y = r * sin(a);
-				curveVertex(x, y);
+				translate(cx, cy);
+				stroke(0);
+				strokeWeight(2);
+				noFill();
+				beginShape();
+				for (let a = 0; a < TWO_PI; a += radians(par.inc)) {
+					let xoff = map(cos(a + phase), -1, 1, 0, par.xNoiseMax);
+					let yoff = map(sin(a + phase), -1, 1, 0, par.yNoiseMax);
+					let r = map(noise(xoff, yoff, zoff), 0, 1, par.minR, par.maxR);
+					let x = r * cos(a);
+					x = x;
+					let y = r * sin(a);
+					curveVertex(x, y);
+				}
+
+				endShape(CLOSE);
+				phase += par.phaseOffset;
+				zoff += par.zNoiseOffset;
+				pop();
 			}
-
-			endShape(CLOSE);
-			phase += par.phaseOffset;
-			zoff += par.zNoiseOffset;
-			pop();
 		}
 	};
 }
@@ -223,10 +275,10 @@ function scene02() {
 		// 	image(sample, 0, 0);
 		// }
 
+		// Check if the recording is over
 		if (recording) {
-			posesHistory.push(poses[0].pose.keypoints);
-			if (posesHistory.length > 1000) {
-				console.log('recording ended')
+			if (posesHistory.length > 500) {
+				console.log('recording ended');
 				console.log(posesHistory);
 				recording = false;
 				recorded = true;
@@ -235,14 +287,25 @@ function scene02() {
 		}
 
 		if (recorded) {
+			console.log('playback starting');
+
+			// Use the current frame counter as an iterator for looping through the recorded array
 			let cp = frameCount % posesHistory.length;
-			console.log(cp)
 			let np = posesHistory[cp];
-			console.log(np);
-			point(np[0].position.x, np[0].position.y);
-			point(np[1].position.x, np[1].position.y);
-			point(np[2].position.x, np[2].position.y);
-			if (cp === posesHistory.length-1) {
+			// console.log('current index in recording: ', cp);
+			// console.log('point in current index: ', np);
+			// Just mark a point at the first three values, which are the eyes and nose
+			// point(np[0].position.x, np[0].position.y);
+			// point(np[1].position.x, np[1].position.y);
+			// point(np[2].position.x, np[2].position.y);
+
+						// Set up anchors to follow hull outline
+						retargetAnchors(np)
+
+						// Draw abstract shape
+						abstractShape();
+
+			if (cp === posesHistory.length - 1) {
 				recorded = false;
 			}
 		}
@@ -285,6 +348,11 @@ function scene02() {
 			// Find convex hull for all points
 			hullPoints = Anchor.convexHull(expandedPoints);
 
+			// Store a "frame" in the recording as the position of hull points
+			if (recording) {
+				posesHistory.push(hullPoints);
+			}
+
 			// Outline hull points with a blue line
 			if (par.showHull) {
 				// console.table(hullPoints)
@@ -299,38 +367,10 @@ function scene02() {
 			}
 
 			// Set up anchors to follow hull outline
-			anchors.forEach((a, i) => {
-				if (hullPoints[i]) {
-					a.setTarget(hullPoints[i]);
-				} else {
-					a.setTarget(hullPoints[0]);
-				}
-				a.behaviors();
-				a.update();
-				if (par.showAnchors) a.show();
-			});
+			retargetAnchors(hullPoints)
 
 			// Draw abstract shape
-			if (par.showAbstract) {
-				if (par.showAbstractFill) {
-					stroke(0);
-					strokeWeight(10);
-					fill(255);
-				} else {
-					stroke(0);
-					strokeWeight(8);
-					noFill();
-				}
-				beginShape();
-				anchors.forEach(a => {
-					if (par.showCurves) {
-						curveVertex(a.pos.x, a.pos.y);
-					} else {
-						vertex(a.pos.x, a.pos.y);
-					}
-				});
-				endShape(CLOSE);
-			}
+			if (par.showAbstract) abstractShape();
 		}
 	};
 	this.counter = function () {};

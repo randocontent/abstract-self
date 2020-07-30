@@ -102,6 +102,13 @@ main {
 	padding: 0;
 }
 
+#dat-gui-container {
+	padding: 1rem;
+}
+.dg.main {
+	/* width: 345px !important; */
+}
+
 /* ==P5 Helpers ************************************************* */
 /* ************************************************************** */
 
@@ -196,9 +203,13 @@ strong {
 	text-align: center;
 }
 
-/* ==  *************************************************** */
+/* ==Misc  *************************************************** */
 /* ************************************************************** */
 
+/* Places the dat.GUI on the left */
+.dg.a {
+	/* float: left; */
+}
 #test-controls {
 	display: grid;
 	grid-template-columns: repeat(3, 1fr);
