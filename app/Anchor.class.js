@@ -20,18 +20,16 @@ class Anchor {
 		noStroke();
 		fill('orange');
 		ellipse(this.pos.x, this.pos.y, this.r);
+		text(this.part,this.pos.x,this.pos.y)
 	}
 
 	addVertex() {
 		curveVertex(this.pos.x, this.pos.y);
 	}
 
-	setTarget(v,x,y) {
-		if (v) {
-			this.target = v;
-		} else {
-			this.target = createVector(x,y)
-		}
+	setTarget(x,y,part) {
+		this.target = createVector(x,y)
+		this.part = part
 	}
 
 	// Runs behaviors

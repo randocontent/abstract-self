@@ -1,4 +1,3 @@
-
 const NOSE = 0;
 const LEFTEYE = 1;
 const RIGHTEYE = 2;
@@ -37,8 +36,11 @@ class Paramaters {
 		this.startWebcam = function () {
 			startWebcam();
 		};
-		this.changeVideo = function () {
+		this.loadSampleVideo = function () {
 			reloadVideo();
+		};
+		this.pause_play = function () {
+			togglePlayback();
 		};
 		this.stop = function () {
 			stopEverything();
@@ -59,24 +61,23 @@ gui.add(par, 'autoRadius');
 gui.add(par, 'autoRadiusRatio');
 gui.add(par, 'radius');
 gui.add(par, 'angles');
-// gui.add(par, 'leftHandRadius');
-// gui.add(par, 'rightHandRadius');
-// gui.add(par, 'leftHandAngles');
-// gui.add(par, 'rightHandAngles');
 gui.add(par, 'slowMotion', 0.1, 1, 0.1);
 gui.add(par, 'startWebcam');
-gui.add(par, 'changeVideo');
+gui.add(par, 'loadSampleVideo');
+gui.add(par, 'pause_play');
 gui.add(par, 'stop');
 
+let sample;
 let posenet;
 let poses = [];
 let options = { maxPoseDetections: 2 };
+let playing = false;
 
 let anchors = [];
 
-let eyeDistance;
-let shoulderDistance;
-let waistDistance;
+let eyeDist;
+let shoulderDist;
+let hipDist;
 let eyeShoulderRatio;
 let eyeWaistRatio;
 let shoulderWaistRatio;
@@ -121,7 +122,7 @@ function setup() {
 	}
 
 	// startWebcam()
-	loadNewVideo();
+	// loadNewVideo();
 }
 
 function draw() {
@@ -143,25 +144,23 @@ function draw() {
 			// Set anchors to track pose
 			anchors.forEach((a, i) => {
 				if (pose[i]) {
-					a.setTarget(null, pose[i].position.x, pose[i].position.y);
+					a.setTarget(pose[i].position.x, pose[i].position.y, pose[i].part);
 				} else {
-					a.setTarget(null, pose[0].position.x, pose[0].position.y);
+					a.setTarget(pose[0].position.x, pose[0].position.y, pose[0].part);
 				}
 				a.behaviors();
 				a.update();
 				if (par.showAnchors) a.show();
 			});
 
-			eyeDistance = floor(checkPoseDistance(pose, LEFTEYE, RIGHTEYE));
-			select('#eye-distance').html('Eye distance: ' + eyeDistance);
-			shoulderDistance = floor(
-				checkPoseDistance(pose, LEFTSHOULDER, RIGHTSHOULDER)
-			);
-			select('#shoulder-distance').html(
-				'Shoulder distance: ' + shoulderDistance
-			);
-			waistDistance = floor(checkPoseDistance(pose, LEFTHIP, RIGHTHIP));
-			select('#waist-distance').html('Waist distance: ' + waistDistance);
+			eyeDist = floor(poseDist(pose, LEFTEYE, RIGHTEYE));
+			select('#eye-distance').html('Eye distance: ' + eyeDist);
+
+			shoulderDist = floor(poseDist(pose, LEFTSHOULDER, RIGHTSHOULDER));
+			select('#shoulder-distance').html('Shoulder distance: ' + shoulderDist);
+
+			hipDist = floor(poseDist(pose, LEFTHIP, RIGHTHIP));
+			select('#hip-distance').html('Hip distance: ' + hipDist);
 
 			// Draw pose for reference
 			if (par.showPose) {
@@ -225,14 +224,14 @@ function expandAllPoints(pose) {
 				// } else {
 				// 	radius = eyeDistance * par.autoRadiusRatio;
 				// }
-					radius = eyeDistance * par.autoRadiusRatio;
+				radius = eyeDist * par.autoRadiusRatio;
 			} else {
 				// if (p.part === 'nose') {
 				// 	radius = par.radius * 3;
 				// } else {
 				// 	radius = par.radius;
 				// }
-					radius = par.radius;
+				radius = par.radius;
 			}
 
 			x = p.pos.x + n + radius * sin(angle);
@@ -252,7 +251,7 @@ function expandAllPoints(pose) {
 }
 
 // Gets a posenet pose and returns distance between two points
-function checkPoseDistance(pose, a, b) {
+function poseDist(pose, a, b) {
 	let left = createVector(pose[a].position.x, pose[a].position.y);
 	let right = createVector(pose[b].position.x, pose[b].position.y);
 	return p5.Vector.dist(left, right);
@@ -285,26 +284,43 @@ function startWebcam(autoSize, sw, sh) {
 	}
 	// TODO - too ugly
 	// sample.parent('#webcam-monitor-0' + par.scene);
+	playing = true;
 }
 
-function loadNewVideo() {
+function videoSample() {
 	let video = random(videos);
 	console.log('getting ' + video);
 	sample = createVideo(video, sampleReady);
 	sample.volume(0);
 	sample.loop();
 	sample.hide();
+	playing = true;
 }
 
 function reloadVideo() {
-	stopEverything();
-	loadNewVideo();
+	if (playing) {
+		stopEverything();
+		videoSample();
+	} else {
+		videoSample();
+	}
+}
+
+function togglePlayback() {
+	if (playing) {
+		sample.pause()
+		playing = false;
+	} else {
+		sample.loop()
+		playing = true;
+	}
 }
 
 function stopEverything() {
 	posenet.removeAllListeners();
 	poses[0] = null;
 	sample.stop();
+	playing = false;
 }
 
 function sampleReady() {
