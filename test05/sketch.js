@@ -1,18 +1,37 @@
+const NOSE = 0;
+const LEFTEYE = 1;
+const RIGHTEYE = 2;
+const LEFTEAR = 3;
+const RIGHTEAR = 4;
+const LEFTSHOULDER = 5;
+const RIGHTSHOULDER = 6;
+const LEFTELBOW = 7;
+const RIGHTELBOW = 8;
+const LEFTWRIST = 9;
+const RIGHTWRIST = 10;
+const LEFTHIP = 11;
+const RIGHTHIP = 12;
+const LEFTKNEE = 13;
+const RIGHTKNEE = 14;
+const LEFTANKLE = 15;
+const RIGHTANKLE = 16;
+
 class Paramaters {
 	constructor() {
-		this.concave = 150;
+		this.concave = 100;
 		this.showPreview = true;
 		this.showPose = false;
 		this.showExpanded = false;
 		this.noiseStep = 0.001;
 		this.autoRadius = true;
-		this.autoRadiusRatio = 1.8;
-		this.radius = 100;
-		this.angles = 10;
+		this.autoRadiusRatio = 1.6;
+		this.radius = 50;
+		this.angles = 37;
 		this.leftHandRadius = 100;
 		this.leftHandAngles = 10;
 		this.rightHandRadius = 100;
 		this.rightHandAngles = 10;
+		this.slowMotion = 1;
 		this.startWebcam = function () {
 			startWebcam();
 		};
@@ -37,10 +56,11 @@ gui.add(par, 'autoRadius');
 gui.add(par, 'autoRadiusRatio');
 gui.add(par, 'radius');
 gui.add(par, 'angles');
-gui.add(par, 'leftHandRadius');
-gui.add(par, 'rightHandRadius');
-gui.add(par, 'leftHandAngles');
-gui.add(par, 'rightHandAngles');
+// gui.add(par, 'leftHandRadius');
+// gui.add(par, 'rightHandRadius');
+// gui.add(par, 'leftHandAngles');
+// gui.add(par, 'rightHandAngles');
+gui.add(par, 'slowMotion', 0.1, 1, 0.1);
 gui.add(par, 'startWebcam');
 gui.add(par, 'changeVideo');
 gui.add(par, 'stop');
@@ -48,26 +68,55 @@ gui.add(par, 'stop');
 let posenet;
 let poses = [];
 let options = { maxPoseDetections: 2 };
+
 let eyeDistance;
+let shoulderDistance;
+let waistDistance;
+let eyeShoulderRatio;
+let eyeWaistRatio;
+let shoulderWaistRatio;
+
+let zoff = 0.0;
 
 const videos = [
-	'../assets/body/video02.mp4',
-	'../assets/body/video03.mp4',
-	'../assets/body/video08.mp4',
-	'../assets/body/video09.mp4',
+	'../assets/body/video27.mp4',
 	'../assets/body/video10.mp4',
 	'../assets/body/video11.mp4',
+	'../assets/body/video12.mp4',
 	'../assets/body/video13.mp4',
+	'../assets/body/video14.mp4',
+	'../assets/body/video15.mp4',
+	'../assets/body/video16.mp4',
+	'../assets/body/video17.mp4',
+	'../assets/body/video09.mp4',
+	'../assets/body/video18.mp4',
+	'../assets/body/video19.mp4',
+	'../assets/body/video20.mp4',
+	'../assets/body/video21.mp4',
+	'../assets/body/video22.mp4',
+	'../assets/body/video23.mp4',
+	'../assets/body/video24.mp4',
+	'../assets/body/video25.mp4',
+	'../assets/body/video26.mp4',
+	'../assets/body/video28.mp4',
+	'../assets/body/video29.mp4',
+	'../assets/body/video30.mp4',
+	'../assets/body/video31.mp4',
 ];
 
 function setup() {
-	createCanvas(720, 500);
+	let canvas = createCanvas(910, 500);
+	canvas.parent('#canvas-container');
 	// startWebcam()
 	loadNewVideo();
 }
 
 function draw() {
 	background(255);
+
+	if (sample) {
+		sample.speed(par.slowMotion);
+	}
 
 	if (sample && par.showPreview) {
 		image(sample, 0, 0);
@@ -78,7 +127,12 @@ function draw() {
 			//  will look like [{part:'nose',position: {x: 0,y:0},score:.99}]
 			let pose = poses[0].pose.keypoints;
 
-			eyeDistance = checkEyeDistance(pose);
+			eyeDistance = floor(checkPoseDistance(pose, LEFTEYE,RIGHTEYE))
+			select('#eye-distance').html('Eye distance: ' + eyeDistance);
+			shoulderDistance = floor(checkPoseDistance(pose,LEFTSHOULDER,RIGHTSHOULDER))
+			select('#shoulder-distance').html('Shoulder distance: ' + shoulderDistance)
+			waistDistance = floor(checkPoseDistance(pose,LEFTHIP,RIGHTHIP))
+			select('#waist-distance').html('Waist distance: '+ waistDistance)
 
 			// Draw pose for reference
 			if (par.showPose) {
@@ -124,121 +178,71 @@ function draw() {
 	}
 }
 
+// Takes posenet poses and returns 2D array of points for hull()
+// Pose will look like [{part:'nose',position: {x: 0,y:0},score:.99}]
 function expandAllPoints(pose) {
 	let newArr = [];
-	let xoff = 0.0
-	let yoff = 0.0
+	let xoff = 0.0;
+	let yoff = 0.0;
 	pose.forEach(p => {
 		for (let angle = 0; angle < 360; angle += par.angles) {
 			let x, y;
-			let n = noise(xoff,yoff)
-			// console.log(n)
+			let n = noise(xoff, yoff);
+
+			let radius;
 			if (par.autoRadius) {
-				let radius = eyeDistance * par.autoRadiusRatio;
-				x = p.position.x + n + radius * sin(angle);
-				y = p.position.y + n + radius * cos(angle);
+				if (p.part === 'nose') {
+					radius = eyeDistance * par.autoRadiusRatio * 3;
+				} else {
+					radius = eyeDistance * par.autoRadiusRatio;
+				}
 			} else {
-				x = p.position.x + n + par.radius * sin(angle);
-				y = p.position.y + n + par.radius * cos(angle);
+				if (p.part === 'nose') {
+					radius = par.radius * 3;
+				} else {
+					radius = par.radius;
+				}
 			}
+
+			x = p.position.x + n + radius * sin(angle);
+			y = p.position.y + n + radius * cos(angle);
+
+			x = p.position.x + n + radius * sin(angle);
+			y = p.position.y + n + radius * cos(angle);
+
 			let newP = [x, y];
 			newArr.push(newP);
-			xoff += par.noiseStep
-			yoff += par.noiseStep
-		
+			xoff += par.noiseStep;
+			yoff += par.noiseStep;
 		}
 	});
 
 	return newArr;
 }
 
-// Takes posenet poses and returns 2D array of points for hull()
-function expandPoints(pose) {
-	// Pose will look like [{part:'nose',position: {x: 0,y:0},score:.99}]
-	let newArr = [];
-
-	// First add all points
-	pose.forEach(p => {
-		let newP = [p.position.x, p.position.y];
-		newArr.push(newP);
-	});
-
-	/**
-	 0	nose
-	 1	leftEye
-	 2	rightEye
-	 3	leftEar
-	 4	rightEar
-	 5	leftShoulder
-	 6	rightShoulder
-	 7	leftElbow
-	 8	rightElbow
-	 9	leftWrist
-	 10	rightWrist
-	 11	leftHip
-	 12	rightHip
-	 13	leftKnee
-	 14	rightKnee
-	 15	leftAnkle
-	 16	rightAnkle
-	 */
-
-	let part;
-	// Expand nose
-	part = { x: pose[0].position.x, y: pose[0].position.y };
-	for (let angle = 0; angle < 360; angle += par.angles) {
-		let x, y;
-		if (par.autoRadius) {
-			let radius = eyeDistance * par.autoRadiusRatio;
-			x = part.x + radius * sin(angle);
-			y = part.y + radius * cos(angle);
-		} else {
-			x = part.x + par.radius * sin(angle);
-			y = part.y + par.radius * cos(angle);
-		}
-		let newP = [x, y];
-		newArr.push(newP);
-	}
-
-	// Expand left hand
-	part = { x: pose[9].position.x, y: pose[9].position.y };
-	for (let angle = 0; angle < 360; angle += par.leftHandAngles) {
-		if (par.autoRadius) {
-			let radius = eyeDistance * par.autoRadiusRatio * 0.5;
-			x = part.x + radius * sin(angle);
-			y = part.y + radius * cos(angle);
-		} else {
-			x = part.x + par.leftHandRadius * sin(angle);
-			y = part.y + par.leftHandRadius * cos(angle);
-		}
-		let newP = [x, y];
-		newArr.push(newP);
-	}
-
-	// Expand right hand
-	part = { x: pose[10].position.x, y: pose[10].position.y };
-	for (let angle = 0; angle < 360; angle += par.rightHandAngles) {
-		if (par.autoRadius) {
-			let radius = eyeDistance * par.autoRadiusRatio * 0.75;
-			x = part.x + radius * sin(angle);
-			y = part.y + radius * cos(angle);
-		} else {
-			x = part.x + par.rightHandRadius * sin(angle);
-			y = part.y + par.rightHandRadius * cos(angle);
-		}
-		let newP = [x, y];
-		newArr.push(newP);
-	}
-	return newArr;
+// Gets a posenet pose and returns distance between two points
+function checkPoseDistance(pose, a, b) {
+	let left = createVector(pose[a].position.x, pose[a].position.y);
+	let right = createVector(pose[b].position.x, pose[b].position.y);
+	return p5.Vector.dist(left, right);
 }
 
 // Gets a posenet pose and returns eye distance
 function checkEyeDistance(pose) {
 	// Pose will look like [{part:'nose',position: {x: 0,y:0},score:.99}]
-	// 1	leftEye 2	rightEye
+	// 1	leftEye, 2	rightEye
 	let left = createVector(pose[1].position.x, pose[1].position.y);
 	let right = createVector(pose[2].position.x, pose[2].position.y);
 	return p5.Vector.dist(left, right);
+}
+
+// Gets a posenet pose and returns eye-should ratio
+function checkEyeShoulderRatio() {
+	// Pose will look like [{part:'nose',position: {x: 0,y:0},score:.99}]
+	//  1	leftEye
+	//  2	rightEye
+	//  5	leftShoulder
+	//  6	rightShoulder
 }
 
 function startWebcam(autoSize, sw, sh) {
