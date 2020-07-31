@@ -16,6 +16,26 @@ const RIGHTKNEE = 14;
 const LEFTANKLE = 15;
 const RIGHTANKLE = 16;
 
+const PARTS = [
+	'nose',
+	'leftEye',
+	'rightEye',
+	'leftEar',
+	'rightEar',
+	'leftShoulder',
+	'rightShoulder',
+	'leftElbow',
+	'rightElbow',
+	'leftWrist',
+	'rightWrist',
+	'leftHip',
+	'rightHip',
+	'leftKnee',
+	'rightKnee',
+	'leftAnkle',
+	'rightAnkle',
+];
+
 class Paramaters {
 	constructor() {
 		this.concave = 100;
@@ -24,15 +44,13 @@ class Paramaters {
 		this.showExpanded = false;
 		this.showAnchors = false;
 		this.noiseStep = 0.001;
-		this.autoRadius = false;
-		this.autoRadiusRatio = 1.6;
+		this.autoRadius = true;
+		this.autoRadiusRatio = 1.2;
 		this.radius = 33;
 		this.angles = 37;
-		this.leftHandRadius = 100;
-		this.leftHandAngles = 10;
-		this.rightHandRadius = 100;
-		this.rightHandAngles = 10;
-		this.slowMotion = 1;
+		this.topSpeed = 20;
+		this.maxAcc = 15;
+		this.sampleSpeed = .5;
 		this.startWebcam = function () {
 			startWebcam();
 		};
@@ -61,7 +79,15 @@ gui.add(par, 'autoRadius');
 gui.add(par, 'autoRadiusRatio');
 gui.add(par, 'radius');
 gui.add(par, 'angles');
-gui.add(par, 'slowMotion', 0.1, 1, 0.1);
+let speedControl = gui.add(par, 'topSpeed');
+speedControl.onFinishChange(() => {
+	updateAnchors();
+});
+let accControl = gui.add(par, 'maxAcc');
+accControl.onFinishChange(() => {
+	updateAnchors();
+});
+gui.add(par, 'sampleSpeed', 0.1, 2, 0.1);
 gui.add(par, 'startWebcam');
 gui.add(par, 'loadSampleVideo');
 gui.add(par, 'pause_play');
@@ -116,10 +142,12 @@ function setup() {
 	let canvas = createCanvas(910, 500);
 	canvas.parent('#canvas-container');
 
-	for (let i = 0; i < 17; i++) {
+	// Attach anchors to points
+	PARTS.forEach(p => {
 		let anchor = new Anchor(width / 2, height / 2);
+		anchor.part = p;
 		anchors.push(anchor);
-	}
+	});
 
 	// startWebcam()
 	// loadNewVideo();
@@ -129,7 +157,7 @@ function draw() {
 	background(255);
 
 	if (sample) {
-		sample.speed(par.slowMotion);
+		sample.speed(par.sampleSpeed);
 	}
 
 	if (sample && par.showPreview) {
@@ -138,29 +166,26 @@ function draw() {
 
 	if (poses) {
 		if (poses[0]) {
-			//  will look like [{part:'nose',position: {x: 0,y:0},score:.99}]
+			//  will look like [{part:'nose', position: {x: 0, y: 0}, score: 0.99}]
 			let pose = poses[0].pose.keypoints;
+			let poseParts = poses[0].pose;
 
 			// Set anchors to track pose
 			anchors.forEach((a, i) => {
-				if (pose[i]) {
-					a.setTarget(pose[i].position.x, pose[i].position.y, pose[i].part);
-				} else {
-					a.setTarget(pose[0].position.x, pose[0].position.y, pose[0].part);
-				}
+				a.setTarget(poseParts[a.part].x, poseParts[a.part].y);
 				a.behaviors();
 				a.update();
 				if (par.showAnchors) a.show();
 			});
 
 			eyeDist = floor(poseDist(pose, LEFTEYE, RIGHTEYE));
-			select('#eye-distance').html('Eye distance: ' + eyeDist);
+			select('#eye-dist').html('Eye distance: ' + eyeDist);
 
 			shoulderDist = floor(poseDist(pose, LEFTSHOULDER, RIGHTSHOULDER));
-			select('#shoulder-distance').html('Shoulder distance: ' + shoulderDist);
+			select('#shoulder-dist').html('Shoulder distance: ' + shoulderDist);
 
 			hipDist = floor(poseDist(pose, LEFTHIP, RIGHTHIP));
-			select('#hip-distance').html('Hip distance: ' + hipDist);
+			select('#hip-dist').html('Hip distance: ' + hipDist);
 
 			// Draw pose for reference
 			if (par.showPose) {
@@ -206,6 +231,13 @@ function draw() {
 	}
 }
 
+function updateAnchors() {
+	anchors.forEach(a => {
+		a.topSpeed = par.topSpeed;
+		a.maxForce = par.maxAcc;
+	});
+}
+
 // Takes posenet poses and returns 2D array of points for hull()
 // Pose will look like [{part:'nose',position: {x: 0,y:0},score:.99}]
 function expandAllPoints(pose) {
@@ -219,19 +251,17 @@ function expandAllPoints(pose) {
 
 			let radius;
 			if (par.autoRadius) {
-				// if (p.part === 'nose') {
-				// 	radius = eyeDistance * par.autoRadiusRatio * 3;
-				// } else {
-				// 	radius = eyeDistance * par.autoRadiusRatio;
-				// }
-				radius = eyeDist * par.autoRadiusRatio;
+				if (p.part === 'nose') {
+					radius = eyeDist * par.autoRadiusRatio * 2.5;
+				} else {
+					radius = eyeDist * par.autoRadiusRatio;
+				}
 			} else {
-				// if (p.part === 'nose') {
-				// 	radius = par.radius * 3;
-				// } else {
-				// 	radius = par.radius;
-				// }
-				radius = par.radius;
+				if (p.part === 'nose') {
+					radius = par.radius * 2.5;
+				} else {
+					radius = par.radius;
+				}
 			}
 
 			x = p.pos.x + n + radius * sin(angle);
@@ -258,7 +288,7 @@ function poseDist(pose, a, b) {
 }
 
 // Gets a posenet pose and returns eye distance
-function checkEyeDistance(pose) {
+function checkEyeDist(pose) {
 	// Pose will look like [{part:'nose',position: {x: 0,y:0},score:.99}]
 	// 1	leftEye, 2	rightEye
 	let left = createVector(pose[1].position.x, pose[1].position.y);
@@ -308,10 +338,10 @@ function reloadVideo() {
 
 function togglePlayback() {
 	if (playing) {
-		sample.pause()
+		sample.pause();
 		playing = false;
 	} else {
-		sample.loop()
+		sample.loop();
 		playing = true;
 	}
 }

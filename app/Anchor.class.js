@@ -5,8 +5,8 @@ class Anchor {
 		this.vel = p5.Vector.random2D();
 		this.acc = createVector();
 		this.r = 10;
-		this.topSpeed = 10;
-		this.maxForce = 2;
+		this.topSpeed = par.topSpeed;
+		this.maxForce = par.maxAcc;
 		this.part = ''
 	}
 
@@ -29,7 +29,7 @@ class Anchor {
 
 	setTarget(x,y,part) {
 		this.target = createVector(x,y)
-		this.part = part
+		// this.part = part
 	}
 
 	// Runs behaviors
