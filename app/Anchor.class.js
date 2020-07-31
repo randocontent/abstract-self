@@ -5,8 +5,9 @@ class Anchor {
 		this.vel = p5.Vector.random2D();
 		this.acc = createVector();
 		this.r = 10;
-		this.topSpeed = 8;
-		this.maxForce = 2.5;
+		this.topSpeed = 10;
+		this.maxForce = 2;
+		this.part = ''
 	}
 
 	update() {
@@ -25,8 +26,12 @@ class Anchor {
 		curveVertex(this.pos.x, this.pos.y);
 	}
 
-	setTarget(v) {
-		this.target = v;
+	setTarget(v,x,y) {
+		if (v) {
+			this.target = v;
+		} else {
+			this.target = createVector(x,y)
+		}
 	}
 
 	// Runs behaviors

@@ -1,3 +1,4 @@
+
 const NOSE = 0;
 const LEFTEYE = 1;
 const RIGHTEYE = 2;
@@ -22,10 +23,11 @@ class Paramaters {
 		this.showPreview = true;
 		this.showPose = false;
 		this.showExpanded = false;
+		this.showAnchors = false;
 		this.noiseStep = 0.001;
-		this.autoRadius = true;
+		this.autoRadius = false;
 		this.autoRadiusRatio = 1.6;
-		this.radius = 50;
+		this.radius = 33;
 		this.angles = 37;
 		this.leftHandRadius = 100;
 		this.leftHandAngles = 10;
@@ -51,6 +53,7 @@ gui.add(par, 'concave');
 gui.add(par, 'showPreview');
 gui.add(par, 'showPose');
 gui.add(par, 'showExpanded');
+gui.add(par, 'showAnchors');
 gui.add(par, 'noiseStep');
 gui.add(par, 'autoRadius');
 gui.add(par, 'autoRadiusRatio');
@@ -68,6 +71,8 @@ gui.add(par, 'stop');
 let posenet;
 let poses = [];
 let options = { maxPoseDetections: 2 };
+
+let anchors = [];
 
 let eyeDistance;
 let shoulderDistance;
@@ -104,9 +109,17 @@ const videos = [
 	'../assets/body/video31.mp4',
 ];
 
+p5.disableFriendlyErrors = true;
+
 function setup() {
 	let canvas = createCanvas(910, 500);
 	canvas.parent('#canvas-container');
+
+	for (let i = 0; i < 17; i++) {
+		let anchor = new Anchor(width / 2, height / 2);
+		anchors.push(anchor);
+	}
+
 	// startWebcam()
 	loadNewVideo();
 }
@@ -127,12 +140,28 @@ function draw() {
 			//  will look like [{part:'nose',position: {x: 0,y:0},score:.99}]
 			let pose = poses[0].pose.keypoints;
 
-			eyeDistance = floor(checkPoseDistance(pose, LEFTEYE,RIGHTEYE))
+			// Set anchors to track pose
+			anchors.forEach((a, i) => {
+				if (pose[i]) {
+					a.setTarget(null, pose[i].position.x, pose[i].position.y);
+				} else {
+					a.setTarget(null, pose[0].position.x, pose[0].position.y);
+				}
+				a.behaviors();
+				a.update();
+				if (par.showAnchors) a.show();
+			});
+
+			eyeDistance = floor(checkPoseDistance(pose, LEFTEYE, RIGHTEYE));
 			select('#eye-distance').html('Eye distance: ' + eyeDistance);
-			shoulderDistance = floor(checkPoseDistance(pose,LEFTSHOULDER,RIGHTSHOULDER))
-			select('#shoulder-distance').html('Shoulder distance: ' + shoulderDistance)
-			waistDistance = floor(checkPoseDistance(pose,LEFTHIP,RIGHTHIP))
-			select('#waist-distance').html('Waist distance: '+ waistDistance)
+			shoulderDistance = floor(
+				checkPoseDistance(pose, LEFTSHOULDER, RIGHTSHOULDER)
+			);
+			select('#shoulder-distance').html(
+				'Shoulder distance: ' + shoulderDistance
+			);
+			waistDistance = floor(checkPoseDistance(pose, LEFTHIP, RIGHTHIP));
+			select('#waist-distance').html('Waist distance: ' + waistDistance);
 
 			// Draw pose for reference
 			if (par.showPose) {
@@ -146,7 +175,7 @@ function draw() {
 			}
 
 			// Prepare pointlist for hull()
-			let pointSet = expandAllPoints(pose);
+			let pointSet = expandAllPoints(anchors);
 
 			// Draw expanded points for reference
 			if (par.showExpanded) {
@@ -170,7 +199,7 @@ function draw() {
 			noFill();
 			beginShape();
 			hullSet.forEach(p => {
-				vertex(p[0], p[1]);
+				curveVertex(p[0], p[1]);
 			});
 			endShape(CLOSE);
 			pop();
@@ -191,24 +220,26 @@ function expandAllPoints(pose) {
 
 			let radius;
 			if (par.autoRadius) {
-				if (p.part === 'nose') {
-					radius = eyeDistance * par.autoRadiusRatio * 3;
-				} else {
+				// if (p.part === 'nose') {
+				// 	radius = eyeDistance * par.autoRadiusRatio * 3;
+				// } else {
+				// 	radius = eyeDistance * par.autoRadiusRatio;
+				// }
 					radius = eyeDistance * par.autoRadiusRatio;
-				}
 			} else {
-				if (p.part === 'nose') {
-					radius = par.radius * 3;
-				} else {
+				// if (p.part === 'nose') {
+				// 	radius = par.radius * 3;
+				// } else {
+				// 	radius = par.radius;
+				// }
 					radius = par.radius;
-				}
 			}
 
-			x = p.position.x + n + radius * sin(angle);
-			y = p.position.y + n + radius * cos(angle);
+			x = p.pos.x + n + radius * sin(angle);
+			y = p.pos.y + n + radius * cos(angle);
 
-			x = p.position.x + n + radius * sin(angle);
-			y = p.position.y + n + radius * cos(angle);
+			x = p.pos.x + n + radius * sin(angle);
+			y = p.pos.y + n + radius * cos(angle);
 
 			let newP = [x, y];
 			newArr.push(newP);
