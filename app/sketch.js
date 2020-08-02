@@ -1,6 +1,6 @@
 class Paramaterize {
 	constructor() {
-		this.scene = 1;
+		this.scene = 0;
 		this.minR = 33; // scene 0
 		this.maxR = 66; // scene 0
 		this.xNoiseMax = 2; // scene 0
