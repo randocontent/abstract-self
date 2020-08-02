@@ -1,6 +1,6 @@
 class Paramaterize {
 	constructor() {
-		this.scene = 1;
+		this.scene = 0;
 		this.minR = 33;
 		this.maxR = 66;
 		this.xNoiseMax = 2;
@@ -89,16 +89,17 @@ function setup() {
 
 	// Preload scenes. Preloading is normally optional
 	// ... but needed if showNextScene() is used.
+	mgr.addScene(scene00);
 	mgr.addScene(scene01);
-	mgr.addScene(scene02);
 
 	select('#begin-button').mousePressed(() => {
-		mgr.showScene(scene02);
+		mgr.showScene(scene01);
 	});
-	select('#record-button-02').mousePressed(() => {
+
+	select('#record-button-01').mousePressed(() => {
 		recording = true;
 		console.log('recording started');
-		select('#record-button-02').addClass('rec');
+		select('#record-button-01').addClass('rec');
 	});
 
 	startWebcam(false, 467, 350);
@@ -111,11 +112,11 @@ function draw() {
 
 function gotoScene() {
 	switch (par.scene) {
+		case 0:
+			mgr.showScene(scene00);
+			break;
 		case 1:
 			mgr.showScene(scene01);
-			break;
-		case 2:
-			mgr.showScene(scene02);
 			break;
 		default:
 			break;
@@ -207,15 +208,15 @@ function makePointSet(vArr) {
 // =                         BEGIN SCENES                      =
 // =============================================================
 
-// --1
+// --0
 
-function scene01() {
+function scene00() {
 	this.enter = function () {
-		select('#scene-02').addClass('hidden');
-		select('#scene-01').removeClass('hidden');
-		canvas.parent('#canvas-01');
+		select('#scene-01').addClass('hidden');
+		select('#scene-00').removeClass('hidden');
+		canvas.parent('#canvas-00');
 		// move the webcam monitor over
-		sample.parent('#webcam-monitor-01');
+		sample.parent('#webcam-monitor-00');
 		sample.size(467, 350);
 	};
 
@@ -256,21 +257,21 @@ function scene01() {
 	};
 }
 
-// --2
+// --1
 
-function scene02() {
+function scene01() {
 	// Will run when entering the scene, seems like a good place to do clean up
 	// from the previous one
 	this.enter = function () {
 		// hide the other scenes
-		select('#scene-01').addClass('hidden');
+		select('#scene-00').addClass('hidden');
 		// show this scene
-		select('#scene-02').removeClass('hidden');
+		select('#scene-01').removeClass('hidden');
 		// move the canvas over
-		canvas.parent('#canvas-02');
+		canvas.parent('#canvas-01');
 		resizeCanvas(820, 820);
 		// move the webcam monitor over
-		sample.parent('#webcam-monitor-02');
+		sample.parent('#webcam-monitor-01');
 		sample.size(666, 500);
 	};
 

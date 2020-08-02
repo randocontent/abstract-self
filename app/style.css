@@ -52,7 +52,7 @@ main {
 	place-items: center;
 }
 
-#scene-01 {
+#scene-00 {
 	display: grid;
 	grid-template-columns: 350px 200px 350px;
 	grid-template-areas:
@@ -61,25 +61,25 @@ main {
 	margin-top: 10vh; /* 10% viewport height */
 }
 
-#scene-01 .sidebar {
+#scene-00 .sidebar {
 	grid-area: sidebar;
 	margin-bottom: 5rem;
 }
 
-#scene-01 .abstract {
+#scene-00 .abstract {
 	grid-area: abstract;
 	margin-bottom: 5rem;
 }
 
-#scene-01 .controls {
+#scene-00 .controls {
 	grid-area: controls;
 	text-align: center;
 }
-#scene-01 .title {
+#scene-00 .title {
 	height: 10rem;
 	display: flex;
 }
-#scene-01 .title p {
+#scene-00 .title p {
 	align-self: flex-end;
 }
 .title {
@@ -121,7 +121,6 @@ canvas {
 	border-radius: 0.75rem;
 }
 
-
 .webcam-monitor-container video {
 	border-radius: 0.75rem;
 	transform: scaleX(-1);
@@ -130,11 +129,9 @@ canvas {
 	object-fit: cover;
 }
 
-
-#scene-01 .webcam-monitor-container video {
+#scene-00 .webcam-monitor-container video {
 	width: 350px !important;
 }
-
 
 /* ==Controls  ************************************************** */
 /* ************************************************************** */
@@ -167,15 +164,14 @@ button:hover,
 .btn-primary {
 	background-color: var(--primary);
 	color: var(--dark);
-	border-color: var(--primary)
-
+	border-color: var(--primary);
 }
 
 /* ==Utilities  ************************************************* */
 /* ************************************************************** */
 .rec {
 	background-color: var(--recording);
-	color: var(--primary)
+	color: var(--primary);
 }
 
 .hidden {
@@ -210,10 +206,12 @@ strong {
 .dg.a {
 	/* float: left; */
 }
+
 #test-controls {
 	display: grid;
 	grid-template-columns: repeat(3, 1fr);
 }
+
 #source-controls {
 	text-align: center;
 }
@@ -221,6 +219,7 @@ strong {
 .group {
 	padding-bottom: 1rem;
 }
+
 .group a {
 	display: block;
 }

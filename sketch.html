@@ -27,13 +27,13 @@
 	<body>
 		<main class="container">
 
-			<div id="scene-01" class="fullscreen">
+			<div id="scene-00" class="fullscreen">
 				<div class="sidebar">
 					<section class="title">
 						<p>This is <strong>You</strong>.</p>
 					</section>
 					<section class="webcam-monitor-container">
-						<div id="webcam-monitor-01"></div>
+						<div id="webcam-monitor-00"></div>
 					</section>
 				</div>
 
@@ -44,7 +44,7 @@
 						</p>
 					</section>
 					<section class="canvas-container">
-						<div id="canvas-01"></div>
+						<div id="canvas-00"></div>
 					</section>
 				</div>
 
@@ -53,7 +53,7 @@
 				</div>
 			</div>
 
-			<div id="scene-02" class="hidden fullscreen">
+			<div id="scene-01" class="hidden fullscreen">
 				<div class="sidebar">
 					<section class="title">
 						<p class="row">Abstract you</p>
@@ -65,6 +65,32 @@
 							Press record, then starting from the mark,
 							<strong> begin walking towards the camera </strong>.
 						</p>
+					</section>
+					<section class="webcam-monitor-container">
+						<div id="webcam-monitor-01"></div>
+					</section>
+					<div class="controls">
+						<button id="record-button-01">Record</button>
+						<span class="row btn counter" id="counter-01">0:15</span>
+					</div>
+				</div>
+
+				<div class="abstract">
+					<section class="canvas-container">
+						<div id="canvas-01"></div>
+					</section>
+				</div>
+			</div>
+
+			<div id="scene-02" class="hidden fullscreen">
+				<div class="sidebar">
+					<section class="title">
+						<p class="row">Abstract you</p>
+						<p class="row">2: Facial Expressions</p>
+					</section>
+
+					<section class="directions">
+						<p class="col">Press record, <strong>answer the following questions</strong>, make sure your face is facing the camera.</p>
 					</section>
 					<section class="webcam-monitor-container">
 						<div id="webcam-monitor-02"></div>
@@ -80,8 +106,35 @@
 						<div id="canvas-02"></div>
 					</section>
 				</div>
-			</div>
 
+			</div>
+<div id="scene-03" class="hidden fullscreen">
+				<div class="sidebar">
+					<section class="title">
+						<p class="row">Abstract you</p>
+						<p class="row">3: Voice</p>
+					</section>
+
+					<section class="directions">
+						<p class="col">Press record and <strong>read the following text</strong>, press stop when done.</p>
+					</section>
+					<section class="webcam-monitor-container">
+						<!-- <div id="webcam-monitor-03"></div> -->
+						<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum gravida eget orci in feugiat.</p>
+					</section>
+					<div class="controls">
+						<button id="record-button-03">Record</button>
+						<span class="row btn counter" id="counter-03">0:15</span>
+					</div>
+				</div>
+
+				<div class="abstract">
+					<section class="canvas-container">
+						<div id="canvas-03"></div>
+					</section>
+				</div>
+
+			</div>
 			<div id="dat-gui-container">
 
 			</div>
