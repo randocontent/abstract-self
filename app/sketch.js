@@ -1,6 +1,6 @@
 class Paramaterize {
 	constructor() {
-		this.scene = 1;
+		this.scene = 0;
 		this.minR = 33; // scene 0
 		this.maxR = 66; // scene 0
 		this.xNoiseMax = 2; // scene 0
@@ -16,25 +16,26 @@ class Paramaterize {
 		this.showAnchors = false;
 		this.showAbstract = true;
 		this.showAbstractFill = false;
-		this.showCurves = true;
-		this.isHeadOnly = true;
+		this.showCurves = false;
 		this.numAnchors = 20;
 		this.topSpeed = 10;
 		this.maxForce = 10;
 		this.autoRadius = true;
-		this.autoRadiusRatio = 1.2;
+		this.autoRadiusRatio = .5;
+		this.noseRatio = 3.5;
 		this.noiseStep = 0.001;
-		this.concave = 1000;
+		this.concave = 250;
 		this.sampleSpeed = 0.5;
 		this.recLength = 50;
+		this.angles = 37
 	}
 }
 
 par = new Paramaterize();
 
-let gui = new dat.GUI({ autoPlace: false });
-let customContainer = document.getElementById('dat-gui-container');
-customContainer.appendChild(gui.domElement);
+let gui = new dat.GUI({ autoPlace: true });
+// let customContainer = document.getElementById('dat-gui-container');
+// customContainer.appendChild(gui.domElement);
 
 let sceneGui = gui.add(par, 'scene');
 sceneGui.onFinishChange(() => {
@@ -48,6 +49,7 @@ gui.add(par, 'yNoiseMax');
 gui.add(par, 'zNoiseOffset');
 gui.add(par, 'phaseOffset');
 gui.add(par, 'inc');
+gui.add(par, 'angles');
 gui.add(par, 'blobR');
 gui.add(par, 'showPose');
 gui.add(par, 'showExpanded');
@@ -57,12 +59,12 @@ gui.add(par, 'showAnchors');
 gui.add(par, 'showAbstract');
 gui.add(par, 'showAbstractFill');
 gui.add(par, 'showCurves');
-gui.add(par, 'isHeadOnly');
 gui.add(par, 'numAnchors');
 gui.add(par, 'topSpeed');
 gui.add(par, 'maxForce');
 gui.add(par, 'autoRadius');
 gui.add(par, 'autoRadiusRatio');
+gui.add(par, 'noseRatio');
 gui.add(par, 'noiseStep');
 gui.add(par, 'concave');
 gui.add(par, 'sampleSpeed', 0.1, 2, 0.1);
@@ -155,6 +157,7 @@ let shoulderWaistRatio;
 let faceapi;
 let detections = [];
 let expression;
+let faceapiLoading = true;
 
 const faceOptions = {
 	withLandmarks: false,
@@ -268,20 +271,14 @@ function expand1(pose) {
 
 	pose.forEach(p => {
 		for (let angle = 0; angle < 360; angle += par.angles) {
-			let n = noise(xoff, yoff);
 			let radius;
-			if (par.autoRadius) {
-				if (p.part === 'nose') {
-					radius = eyeDist * par.autoRadiusRatio * 2.5;
-				} else {
-					radius = eyeDist * par.autoRadiusRatio;
-				}
+			let n = noise(xoff, yoff);
+			let ratio = 1
+			if (par.autoRadius) ratio = par.autoRadiusRatio
+			if (p.part === 'nose') {
+				radius = eyeDist * ratio * par.noseRatio
 			} else {
-				if (p.part === 'nose') {
-					radius = par.radius * 2.5;
-				} else {
-					radius = par.radius;
-				}
+				radius = eyeDist * ratio
 			}
 
 			let x = p.pos.x + n + radius * sin(angle);
@@ -330,7 +327,7 @@ function expand2(pose) {
 				}
 			}
 
-			radius = map(happy, 0, 1, 200, 50);
+			radius = map(happy, 0, 1, 50, 200);
 
 			let x = p.pos.x + n + radius * sin(angle);
 			let y = p.pos.y + n + radius * cos(angle);
@@ -570,6 +567,7 @@ function scene02() {
 
 	// --2draw
 	this.draw = function () {
+
 		button.mousePressed(() => {
 			console.log('button 2');
 			startRecording();
@@ -588,6 +586,15 @@ function scene02() {
 		if (detections) {
 			graphExpressions();
 			if (rec) recordExpressions(detections);
+		} 
+
+		if (faceapiLoading) {
+push()
+		translate(width, 0);
+		scale(-1, 1);
+		textAlign(CENTER)
+			text('waiting for faceapi',width/2,height/2)
+			pop()
 		}
 	};
 	// this.counter = function () {};
@@ -711,6 +718,7 @@ function loopPlayback() {
 	// TODO change the counter to a Redo button
 }
 
+// Draws an outline based on posenet keypoints
 function drawShape(points) {
 	retargetAnchorsFromPose(points);
 	expanded = expand1(anchors);
@@ -773,6 +781,7 @@ function gotFaces(error, result) {
 		return;
 	}
 	detections = result;
+	faceapiLoading = false;
 	faceapi.detect(gotFaces);
 }
 
@@ -825,8 +834,8 @@ function emotionalPoints(pArr) {
 	}
 
 	pArr.forEach(p => {
-		p[0] = p[0] + map(happy, 0, 1, -100, 100);
-		p[1] = p[1] + map(surprised, 0, 1, 100, 300);
+		p[0] = p[0] + map(happy, 0, 1, -50, 50);
+		p[1] = p[1] + map(surprised, 0, 1, -50, 50);
 	});
 
 	return pArr;
