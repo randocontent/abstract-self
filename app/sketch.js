@@ -1,7 +1,7 @@
 class Paramaterize {
 	constructor() {
 		this.scene = 0;
-		this.framesToRecord = 10;
+		this.framesToRecord = 200;
 
 		this.minR = 33; // scene 0
 		this.maxR = 66; // scene 0
