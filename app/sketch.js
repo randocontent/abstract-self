@@ -21,13 +21,13 @@ class Paramaterize {
 		this.topSpeed = 10;
 		this.maxForce = 10;
 		this.autoRadius = true;
-		this.autoRadiusRatio = .5;
+		this.autoRadiusRatio = 0.5;
 		this.noseRatio = 3.5;
 		this.noiseStep = 0.001;
 		this.concave = 250;
 		this.sampleSpeed = 0.5;
-		this.recLength = 50;
-		this.angles = 37
+		this.recLength = 10;
+		this.angles = 37;
 	}
 }
 
@@ -117,26 +117,18 @@ let webcamPreview;
 let button;
 
 let sceneReady = false;
-let recorded = false;
-let recording = false;
-let playback = false;
 
 let rec = false;
 let play = false;
-let replay = false;
 let full = false;
-// let recLength = 100; // in frames
 
 let posenet;
 let poses = [];
-let posesHistory = [];
-let history1 = [];
-let history2 = [];
+let poseHistory = [];
 let expressionHistory = [];
 let options = { maxPoseDetections: 2 };
 
 let numAnchors = 50;
-let points = [];
 let anchors = [];
 let expanded = [];
 let hullSet = [];
@@ -176,6 +168,7 @@ function setup() {
 	mgr.addScene(scene00);
 	mgr.addScene(scene01);
 	mgr.addScene(scene02);
+	mgr.addScene(scene03);
 
 	canvas = createCanvas(350, 350);
 	canvas.parent('#canvas-01');
@@ -188,6 +181,9 @@ function setup() {
 		mgr.showScene(scene01);
 	});
 	select('#record-button-01').mousePressed(() => {
+		startRecording();
+	});
+	select('#record-button-02').mousePressed(() => {
 		startRecording();
 	});
 	select('#record-button-02').mousePressed(() => {
@@ -273,12 +269,12 @@ function expand1(pose) {
 		for (let angle = 0; angle < 360; angle += par.angles) {
 			let radius;
 			let n = noise(xoff, yoff);
-			let ratio = 1
-			if (par.autoRadius) ratio = par.autoRadiusRatio
+			let ratio = 1;
+			if (par.autoRadius) ratio = par.autoRadiusRatio;
 			if (p.part === 'nose') {
-				radius = eyeDist * ratio * par.noseRatio
+				radius = eyeDist * ratio * par.noseRatio;
 			} else {
-				radius = eyeDist * ratio
+				radius = eyeDist * ratio;
 			}
 
 			let x = p.pos.x + n + radius * sin(angle);
@@ -294,7 +290,7 @@ function expand1(pose) {
 	return newArr;
 }
 
-function expand2(pose) {
+function expand2(pose, points) {
 	let newArr = [];
 	let xoff = 0.0;
 	let yoff = 0.0;
@@ -305,7 +301,14 @@ function expand2(pose) {
 		if (detections[0]) {
 			// ({ expressions } = detections[0]);
 			happy = detections[0].expressions.happy;
-			surprised = detections[0].expressions.happy;
+			surprised = detections[0].expressions.surprised;
+		}
+	}
+
+	if (points) {
+		if (points.length === 18) {
+			happy = points[17].expressions.happy;
+			surprised = points[17].expressions.surprised;
 		}
 	}
 
@@ -492,7 +495,7 @@ function scene01() {
 			image(sample, 0, 0);
 		}
 
-		if (play) playShape(history1);
+		if (play) playShape(poseHistory);
 
 		if (poses) {
 			if (poses[0]) {
@@ -502,11 +505,7 @@ function scene01() {
 
 				if (rec) recordPose(pose);
 
-				if (replay) {
-					playShape(history1);
-				} else {
-					drawShape(pose);
-				}
+				if (!full) drawShape(pose);
 
 				// Draw pose for reference
 				if (par.showPose) {
@@ -541,6 +540,8 @@ function scene02() {
 	this.enter = function () {
 		// Entering this scene, cleanup the last one
 		full = false;
+		rec = false;
+		play = false;
 		// remove posenet listeners
 		posenet.removeAllListeners();
 		poses[0] = null;
@@ -559,54 +560,47 @@ function scene02() {
 		button.removeClass('primary');
 		button.html('Record');
 		faceapi = ml5.faceApi(sample, faceOptions, faceReady);
-	};
-
-	this.setup = function () {
-		// What's the difference between .enter() and .setup()? Does .setup() get run for all scenes when we start?
-	};
-
-	// --2draw
-	this.draw = function () {
-
 		button.mousePressed(() => {
 			console.log('button 2');
 			startRecording();
 		});
+	};
 
+	// --2draw
+	this.draw = function () {
 		background(255);
-		translate(width, 0);
-		scale(-1, 1);
+		// Mirror canvas, to match the mirrored video
+		mirror();
 
-		if (full) {
-			playShapeWithFace(history1);
-		} else if (replay) {
-			playShapeWithFace(history1);
+		if (full) playModifiedShape2(expressionHistory);
+
+		if (detections && !full) {
+			graphExpressions();
+			playShape2(poseHistory);
 		}
 
-		if (detections) {
-			graphExpressions();
-			if (rec) recordExpressions(detections);
-		} 
-
+		// TODO: starte getting faceapi ready when we finish recording in scene01
 		if (faceapiLoading) {
-push()
-		translate(width, 0);
-		scale(-1, 1);
-		textAlign(CENTER)
-			text('waiting for faceapi',width/2,height/2)
-			pop()
+			push();
+			// Unmirror so we can write in the right direction
+			mirror();
+			textAlign(CENTER);
+			text('waiting for faceapi', width / 2, height / 2);
+			pop();
 		}
 	};
 	// this.counter = function () {};
 }
 
-
 // --3 speech
 
 function scene03() {
 	this.enter = function () {
+		console.log('Entering scene 3');
 		// Entering this scene, cleanup the last one
 		full = false;
+		rec = false;
+		play = false;
 		// Remove faceapi listeners?
 		// hide the other scenes
 		select('#scene-02').addClass('hidden');
@@ -616,35 +610,25 @@ function scene03() {
 		canvas.parent('#canvas-03');
 		resizeCanvas(820, 820);
 		// move the webcam monitor over
-		sample.parent('#webcam-monitor-03');
+		sample.hide()
 		// resize video for a larger preview this time
-		sample.size(666, 500);
+		// sample.size(666, 500);
 		button = select('#record-button-03');
 		button.removeClass('primary');
 		button.html('Record');
-	};
-
-	this.setup = function () {
-		// What's the difference between .enter() and .setup()? Does .setup() get run for all scenes when we start?
-	};
-
-	// --2draw
-	this.draw = function () {
 		button.mousePressed(() => {
 			console.log('button 3');
 			startRecording();
 		});
+	};
 
+	// --3draw
+	this.draw = function () {
 		background(255);
-		translate(width, 0);
-		scale(-1, 1);
 
-		if (full) {
-			playShapeWithFace(history1);
-		} else if (replay) {
-			playShapeWithFace(history1);
-		}
+		mirror();
 
+		playModifiedShape2(expressionHistory);
 	};
 }
 
@@ -654,7 +638,6 @@ function startRecording() {
 	console.log('startRecording');
 	if (!full) {
 		rec = true;
-		replay = false;
 		play = false;
 		button.addClass('rec');
 		// TODO start counter?
@@ -662,9 +645,9 @@ function startRecording() {
 }
 
 function recordPose(points) {
-	history1.push(points);
-	setCounter(history1.length);
-	if (history1.length === par.recLength) finishRecording();
+	poseHistory.push(points);
+	setCounter(poseHistory.length);
+	if (poseHistory.length === par.recLength) finishRecording();
 }
 
 function setCounter(count) {
@@ -685,7 +668,7 @@ function finishRecording() {
 	button.addClass('primary');
 	button.html('Next');
 	button.mousePressed(() => {
-		console.log('button 1 next');
+		console.log('button next');
 		mgr.showNextScene();
 	});
 	let counters = selectAll('.counter');
@@ -702,20 +685,28 @@ function playShape(history) {
 	if (cp === history.length - 1) loopPlayback();
 }
 
-function playShapeWithFace(history) {
+function playShape2(history) {
 	// Use the current frame counter as an iterator for looping through the recorded array
 	let cp = frameCount % history.length;
-	drawShapeWithFace(history[cp]);
+	drawShape2(history[cp]);
+	if (rec && detections) recordExpression(detections, history[cp]);
 	// Reset recorded state after finishing playback
 	if (cp === history.length - 1) loopPlayback();
 }
 
+function playModifiedShape2(history) {
+	// console.log('playModifiedShape2', history);
+	// Use the current frame counter as an iterator for looping through the recorded array
+	let cp = frameCount % history.length;
+	// console.log(cp);
+	// console.log(history[cp]);
+	drawModifiedShape2(history[cp]);
+	// Reset recorded state after finishing playback
+	// if (cp === history.length - 1) loopPlayback();
+}
+
 function loopPlayback() {
 	console.log('loopPlayback');
-	play = false;
-	replay = true;
-	// TODO add an event for the next button
-	// TODO change the counter to a Redo button
 }
 
 // Draws an outline based on posenet keypoints
@@ -742,7 +733,7 @@ function drawShape(points) {
 	pop();
 }
 
-function drawShapeWithFace(points) {
+function drawShape2(points) {
 	retargetAnchorsFromPose(points);
 	expanded = expand2(anchors);
 	hullSet = hull(expanded, par.concave);
@@ -765,6 +756,29 @@ function drawShapeWithFace(points) {
 	pop();
 }
 
+function drawModifiedShape2(points) {
+	// console.log('drawModifiedShape2 ', points);
+	retargetAnchorsFromPose(points);
+	expanded = expand2(anchors, points);
+	hullSet = hull(expanded, par.concave);
+
+	push();
+	stroke(255);
+	if (!par.showPreview) stroke(0);
+	strokeWeight(6);
+	noFill();
+	beginShape();
+	hullSet.forEach(p => {
+		if (par.showCurves) {
+			curveVertex(p[0], p[1]);
+		} else {
+			vertex(p[0], p[1]);
+		}
+	});
+
+	endShape(CLOSE);
+	pop();
+}
 function deriveProportions(pose) {
 	eyeDist = floor(poseDist(pose, LEFTEYE, RIGHTEYE));
 	shoulderDist = floor(poseDist(pose, LEFTSHOULDER, RIGHTSHOULDER));
@@ -841,10 +855,17 @@ function emotionalPoints(pArr) {
 	return pArr;
 }
 
-function recordExpressions(exp) {
-	console.log('recordExpressions');
-	history2.push(anchors);
-	expressionHistory.push(exp);
-	setCounter(history2.length);
-	if (history2.length === par.recLength) finishRecording();
+function recordExpression(exp, pose) {
+	// console.log('recordExpression exp ', exp);
+	// console.log('recordExpression pose ', pose);
+	let newArr = pose.concat(exp);
+	expressionHistory.push(newArr);
+	// console.log('expressionHistory ', expressionHistory);
+	setCounter(expressionHistory.length);
+	if (expressionHistory.length === par.recLength) finishRecording();
+}
+
+function mirror() {
+	translate(width, 0);
+	scale(-1, 1);
 }
