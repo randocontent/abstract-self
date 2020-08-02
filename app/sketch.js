@@ -7,8 +7,7 @@ class Paramaterize {
 		this.yNoiseMax = 2; // scene 0
 		this.zNoiseOffset = 0.01; // scene 0
 		this.phaseOffset = 0.001; // scene 0
-		this.inc = 26;
-		this.blobR = 100;
+		this.inc = 2;
 		this.showPose = false;
 		this.showExpanded = false;
 		this.showHull = false;
@@ -17,16 +16,15 @@ class Paramaterize {
 		this.showAbstract = true;
 		this.showAbstractFill = false;
 		this.showCurves = false;
-		this.numAnchors = 20;
 		this.topSpeed = 10;
-		this.maxForce = 10;
+		this.maxAcc = 10;
 		this.autoRadius = true;
 		this.autoRadiusRatio = 0.5;
-		this.noseRatio = 3.5;
-		this.noiseStep = 0.001;
-		this.concave = 250;
-		this.sampleSpeed = 0.5;
-		this.recLength = 10;
+		this.manualRadiusRatio = 1;
+		this.noseExpandRatio = 3.5;
+		this.noiseLevel = 0.001;
+		this.roundness = 250;
+		this.framesToRecord = 10;
 		this.angles = 37;
 	}
 }
@@ -37,38 +35,53 @@ let gui = new dat.GUI({ autoPlace: true });
 // let customContainer = document.getElementById('dat-gui-container');
 // customContainer.appendChild(gui.domElement);
 
-let sceneGui = gui.add(par, 'scene');
-sceneGui.onFinishChange(() => {
-	gotoScene();
+let f1 = gui.addFolder('Intro screen');
+let f2 = gui.addFolder('Pose');
+let f3 = gui.addFolder('Reference');
+
+// let sceneGui = gui.add(par, 'scene');
+// sceneGui.onFinishChange(() => {
+// 	gotoScene();
+// });
+
+gui.add(par, 'framesToRecord', 10, 10000, 1);
+
+f1.add(par, 'minR');
+f1.add(par, 'maxR');
+f1.add(par, 'xNoiseMax');
+f1.add(par, 'yNoiseMax');
+f1.add(par, 'zNoiseOffset');
+f1.add(par, 'phaseOffset');
+f1.add(par, 'inc');
+f1.close();
+
+
+let speedControl = f2.add(par, 'topSpeed');
+speedControl.onFinishChange(() => {
+	updateAnchors();
 });
-gui.add(par, 'minR');
-gui.add(par, 'minR');
-gui.add(par, 'maxR');
-gui.add(par, 'xNoiseMax');
-gui.add(par, 'yNoiseMax');
-gui.add(par, 'zNoiseOffset');
-gui.add(par, 'phaseOffset');
-gui.add(par, 'inc');
-gui.add(par, 'angles');
-gui.add(par, 'blobR');
-gui.add(par, 'showPose');
-gui.add(par, 'showExpanded');
-gui.add(par, 'showHull');
-gui.add(par, 'showPreview');
-gui.add(par, 'showAnchors');
-gui.add(par, 'showAbstract');
-gui.add(par, 'showAbstractFill');
-gui.add(par, 'showCurves');
-gui.add(par, 'numAnchors');
-gui.add(par, 'topSpeed');
-gui.add(par, 'maxForce');
-gui.add(par, 'autoRadius');
-gui.add(par, 'autoRadiusRatio');
-gui.add(par, 'noseRatio');
-gui.add(par, 'noiseStep');
-gui.add(par, 'concave');
-gui.add(par, 'sampleSpeed', 0.1, 2, 0.1);
-gui.add(par, 'recLength', 10, 10000, 1);
+let accControl = f2.add(par, 'maxAcc');
+accControl.onFinishChange(() => {
+	updateAnchors();
+});
+f2.add(par, 'angles');
+f2.add(par, 'autoRadius');
+f2.add(par, 'autoRadiusRatio');
+f2.add(par, 'manualRadiusRatio');
+f2.add(par, 'noseExpandRatio');
+f2.add(par, 'noiseLevel');
+f2.add(par, 'roundness');
+f2.close();
+
+f3.add(par, 'showPose');
+f3.add(par, 'showExpanded');
+f3.add(par, 'showHull');
+f3.add(par, 'showPreview');
+f3.add(par, 'showAnchors');
+f3.add(par, 'showAbstract');
+f3.add(par, 'showAbstractFill');
+f3.add(par, 'showCurves');
+f3.close();
 
 gui.close();
 
@@ -128,7 +141,6 @@ let poseHistory = [];
 let expressionHistory = [];
 let options = { maxPoseDetections: 2 };
 
-let numAnchors = 50;
 let anchors = [];
 let expanded = [];
 let hullSet = [];
@@ -269,10 +281,10 @@ function expand1(pose) {
 		for (let angle = 0; angle < 360; angle += par.angles) {
 			let radius;
 			let n = noise(xoff, yoff);
-			let ratio = 1;
+			let ratio = par.manualRadiusRatio;
 			if (par.autoRadius) ratio = par.autoRadiusRatio;
 			if (p.part === 'nose') {
-				radius = eyeDist * ratio * par.noseRatio;
+				radius = eyeDist * ratio * par.noseExpandRatio;
 			} else {
 				radius = eyeDist * ratio;
 			}
@@ -282,8 +294,8 @@ function expand1(pose) {
 
 			let newP = [x, y];
 			newArr.push(newP);
-			xoff += par.noiseStep;
-			yoff += par.noiseStep;
+			xoff += par.noiseLevel;
+			yoff += par.noiseLevel;
 		}
 	});
 
@@ -337,8 +349,8 @@ function expand2(pose, points) {
 
 			let newP = [x, y];
 			newArr.push(newP);
-			xoff += par.noiseStep;
-			yoff += par.noiseStep;
+			xoff += par.noiseLevel;
+			yoff += par.noiseLevel;
 		}
 	});
 
@@ -489,8 +501,6 @@ function scene01() {
 		translate(width, 0);
 		scale(-1, 1);
 
-		if (sample) sample.speed(par.sampleSpeed);
-
 		if (sample && par.showPreview) {
 			image(sample, 0, 0);
 		}
@@ -610,7 +620,7 @@ function scene03() {
 		canvas.parent('#canvas-03');
 		resizeCanvas(820, 820);
 		// move the webcam monitor over
-		sample.hide()
+		sample.hide();
 		// resize video for a larger preview this time
 		// sample.size(666, 500);
 		button = select('#record-button-03');
@@ -647,7 +657,7 @@ function startRecording() {
 function recordPose(points) {
 	poseHistory.push(points);
 	setCounter(poseHistory.length);
-	if (poseHistory.length === par.recLength) finishRecording();
+	if (poseHistory.length === par.framesToRecord) finishRecording();
 }
 
 function setCounter(count) {
@@ -713,7 +723,7 @@ function loopPlayback() {
 function drawShape(points) {
 	retargetAnchorsFromPose(points);
 	expanded = expand1(anchors);
-	hullSet = hull(expanded, par.concave);
+	hullSet = hull(expanded, par.roundness);
 
 	push();
 	stroke(255);
@@ -736,7 +746,7 @@ function drawShape(points) {
 function drawShape2(points) {
 	retargetAnchorsFromPose(points);
 	expanded = expand2(anchors);
-	hullSet = hull(expanded, par.concave);
+	hullSet = hull(expanded, par.roundness);
 
 	push();
 	stroke(255);
@@ -760,7 +770,7 @@ function drawModifiedShape2(points) {
 	// console.log('drawModifiedShape2 ', points);
 	retargetAnchorsFromPose(points);
 	expanded = expand2(anchors, points);
-	hullSet = hull(expanded, par.concave);
+	hullSet = hull(expanded, par.roundness);
 
 	push();
 	stroke(255);
@@ -862,10 +872,17 @@ function recordExpression(exp, pose) {
 	expressionHistory.push(newArr);
 	// console.log('expressionHistory ', expressionHistory);
 	setCounter(expressionHistory.length);
-	if (expressionHistory.length === par.recLength) finishRecording();
+	if (expressionHistory.length === par.framesToRecord) finishRecording();
 }
 
 function mirror() {
 	translate(width, 0);
 	scale(-1, 1);
+}
+
+function updateAnchors() {
+	anchors.forEach(a => {
+		a.topSpeed = par.topSpeed;
+		a.maxForce = par.maxAcc;
+	});
 }

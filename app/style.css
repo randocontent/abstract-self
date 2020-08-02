@@ -83,7 +83,7 @@ main {
 #scene-00 .title p {
 	align-self: flex-end;
 }
-.title {
+main .title {
 	margin-bottom: 2rem;
 	width: 350px;
 }
