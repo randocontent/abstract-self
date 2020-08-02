@@ -1,6 +1,8 @@
 class Paramaterize {
 	constructor() {
 		this.scene = 0;
+		this.framesToRecord = 10;
+
 		this.minR = 33; // scene 0
 		this.maxR = 66; // scene 0
 		this.xNoiseMax = 2; // scene 0
@@ -8,24 +10,24 @@ class Paramaterize {
 		this.zNoiseOffset = 0.01; // scene 0
 		this.phaseOffset = 0.001; // scene 0
 		this.inc = 2;
-		this.showPose = false;
-		this.showExpanded = false;
-		this.showHull = false;
-		this.showPreview = false;
-		this.showAnchors = false;
-		this.showAbstract = true;
-		this.showAbstractFill = false;
-		this.showCurves = false;
+
 		this.topSpeed = 10;
 		this.maxAcc = 10;
+		this.angles = 37;
 		this.autoRadius = true;
 		this.autoRadiusRatio = 0.5;
 		this.manualRadiusRatio = 1;
 		this.noseExpandRatio = 3.5;
 		this.noiseLevel = 0.001;
 		this.roundness = 250;
-		this.framesToRecord = 10;
-		this.angles = 37;
+
+		this.showPose = false;
+		this.showExpanded = false;
+		this.showHull = false;
+		this.showPreview = false;
+		this.showAnchors = false;
+		this.fillShape = false;
+		this.showCurves = false;
 	}
 }
 
@@ -79,7 +81,7 @@ f3.add(par, 'showHull');
 f3.add(par, 'showPreview');
 f3.add(par, 'showAnchors');
 f3.add(par, 'showAbstract');
-f3.add(par, 'showAbstractFill');
+f3.add(par, 'fillShape');
 f3.add(par, 'showCurves');
 f3.close();
 
@@ -382,7 +384,7 @@ function checkEyeShoulderRatio() {
 }
 
 function drawAbstractShape() {
-	if (par.showAbstractFill) {
+	if (par.fillShape) {
 		stroke(0);
 		strokeWeight(10);
 		fill(255);
