@@ -7,7 +7,7 @@ class Anchor {
 		this.r = 10;
 		this.topSpeed = par.topSpeed;
 		this.maxForce = par.maxAcc;
-		this.part = ''
+		this.part = '';
 	}
 
 	update() {
@@ -20,16 +20,15 @@ class Anchor {
 		noStroke();
 		fill('orange');
 		ellipse(this.pos.x, this.pos.y, this.r);
-		text(this.part,this.pos.x,this.pos.y)
+		// text(this.part,this.pos.x,this.pos.y)
 	}
 
 	addVertex() {
 		curveVertex(this.pos.x, this.pos.y);
 	}
 
-	setTarget(x,y,part) {
-		this.target = createVector(x,y)
-		// this.part = part
+	setTarget(v) {
+		this.target = v
 	}
 
 	// Runs behaviors

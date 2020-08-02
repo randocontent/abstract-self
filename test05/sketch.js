@@ -172,7 +172,8 @@ function draw() {
 
 			// Set anchors to track pose
 			anchors.forEach((a, i) => {
-				a.setTarget(poseParts[a.part].x, poseParts[a.part].y);
+				let nv = createVector(poseParts[a.part].x, poseParts[a.part].y)
+				a.setTarget(nv);
 				a.behaviors();
 				a.update();
 				if (par.showAnchors) a.show();
