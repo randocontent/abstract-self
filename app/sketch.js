@@ -80,7 +80,6 @@ f3.add(par, 'showExpanded');
 f3.add(par, 'showHull');
 f3.add(par, 'showPreview');
 f3.add(par, 'showAnchors');
-f3.add(par, 'showAbstract');
 f3.add(par, 'fillShape');
 f3.add(par, 'showCurves');
 f3.close();
