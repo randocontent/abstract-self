@@ -1,16 +1,18 @@
 class Paramaterize {
 	constructor() {
-		this.scene = 0;
-		this.framesToRecord = 250;
+		this.scene = 1;
+		this.framesToRecord = 20;
 		this.shapeStrokeWeight = 2;
 
 		this.minR = 44; // scene 0
 		this.maxR = 66; // scene 0
+		this.noiseMax = 1; // scene 0
 		this.xNoiseMax = 1; // scene 0
 		this.yNoiseMax = 1; // scene 0
 		this.zNoiseOffset = 0.001; // scene 0
 		this.phaseMaxOffset = 0.01; // scene 0
 		this.nosePhaseMax = 1;
+		this.phaseMax = 0.1;
 		this.inc = 12;
 
 		this.noseMinRadius = 100;
@@ -30,11 +32,11 @@ class Paramaterize {
 		this.noiseLevel = 0.001;
 		this.roundness = 250;
 		this.emotionalScale = 2;
-		this.mississippi = 260;
+		this.mississippi = 26;
 
 		this.showAnchors = true;
 		this.showPose = false;
-		this.showExpanded = false;
+		this.showExpanded = true;
 		this.showHull = true;
 		this.showPreview = false;
 		this.fillShape = false;
@@ -66,8 +68,7 @@ gui.add(par, 'shapeStrokeWeight');
 
 f1.add(par, 'minR');
 f1.add(par, 'maxR');
-f1.add(par, 'xNoiseMax');
-f1.add(par, 'yNoiseMax');
+f1.add(par, 'noiseMax');
 f1.add(par, 'zNoiseOffset');
 f1.add(par, 'phaseMaxOffset');
 f1.add(par, 'inc');
@@ -171,7 +172,6 @@ let expanded = [];
 let hullSet = [];
 
 let phase = 0.0;
-let noiseMax = 1;
 let zoff = 0.0;
 
 let eyeDist;
@@ -376,7 +376,7 @@ function scene00() {
 					}
 				}
 				endShape(CLOSE);
-				let pOff = map(noise(zoff, phase), 0, 1, 0, (par.phaseMaxOffset*1000));
+				let pOff = map(noise(zoff, phase), 0, 1, 0, par.phaseMaxOffset * 1000);
 				phase += pOff;
 				zoff += par.zNoiseOffset;
 				pop();
@@ -551,7 +551,7 @@ function scene03() {
 		select('#scene-03').removeClass('hidden');
 		// move the canvas over
 		canvas.parent('#canvas-03');
-		vf.hide()
+		vf.hide();
 		button = select('#record-button-03');
 		button.removeClass('primary');
 		button.html('Record');
@@ -572,7 +572,7 @@ function scene03() {
 			vf.image(sample, -50, 0);
 		}
 
-noPreroll()
+		if (preroll) noPreroll();
 		// if (isAudioSampleReady) fft.setInput(mic);
 		if (mic) fft.setInput(mic);
 
@@ -774,7 +774,8 @@ function drawShape2(points) {
 		}
 	}
 
-	expanded = faceBodyNet(anchors, happy);
+	expanded = faceBodyNet(anchors, happy + surprised);
+
 	if (rec && detections) recordExpression2(expanded);
 	hullSet = hull(expanded, par.roundness);
 
@@ -832,7 +833,8 @@ function expand2(pointData) {
 
 	hpose.forEach(p => {
 		for (let angle = 0; angle < 360; angle += par.angles) {
-			let n = map(noise(xoff, yoff), 0, 1, 1, 100);
+			let nMax = happy + surprised;
+			let n = map(noise(xoff, yoff), 0, 1, 1, nMax);
 			let radius;
 			let ratio = par.manualRadiusRatio;
 			if (par.autoRadius) ratio = par.autoRadiusRatio;
@@ -841,8 +843,6 @@ function expand2(pointData) {
 			} else {
 				radius = eyeDist * ratio;
 			}
-
-			radius = radius + happy - surprised;
 
 			let x, y;
 			if (p.position) {
@@ -1059,34 +1059,16 @@ function bodyNet(pose) {
 }
 
 function faceBodyNet(pose, exp) {
+	console.log('faceBodyNet ', pose, exp);
 	// [{pos,part}...]
 	// Needs an array of objects that have pos.x,pos.y,part
 	// Will add points around the skeleton to increase the surface area
 	let newArr = [];
-	let phaseMax = par.nosePhaseMax;
-	if (exp) {
-		phaseMax = exp * par.emotionalScale;
-	}
+	let max = exp * par.emotionalScale;
 
 	pose.forEach(p => {
 		if (p.part === 'nose') {
-			for (let a = 0; a < 360; a += par.angles) {
-				let xoff = map(cos(a + phase), -1, 1, 0, par.xNoiseMax);
-				let yoff = map(sin(a + phase), -1, 1, 0, par.yNoiseMax);
-				let r = map(
-					noise(xoff, yoff, zoff),
-					0,
-					1,
-					par.noseMinRadius,
-					par.noseMaxRadius
-				);
-				let x = p.pos.x + r * cos(a);
-				let y = p.pos.y + r * sin(a);
-				newArr.push([x, y]);
-			}
-			let pOff = map(noise(zoff), 0, 1, 0, phaseMax);
-			phase += pOff;
-			zoff += par.zNoiseOffset;
+			newArr.push(expandBlob(p, max, par.minR, par.maxR, exp));
 		}
 		if (p.part === 'leftEar' || p.part === 'rightEar') {
 			for (let a = 0; a < 360; a += par.angles) {
@@ -1103,7 +1085,7 @@ function faceBodyNet(pose, exp) {
 				let y = p.pos.y + r * sin(a);
 				newArr.push([x, y]);
 			}
-			let pOff = map(noise(zoff), 0, 1, 0, phaseMax);
+			let pOff = map(noise(zoff), 0, 1, 0, par.phaseMax);
 			phase += pOff;
 			zoff += par.zNoiseOffset;
 		}
@@ -1141,7 +1123,7 @@ function faceBodyNet(pose, exp) {
 				let y = p.pos.y + r * sin(a);
 				newArr.push([x, y]);
 			}
-			let pOff = map(noise(zoff), 0, 1, 0, phaseMax);
+			let pOff = map(noise(zoff), 0, 1, 0, par.phaseMax);
 			phase += pOff;
 			zoff += par.zNoiseOffset;
 		}
@@ -1300,8 +1282,8 @@ function voiceNet(points, level) {
 	return newArr;
 }
 
-function noPreroll(){
-startRecording()
+function noPreroll() {
+	startRecording();
 }
 function playPreroll() {
 	if (preroll) {
@@ -1338,7 +1320,7 @@ function previewSkeleton(pose) {
 				let partA = skeleton[j][0];
 				let partB = skeleton[j][1];
 				vf.push();
-				vf.translate(-50,0)
+				vf.translate(-50, 0);
 				vf.stroke('#AFEEEE');
 				vf.line(
 					partA.position.x,
@@ -1352,4 +1334,32 @@ function previewSkeleton(pose) {
 			}
 		}
 	}
+}
+
+function expandBlob(point, noiseMax, minR, maxR, exp) {
+	let x, y;
+	let px, py;
+	let newArr = [];
+	if (point.position) {
+		px = point.position.x;
+		py = point.position.y;
+	} else if (point.pos) {
+		px = point.pos.x;
+		py = point.pos.y;
+	} else if (point[0]) {
+		px = point[0];
+		py = point[1];
+	}
+	for (let a = 0; a < 360; a += 1) {
+		let xoff = map(cos(a + phase), -1, 1, 0, noiseMax);
+		let yoff = map(sin(a + phase), -1, 1, 0, noiseMax);
+		let r = map(noise(xoff, yoff, zoff), 0, 1, minR, maxR);
+		x = px + r * cos(a);
+		y = py + r * sin(a);
+		newArr.push([x, y]);
+	}
+	let pOff = map(noise(zoff), 0, 1, 0, 0.1);
+	phase += pOff;
+	zoff += par.zNoiseOffset;
+	return newArr;
 }
