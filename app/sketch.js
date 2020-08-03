@@ -146,6 +146,7 @@ let poses = [];
 let poseHistory = [];
 let expressionHistory = [];
 let expressionHistory2 = [];
+let voiceHistory = [];
 let options = { maxPoseDetections: 2 };
 
 let anchors = [];
@@ -194,6 +195,7 @@ function setup() {
 	mgr.addScene(scene01);
 	mgr.addScene(scene02);
 	mgr.addScene(scene03);
+	mgr.addScene(scene04);
 
 	canvas = createCanvas(350, 350);
 	canvas.parent('#canvas-01');
@@ -251,7 +253,6 @@ function startWebcam(autoSize, sw, sh) {
 }
 
 function webcamReady() {
-	console.log('webcamReady');
 	posenet = ml5.poseNet(sample, options, modelReady);
 	posenet.on('pose', function (results) {
 		poses = results;
@@ -260,7 +261,7 @@ function webcamReady() {
 }
 
 function modelReady() {
-	console.log('modelReady');
+	// console.log('modelReady');
 }
 
 function faceReady() {
@@ -279,12 +280,12 @@ function gotFaces(error, result) {
 
 function loadSample() {
 	let f = '/assets/music/spk.mp3';
-	console.log(f);
+	// console.log(f);
 	audioSample = loadSound(f, audioSampleReady);
 }
 
 function audioSampleReady() {
-	console.log(audioSample);
+	// console.log(audioSample);
 	isAudioSampleReady = true;
 	audioSample.disconnect();
 	audioSample.loop();
@@ -451,7 +452,7 @@ function scene02() {
 		button.html('Record');
 		faceapi = ml5.faceApi(sample, faceOptions, faceReady);
 		button.mousePressed(() => {
-			console.log('button 2');
+			// console.log('button 2');
 			startRecording();
 		});
 	};
@@ -519,7 +520,7 @@ function scene03() {
 
 		mirror();
 
-		if (isAudioSampleReady) fft.setInput(audioSample)
+		if (isAudioSampleReady) fft.setInput(audioSample);
 		// if (mic) fft.setInput(mic);
 
 		// Number of bins can only be a power of 2
@@ -528,6 +529,45 @@ function scene03() {
 
 		// if (!full) playModifiedShape2(expressionHistory);
 		if (!full) playShape3(expressionHistory2, spectrum);
+		if (full) playModifiedShape3(voiceHistory);
+	};
+}
+
+// --4
+function scene04() {
+	this.enter = function () {
+		// Entering this scene, cleanup the last one
+		full = false;
+		rec = false;
+		play = false;
+		// Stop faceapi
+		// hide the other scenes
+		select('#scene-03').addClass('hidden');
+		// show this scene
+		select('#scene-04').removeClass('hidden');
+		// move the canvas over
+		canvas.parent('#canvas-04');
+		resizeCanvas(820, 820);
+		// move the webcam monitor over
+		sample.hide();
+		// resize video for a larger preview this time
+		// sample.size(666, 500);
+		button = select('#save-button');
+		button.removeClass('primary');
+		button.html('Save');
+		button.mousePressed(() => {
+			startRecording();
+		});
+		fft = new p5.FFT();
+	};
+
+	// --4draw
+	this.draw = function () {
+		background(255);
+
+		mirror();
+
+		playModifiedShape3(voiceHistory);
 	};
 }
 
@@ -763,20 +803,52 @@ function playShape3(history, spectrum) {
 // `history` will have an array of expanded points from the previous scene
 // (expression data will already be factored into it)
 function drawShape3(history, spectrum) {
-	console.log('drawShape3 ', history, spectrum);
+	// console.log('drawShape3 ', history, spectrum);
 
-	let iterator = frameCount % par.audioResolution;
-	console.log('iterator')
-	console.log(iterator)
-	console.log(spectrum[iterator]);
+	// let concave = map(level, 0, 255, 50, 500);
+	let expanded = expand3(history, spectrum);
+	hullSet = hull(expanded, par.roundness);
+	if (rec) recordVoice(expanded);
 
-	let level = spectrum[iterator]
-	console.log('level')
-	console.log(level)
+	push();
+	stroke(255);
+	if (!par.showPreview) stroke(0);
+	strokeWeight(par.shapeStrokeWeight);
+	noFill();
+	beginShape();
+	hullSet.forEach(p => {
+		if (par.showCurves) {
+			curveVertex(p[0], p[1]);
+		} else {
+			vertex(p[0], p[1]);
+		}
+	});
 
-	let concave = map(level, 0, 255, 50, 500);
+	endShape(CLOSE);
+	pop();
+}
 
-	hullSet = hull(history, concave);
+function expand3(points, levels) {
+	let newArr = [];
+
+	points.forEach(p => {
+		let iterator = frameCount % par.audioResolution;
+		let level = levels[iterator];
+		let offset = map(level, 0, 255, -15, 15);
+		let newP = [p[0] + offset, p[1]];
+		newArr.push(newP);
+	});
+
+	return newArr;
+}
+
+function playModifiedShape3(history) {
+	let cp = frameCount % history.length;
+	drawModifiedShape3(history[cp]);
+}
+
+function drawModifiedShape3(history) {
+	hullSet = hull(history, par.roundness);
 
 	push();
 	stroke(255);
@@ -831,7 +903,7 @@ function drawModifiedShape2(points) {
 }
 
 function loopPlayback() {
-	console.log('loopPlayback');
+	// console.log('loopPlayback');
 }
 
 function playShape(history) {
@@ -954,6 +1026,12 @@ function recordExpression2(history) {
 	if (expressionHistory2.length === par.framesToRecord) finishRecording();
 }
 
+function recordVoice(history) {
+	voiceHistory.push(history);
+	setCounter(voiceHistory.length);
+	if (voiceHistory.length === par.framesToRecord) finishRecording();
+}
+
 function mirror() {
 	translate(width, 0);
 	scale(-1, 1);
@@ -964,4 +1042,28 @@ function updateAnchors() {
 		a.topSpeed = par.topSpeed;
 		a.maxForce = par.maxAcc;
 	});
+}
+
+// Should get an array of hull points from the previous step (what about recording the )
+function playFinalShape(history) {
+	let cp = frameCount % history.length;
+	drawFinalShape(history[cp]);
+}
+
+function drawFinalShape(points) {
+	push();
+	stroke(255);
+	if (!par.showPreview) stroke(0);
+	strokeWeight(par.shapeStrokeWeight);
+	noFill();
+	beginShape();
+	points.forEach(p => {
+		if (par.showCurves) {
+			curveVertex(p[0], p[1]);
+		} else {
+			vertex(p[0], p[1]);
+		}
+	});
+
+	pop();
 }

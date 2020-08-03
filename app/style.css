@@ -9,7 +9,7 @@ Space Mono is a fixed-width font with four weights: 400, 400 Italic, 700, 700 It
 	--dark: #101010;
 	--primary: #f9f9f9;
 	--tertiary: #393939;
-	--light: #E0E0E0;
+	--light: #e0e0e0;
 	--secondary: #a9a9a9;
 	--recording: #ff5151;
 }
@@ -59,8 +59,9 @@ main p {
 /* ==Layout  **************************************************** */
 /* ************************************************************** */
 
-body,main {
-	height: 100vh
+body,
+main {
+	height: 100vh;
 }
 
 main {
@@ -85,7 +86,7 @@ main .directions {
 
 main .controls {
 	margin-top: 2rem;
-	align-self:flex-end;
+	align-self: flex-end;
 }
 
 main .webcam-monitor-container {
@@ -164,6 +165,11 @@ main .webcam-monitor-container {
 	/* align-self: stretch; */
 	height: 100%;
 }
+
+/* #scene-04 {
+	background-color: var(--primary);
+	color: var(--dark);
+} */
 
 /* ==P5 Helpers ************************************************* */
 /* ************************************************************** */
