@@ -56,6 +56,9 @@ main p {
 	margin: 0;
 }
 
+canvas {
+	border-radius: 10px;
+}
 /* ==Layout  **************************************************** */
 /* ************************************************************** */
 
@@ -90,6 +93,8 @@ main .controls {
 }
 
 main .webcam-monitor-container {
+
+	border-radius: 10px;
 }
 
 .scene .sidebar {
@@ -153,9 +158,7 @@ main .webcam-monitor-container {
 #scene-00 .pretitle p {
 	align-self: flex-end;
 }
-#canvas-00 canvas {
-	border-radius: 10px;
-}
+
 #scene-03 .webcam-monitor-container {
 	background-color: var(--light);
 	color: var(--dark);
@@ -256,6 +259,13 @@ button.rec:hover,
 }
 .hidden {
 	display: none !important;
+}
+
+.preroll,
+button.preroll:hover,
+.btn.preroll:hover {
+	background-color: var(--recording);
+	color: var(--primary);
 }
 
 .text-muted,

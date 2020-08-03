@@ -1,6 +1,6 @@
 class Paramaterize {
 	constructor() {
-		this.scene = 1;
+		this.scene = 0;
 		this.framesToRecord = 100;
 		this.shapeStrokeWeight = 2;
 
@@ -30,6 +30,7 @@ class Paramaterize {
 		this.noiseLevel = 0.001;
 		this.roundness = 250;
 		this.emotionalScale = 2;
+		this.mississippi = 260;
 
 		this.showAnchors = true;
 		this.showPose = false;
@@ -82,6 +83,7 @@ f2.add(par, 'earRadius');
 f2.add(par, 'wristRadius');
 f2.add(par, 'noiseLevel');
 f2.add(par, 'roundness');
+f2.add(par, 'mississippi');
 f2.add(par, 'emotionalScale');
 speedControl.onFinishChange(() => updateAnchors());
 accControl.onFinishChange(() => updateAnchors());
@@ -140,7 +142,8 @@ const PARTS = [
 
 // --posenet
 
-let canvas, status;
+let canvas, vf;
+let status;
 let sample, audioSample;
 let webcamPreview;
 let button;
@@ -149,8 +152,10 @@ let sceneReady = false;
 let isAudioSampleReady = false;
 
 let rec = false;
+let preroll = false;
 let play = false;
 let full = false;
+let prerollCounter = 0;
 
 let posenet;
 let poses = [];
@@ -215,6 +220,10 @@ function setup() {
 	canvas = createCanvas(350, 350);
 	canvas.parent('#canvas-01');
 
+	vf = createGraphics(500, 470);
+	vf.translate(vf.width, 0);
+	vf.scale(-1, 1);
+
 	background(255);
 
 	// --b
@@ -223,13 +232,13 @@ function setup() {
 		mgr.showScene(scene01);
 	});
 	select('#record-button-01').mousePressed(() => {
-		startRecording();
+		startPreroll();
 	});
 	select('#record-button-02').mousePressed(() => {
-		startRecording();
+		startPreroll();
 	});
 	select('#record-button-02').mousePressed(() => {
-		startRecording();
+		startPreroll();
 	});
 
 	// Prepare a dedicated anchor for the intro screen
@@ -393,9 +402,13 @@ function scene01() {
 		canvas.parent('#canvas-01');
 		resizeCanvas(820, 820);
 		// move the webcam monitor over
-		sample.parent('#webcam-monitor-01');
+		// sample.parent('#webcam-monitor-01');
 		// resize video for a larger preview this time
-		sample.size(666, 500);
+		sample.size(627, 470);
+		sample.hide();
+
+		vf.parent('#webcam-monitor-01');
+		vf.show();
 		button = select('#record-button-01');
 		// Prepare anchors to chase posenet points
 		PARTS.forEach(p => {
@@ -412,15 +425,21 @@ function scene01() {
 		translate(width, 0);
 		scale(-1, 1);
 
-		if (sample && par.showPreview) {
-			image(sample, 0, 0);
+		if (sample) {
+			// vs is 500x470 but feed is 627x470
+			vf.image(sample, -50, 0);
 		}
 
-		if (play) playShape(poseHistory);
+		playPreroll();
+
+		if (play && !preroll) playShape(poseHistory);
 
 		if (poses) {
 			if (poses[0]) {
 				let pose = poses[0].pose.keypoints;
+
+				// Draw skeleton in vf
+				if (!preroll) previewSkeleton(poses[0]);
 
 				// Draw pose for reference
 				if (par.showPose) {
@@ -462,6 +481,7 @@ function scene02() {
 		// Entering this scene, cleanup the last one
 		full = false;
 		rec = false;
+		preroll = false;
 		play = false;
 		phase = 0.0;
 		// Should stop posenet?
@@ -473,17 +493,13 @@ function scene02() {
 		select('#scene-02').removeClass('hidden');
 		// move the canvas over
 		canvas.parent('#canvas-02');
-		resizeCanvas(800, 800);
-		// move the webcam monitor over
-		sample.parent('#webcam-monitor-02');
-		// resize video for a larger preview this time
-		sample.size(666, 500);
+		vf.parent('#webcam-monitor-02');
 		button = select('#record-button-02');
 		button.removeClass('primary');
 		button.html('Record');
 		faceapi = ml5.faceApi(sample, faceOptions, faceReady);
 		button.mousePressed(() => {
-			startRecording();
+			startPreroll();
 		});
 	};
 
@@ -492,6 +508,12 @@ function scene02() {
 		background(255);
 		// Mirror canvas, to match the mirrored video
 		mirror();
+
+		if (sample) {
+			// vs is 500x470 but feed is 627x470
+			vf.image(sample, -50, 0);
+		}
+		playPreroll();
 
 		if (full) playShape3(expressionHistory2);
 
@@ -520,6 +542,7 @@ function scene03() {
 		// Entering this scene, cleanup the last one
 		full = false;
 		rec = false;
+		preroll = false;
 		play = false;
 		// Stop faceapi
 		stopFaceapi = true;
@@ -530,16 +553,12 @@ function scene03() {
 		select('#scene-03').removeClass('hidden');
 		// move the canvas over
 		canvas.parent('#canvas-03');
-		resizeCanvas(820, 820);
-		// move the webcam monitor over
-		sample.hide();
-		// resize video for a larger preview this time
-		// sample.size(666, 500);
+		vf.hide()
 		button = select('#record-button-03');
 		button.removeClass('primary');
 		button.html('Record');
 		button.mousePressed(() => {
-			startRecording();
+			startPreroll();
 		});
 		fft = new p5.FFT();
 	};
@@ -550,6 +569,12 @@ function scene03() {
 
 		mirror();
 
+		if (sample) {
+			// vs is 500x470 but feed is 627x470
+			vf.image(sample, -50, 0);
+		}
+
+noPreroll()
 		// if (isAudioSampleReady) fft.setInput(mic);
 		if (mic) fft.setInput(mic);
 
@@ -568,6 +593,7 @@ function scene04() {
 		// Entering this scene, cleanup the last one
 		full = false;
 		rec = false;
+		preroll = false;
 		play = false;
 		// Stop faceapi
 		// hide the other scenes
@@ -585,7 +611,7 @@ function scene04() {
 		button.removeClass('primary');
 		button.html('Save');
 		button.mousePressed(() => {
-			startRecording();
+			startPreroll();
 		});
 		fft = new p5.FFT();
 	};
@@ -683,13 +709,18 @@ function makePointSet(vArr) {
 	return set;
 }
 
+function startPreroll() {
+	preroll = true;
+	button.addClass('preroll');
+	button.html('...');
+}
+
 function startRecording() {
-	if (!full) {
-		rec = true;
-		play = false;
-		button.addClass('rec');
-		// TODO start counter?
-	}
+	preroll = false;
+	prerollCounter = 0;
+	rec = true;
+	button.addClass('rec');
+	button.html('Recording');
 }
 
 function recordPose(points) {
@@ -845,7 +876,6 @@ function drawShape3(history, spectrum) {
 	// let concave = map(level, 0, 255, 50, 500);
 	// let expanded = faceBodyNet(history, spectrum);
 	let expanded = voiceNet(history, spectrum);
-	console.log('expanded ', expanded);
 
 	hullSet = hull(expanded, par.roundness);
 	if (rec) recordVoice(hullSet);
@@ -1068,8 +1098,8 @@ function faceBodyNet(pose, exp) {
 					noise(xoff, yoff, zoff),
 					0,
 					1,
-					par.earRadius-10,
-					par.earRadius+10
+					par.earRadius - 10,
+					par.earRadius + 10
 				);
 				let x = p.pos.x + r * cos(a);
 				let y = p.pos.y + r * sin(a);
@@ -1106,8 +1136,8 @@ function faceBodyNet(pose, exp) {
 					noise(xoff, yoff, zoff),
 					0,
 					1,
-					par.radius-10,
-					par.radius+50
+					par.radius - 10,
+					par.radius + 50
 				);
 				let x = p.pos.x + r * cos(a);
 				let y = p.pos.y + r * sin(a);
@@ -1255,19 +1285,73 @@ function drawFinalShape(points) {
 
 function voiceNet(points, level) {
 	let newArr = [];
-	let phase = 0.0
+	let phase = 0.0;
 	points.forEach((p, i) => {
 		let x, y;
 		let offset = 0;
 		if (level) {
 			if (level[0]) {
-				offset = map(level[0],0,255,-50,50)
+				offset = map(level[0], 0, 255, -50, 50);
 			}
 		}
 		x = p[0] + phase + offset * sin(i);
 		y = p[1] + phase + offset * cos(i);
 		newArr.push([x, y]);
 	});
-	phase += par.phaseMaxOffset
+	phase += par.phaseMaxOffset;
 	return newArr;
+}
+
+function noPreroll(){
+startRecording()
+}
+function playPreroll() {
+	if (preroll) {
+		let iterator = frameCount % par.mississippi;
+		let counter = floor(map(prerollCounter, 0, par.mississippi, 4, 0));
+		if (counter > 0) {
+			vf.push();
+			vf.translate(vf.width, 0);
+			vf.scale(-1, 1);
+			vf.noStroke();
+			vf.fill(0, 200);
+			vf.rect(0, 0, vf.width, vf.height);
+			vf.fill(255);
+			vf.textFont('Space Mono');
+			vf.textSize(280);
+			vf.textAlign(CENTER);
+			vf.text(counter, vf.width / 2, vf.height / 2 + 100);
+			vf.pop();
+			prerollCounter++;
+		} else {
+			startRecording();
+		}
+	}
+}
+
+function previewSkeleton(pose) {
+	let skeleton;
+	if (pose) {
+		if (pose.skeleton[0]) {
+			skeleton = pose.skeleton;
+
+			// For every skeleton, loop through all body connections
+			for (let j = 0; j < skeleton.length; j++) {
+				let partA = skeleton[j][0];
+				let partB = skeleton[j][1];
+				vf.push();
+				vf.translate(-50,0)
+				vf.stroke('#AFEEEE');
+				vf.line(
+					partA.position.x,
+					partA.position.y,
+					partB.position.x,
+					partB.position.y
+				);
+				vf.ellipse(partA.position.x, partA.position.y, 5);
+				vf.ellipse(partB.position.x, partB.position.y, 5);
+				vf.pop();
+			}
+		}
+	}
 }
