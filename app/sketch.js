@@ -1,7 +1,8 @@
 class Paramaterize {
 	constructor() {
 		this.scene = 0;
-		this.framesToRecord = 200;
+		this.framesToRecord = 20;
+		this.shapeStrokeWeight = 2;
 
 		this.minR = 33; // scene 0
 		this.maxR = 66; // scene 0
@@ -28,18 +29,22 @@ class Paramaterize {
 		this.showAnchors = false;
 		this.fillShape = false;
 		this.showCurves = false;
+
+		this.audioResolution = 32; // bins
 	}
 }
 
 par = new Paramaterize();
 
 let gui = new dat.GUI({ autoPlace: true });
-// let customContainer = document.getElementById('dat-gui-container');
+// let customContainer =document.getElementById('dat-gui-container');
 // customContainer.appendChild(gui.domElement);
 
 let f1 = gui.addFolder('Intro screen');
 let f2 = gui.addFolder('Pose');
-let f3 = gui.addFolder('Reference');
+let f3 = gui.addFolder('Face');
+let f4 = gui.addFolder('Voice');
+let f5 = gui.addFolder('Reference');
 
 // let sceneGui = gui.add(par, 'scene');
 // sceneGui.onFinishChange(() => {
@@ -47,6 +52,7 @@ let f3 = gui.addFolder('Reference');
 // });
 
 gui.add(par, 'framesToRecord', 10, 10000, 1);
+gui.add(par, 'shapeStrokeWeight');
 
 f1.add(par, 'minR');
 f1.add(par, 'maxR');
@@ -57,15 +63,8 @@ f1.add(par, 'phaseOffset');
 f1.add(par, 'inc');
 f1.close();
 
-
 let speedControl = f2.add(par, 'topSpeed');
-speedControl.onFinishChange(() => {
-	updateAnchors();
-});
 let accControl = f2.add(par, 'maxAcc');
-accControl.onFinishChange(() => {
-	updateAnchors();
-});
 f2.add(par, 'angles');
 f2.add(par, 'autoRadius');
 f2.add(par, 'autoRadiusRatio');
@@ -73,16 +72,20 @@ f2.add(par, 'manualRadiusRatio');
 f2.add(par, 'noseExpandRatio');
 f2.add(par, 'noiseLevel');
 f2.add(par, 'roundness');
+speedControl.onFinishChange(() => updateAnchors());
+accControl.onFinishChange(() => updateAnchors());
 f2.close();
 
-f3.add(par, 'showPose');
-f3.add(par, 'showExpanded');
-f3.add(par, 'showHull');
-f3.add(par, 'showPreview');
-f3.add(par, 'showAnchors');
-f3.add(par, 'fillShape');
-f3.add(par, 'showCurves');
-f3.close();
+f4.add(par, 'audioResolution');
+
+f5.add(par, 'showPose');
+f5.add(par, 'showExpanded');
+f5.add(par, 'showHull');
+f5.add(par, 'showPreview');
+f5.add(par, 'showAnchors');
+f5.add(par, 'fillShape');
+f5.add(par, 'showCurves');
+f5.close();
 
 gui.close();
 
@@ -127,10 +130,12 @@ const PARTS = [
 // --posenet
 
 let canvas, status;
+let sample, audioSample;
 let webcamPreview;
 let button;
 
 let sceneReady = false;
+let isAudioSampleReady = false;
 
 let rec = false;
 let play = false;
@@ -140,6 +145,7 @@ let posenet;
 let poses = [];
 let poseHistory = [];
 let expressionHistory = [];
+let expressionHistory2 = [];
 let options = { maxPoseDetections: 2 };
 
 let anchors = [];
@@ -163,6 +169,7 @@ let faceapi;
 let detections = [];
 let expression;
 let faceapiLoading = true;
+let stopFaceapi = false;
 
 const faceOptions = {
 	withLandmarks: false,
@@ -170,12 +177,17 @@ const faceOptions = {
 	withDescriptors: false,
 };
 
+// --sound
+
+let fft;
+let mic;
+
 let mgr, g;
 p5.disableFriendlyErrors = true;
 
 function setup() {
 	mgr = new SceneManager();
-
+	loadSample();
 	// // Preload scenes. Preloading is normally optional
 	// // ... but needed if showNextScene() is used.
 	mgr.addScene(scene00);
@@ -224,6 +236,11 @@ function gotoScene() {
 	}
 }
 
+function startMic() {
+	mic = new p5.AudioIn();
+	mic.start();
+}
+
 function startWebcam(autoSize, sw, sh) {
 	sample = createCapture(VIDEO, webcamReady);
 	if (!autoSize) {
@@ -246,170 +263,31 @@ function modelReady() {
 	console.log('modelReady');
 }
 
-// takes an array of posenet keypoints
-function retargetAnchorsFromPose(targets) {
-	// TODO: mark anchors, text or color or something
-	anchors.forEach((a, i) => {
-		if (targets[i]) {
-			let v = createVector(targets[i].position.x, targets[i].position.y);
-			a.setTarget(v);
-		} else {
-			let v = createVector(targets[0].position.x, targets[0].position.y);
-			a.setTarget(v);
-		}
-		a.behaviors();
-		a.update();
-		if (par.showAnchors) a.show();
-	});
+function faceReady() {
+	faceapi.detect(gotFaces);
 }
 
-function refreshAnchors() {
-	anchors.forEach(a => {
-		a.behaviors();
-		a.update();
-		if (par.showAnchors) a.show();
-	});
-}
-
-// Takes anchors and returns 2D array of points for hull()
-// Pose will look like [{part:'nose',position: {x: 0,y:0},score:.99}]
-function expand1(pose) {
-	let newArr = [];
-	let xoff = 0.0;
-	let yoff = 0.0;
-
-	pose.forEach(p => {
-		for (let angle = 0; angle < 360; angle += par.angles) {
-			let radius;
-			let n = noise(xoff, yoff);
-			let ratio = par.manualRadiusRatio;
-			if (par.autoRadius) ratio = par.autoRadiusRatio;
-			if (p.part === 'nose') {
-				radius = eyeDist * ratio * par.noseExpandRatio;
-			} else {
-				radius = eyeDist * ratio;
-			}
-
-			let x = p.pos.x + n + radius * sin(angle);
-			let y = p.pos.y + n + radius * cos(angle);
-
-			let newP = [x, y];
-			newArr.push(newP);
-			xoff += par.noiseLevel;
-			yoff += par.noiseLevel;
-		}
-	});
-
-	return newArr;
-}
-
-function expand2(pose, points) {
-	let newArr = [];
-	let xoff = 0.0;
-	let yoff = 0.0;
-
-	let happy, surprised;
-
-	if (detections) {
-		if (detections[0]) {
-			// ({ expressions } = detections[0]);
-			happy = detections[0].expressions.happy;
-			surprised = detections[0].expressions.surprised;
-		}
+function gotFaces(error, result) {
+	if (error) {
+		console.log(error);
+		return;
 	}
-
-	if (points) {
-		if (points.length === 18) {
-			happy = points[17].expressions.happy;
-			surprised = points[17].expressions.surprised;
-		}
-	}
-
-	pose.forEach(p => {
-		for (let angle = 0; angle < 360; angle += par.angles) {
-			let n = noise(xoff, yoff);
-			let radius;
-			if (par.autoRadius) {
-				if (p.part === 'nose') {
-					radius = eyeDist * par.autoRadiusRatio * 2.5;
-				} else {
-					radius = eyeDist * par.autoRadiusRatio;
-				}
-			} else {
-				if (p.part === 'nose') {
-					radius = par.radius * 2.5;
-				} else {
-					radius = par.radius;
-				}
-			}
-
-			radius = map(happy, 0, 1, 50, 200);
-
-			let x = p.pos.x + n + radius * sin(angle);
-			let y = p.pos.y + n + radius * cos(angle);
-
-			let newP = [x, y];
-			newArr.push(newP);
-			xoff += par.noiseLevel;
-			yoff += par.noiseLevel;
-		}
-	});
-
-	return newArr;
-}
-// Gets a posenet pose and returns distance between two points
-function poseDist(pose, a, b) {
-	let left = createVector(pose[a].position.x, pose[a].position.y);
-	let right = createVector(pose[b].position.x, pose[b].position.y);
-	return p5.Vector.dist(left, right);
+	detections = result;
+	faceapiLoading = false;
+	if (!stopFaceapi) faceapi.detect(gotFaces);
 }
 
-// Gets a posenet pose and returns eye distance
-function checkEyeDist(pose) {
-	// Pose will look like [{part:'nose',position: {x: 0,y:0},score:.99}]
-	// 1	leftEye, 2	rightEye
-	let left = createVector(pose[1].position.x, pose[1].position.y);
-	let right = createVector(pose[2].position.x, pose[2].position.y);
-	return p5.Vector.dist(left, right);
+function loadSample() {
+	let f = '/assets/music/spk.mp3';
+	console.log(f);
+	audioSample = loadSound(f, audioSampleReady);
 }
 
-// Gets a posenet pose and returns eye-should ratio
-function checkEyeShoulderRatio() {
-	// Pose will look like [{part:'nose',position: {x: 0,y:0},score:.99}]
-	//  1	leftEye
-	//  2	rightEye
-	//  5	leftShoulder
-	//  6	rightShoulder
-}
-
-function drawAbstractShape() {
-	if (par.fillShape) {
-		stroke(0);
-		strokeWeight(10);
-		fill(255);
-	} else {
-		stroke(0);
-		strokeWeight(8);
-		noFill();
-	}
-	beginShape();
-	anchors.forEach(a => {
-		if (par.showCurves) {
-			curveVertex(a.pos.x, a.pos.y);
-		} else {
-			vertex(a.pos.x, a.pos.y);
-		}
-	});
-	endShape(CLOSE);
-}
-
-function makePointSet(vArr) {
-	let set = [];
-	vArr.forEach(v => {
-		let pt = [v.x, v.y];
-		set.push(pt);
-	});
-	return set;
+function audioSampleReady() {
+	console.log(audioSample);
+	isAudioSampleReady = true;
+	audioSample.disconnect();
+	audioSample.loop();
 }
 
 // =============================================================
@@ -445,7 +323,7 @@ function scene00() {
 
 				translate(cx, cy);
 				stroke(0);
-				strokeWeight(2);
+				strokeWeight(par.shapeStrokeWeight);
 				noFill();
 				beginShape();
 				for (let a = 0; a < TWO_PI; a += radians(par.inc)) {
@@ -553,7 +431,8 @@ function scene02() {
 		full = false;
 		rec = false;
 		play = false;
-		// remove posenet listeners
+		phase = 0.0;
+		// Should stop posenet?
 		posenet.removeAllListeners();
 		poses[0] = null;
 		// hide the other scenes
@@ -607,12 +486,13 @@ function scene02() {
 
 function scene03() {
 	this.enter = function () {
-		console.log('Entering scene 3');
 		// Entering this scene, cleanup the last one
 		full = false;
 		rec = false;
 		play = false;
-		// Remove faceapi listeners?
+		// Stop faceapi
+		stopFaceapi = true;
+		startMic();
 		// hide the other scenes
 		select('#scene-02').addClass('hidden');
 		// show this scene
@@ -628,9 +508,9 @@ function scene03() {
 		button.removeClass('primary');
 		button.html('Record');
 		button.mousePressed(() => {
-			console.log('button 3');
 			startRecording();
 		});
+		fft = new p5.FFT();
 	};
 
 	// --3draw
@@ -639,14 +519,102 @@ function scene03() {
 
 		mirror();
 
-		playModifiedShape2(expressionHistory);
+		if (isAudioSampleReady) fft.setInput(audioSample)
+		// if (mic) fft.setInput(mic);
+
+		// Number of bins can only be a power of 2
+		let bins = pow(2, ceil(log(par.audioResolution) / log(2)));
+		let spectrum = fft.analyze(bins);
+
+		// if (!full) playModifiedShape2(expressionHistory);
+		if (!full) playShape3(expressionHistory2, spectrum);
 	};
 }
 
 // --f
 
+function refreshAnchors() {
+	anchors.forEach(a => {
+		a.behaviors();
+		a.update();
+		if (par.showAnchors) a.show();
+	});
+}
+
+// Takes an array of posenet keypoints
+// What happens if this array also has epxression data at index [17]?
+function retargetAnchorsFromPose(targets) {
+	// TODO: mark anchors, text or color or something
+	anchors.forEach((a, i) => {
+		if (targets[i]) {
+			let v = createVector(targets[i].position.x, targets[i].position.y);
+			a.setTarget(v);
+		} else {
+			let v = createVector(targets[0].position.x, targets[0].position.y);
+			a.setTarget(v);
+		}
+		a.behaviors();
+		a.update();
+		if (par.showAnchors) a.show();
+	});
+}
+
+// Gets a posenet pose and returns distance between two points
+function poseDist(pose, a, b) {
+	let left = createVector(pose[a].position.x, pose[a].position.y);
+	let right = createVector(pose[b].position.x, pose[b].position.y);
+	return p5.Vector.dist(left, right);
+}
+
+// Gets a posenet pose and returns eye distance
+function checkEyeDist(pose) {
+	// Pose will look like [{part:'nose',position: {x: 0,y:0},score:.99}]
+	// 1	leftEye, 2	rightEye
+	let left = createVector(pose[1].position.x, pose[1].position.y);
+	let right = createVector(pose[2].position.x, pose[2].position.y);
+	return p5.Vector.dist(left, right);
+}
+
+// Gets a posenet pose and returns eye-should ratio
+function checkEyeShoulderRatio() {
+	// Pose will look like [{part:'nose',position: {x: 0,y:0},score:.99}]
+	//  1	leftEye
+	//  2	rightEye
+	//  5	leftShoulder
+	//  6	rightShoulder
+}
+
+function drawAbstractShape() {
+	if (par.fillShape) {
+		stroke(0);
+		strokeWeight(par.shapeStrokeWeight);
+		fill(255);
+	} else {
+		stroke(0);
+		strokeWeight(par.shapeStrokeWeight);
+		noFill();
+	}
+	beginShape();
+	anchors.forEach(a => {
+		if (par.showCurves) {
+			curveVertex(a.pos.x, a.pos.y);
+		} else {
+			vertex(a.pos.x, a.pos.y);
+		}
+	});
+	endShape(CLOSE);
+}
+
+function makePointSet(vArr) {
+	let set = [];
+	vArr.forEach(v => {
+		let pt = [v.x, v.y];
+		set.push(pt);
+	});
+	return set;
+}
+
 function startRecording() {
-	console.log('startRecording');
 	if (!full) {
 		rec = true;
 		play = false;
@@ -670,7 +638,6 @@ function setCounter(count) {
 }
 
 function finishRecording() {
-	console.log('finishRecording');
 	// TODO localStorage?
 	rec = false;
 	full = true;
@@ -679,7 +646,6 @@ function finishRecording() {
 	button.addClass('primary');
 	button.html('Next');
 	button.mousePressed(() => {
-		console.log('button next');
 		mgr.showNextScene();
 	});
 	let counters = selectAll('.counter');
@@ -688,14 +654,7 @@ function finishRecording() {
 	});
 }
 
-function playShape(history) {
-	// Use the current frame counter as an iterator for looping through the recorded array
-	let cp = frameCount % history.length;
-	drawShape(history[cp]);
-	// Reset recorded state after finishing playback
-	if (cp === history.length - 1) loopPlayback();
-}
-
+// Gets array of posenet poses
 function playShape2(history) {
 	// Use the current frame counter as an iterator for looping through the recorded array
 	let cp = frameCount % history.length;
@@ -705,19 +664,182 @@ function playShape2(history) {
 	if (cp === history.length - 1) loopPlayback();
 }
 
+function drawShape2(points) {
+	retargetAnchorsFromPose(points);
+	expanded = expand2(anchors);
+	if (rec && detections) recordExpression2(expanded);
+	hullSet = hull(expanded, par.roundness);
+
+	push();
+	stroke(255);
+	if (!par.showPreview) stroke(0);
+	strokeWeight(par.shapeStrokeWeight);
+	noFill();
+	beginShape();
+	hullSet.forEach(p => {
+		if (par.showCurves) {
+			curveVertex(p[0], p[1]);
+		} else {
+			vertex(p[0], p[1]);
+		}
+	});
+
+	endShape(CLOSE);
+	pop();
+}
+
+function expand2(pointData) {
+	let hpose, hexp;
+
+	if (pointData.exp) hexp = pointData.exp;
+	if (pointData.pose) {
+		hpose = pointData.pose;
+	} else {
+		hpose = pointData;
+	}
+
+	let newArr = [];
+	let xoff = 0.0;
+	let yoff = 0.0;
+
+	let happy,
+		surprised = 0.5;
+
+	if (detections) {
+		if (detections[0]) {
+			happy = detections[0].expressions.happy;
+			surprised = detections[0].expressions.surprised;
+		}
+	}
+
+	if (hexp) {
+		if (hexp[0]) {
+			happy = hexp[0].expressions.happy;
+			surprised = hexp[0].expressions.surprised;
+		}
+	}
+
+	happy = map(happy, 0, 1, -50, 50);
+	surprised = map(surprised, 0, 1, -50, 50);
+
+	hpose.forEach(p => {
+		for (let angle = 0; angle < 360; angle += par.angles) {
+			let n = map(noise(xoff, yoff), 0, 1, 1, 100);
+			let radius;
+			let ratio = par.manualRadiusRatio;
+			if (par.autoRadius) ratio = par.autoRadiusRatio;
+			if (p.part === 'nose') {
+				radius = eyeDist * ratio * par.noseExpandRatio;
+			} else {
+				radius = eyeDist * ratio;
+			}
+
+			radius = radius + happy - surprised;
+
+			let x, y;
+			if (p.position) {
+				x = p.position.x + n + radius * sin(angle);
+				y = p.position.y + n + radius * cos(angle);
+			} else if (p.pos) {
+				x = p.pos.x + n + radius * sin(angle);
+				y = p.pos.y + n + radius * cos(angle);
+			}
+
+			let newP = [x, y];
+			newArr.push(newP);
+			xoff += par.noiseLevel;
+			yoff += par.noiseLevel;
+		}
+	});
+
+	return newArr;
+}
+
+function playShape3(history, spectrum) {
+	let cp = frameCount % history.length;
+	drawShape3(history[cp], spectrum);
+}
+
+// `history` will have an array of expanded points from the previous scene
+// (expression data will already be factored into it)
+function drawShape3(history, spectrum) {
+	console.log('drawShape3 ', history, spectrum);
+
+	let iterator = frameCount % par.audioResolution;
+	console.log('iterator')
+	console.log(iterator)
+	console.log(spectrum[iterator]);
+
+	let level = spectrum[iterator]
+	console.log('level')
+	console.log(level)
+
+	let concave = map(level, 0, 255, 50, 500);
+
+	hullSet = hull(history, concave);
+
+	push();
+	stroke(255);
+	if (!par.showPreview) stroke(0);
+	strokeWeight(par.shapeStrokeWeight);
+	noFill();
+	beginShape();
+	hullSet.forEach(p => {
+		if (par.showCurves) {
+			curveVertex(p[0], p[1]);
+		} else {
+			vertex(p[0], p[1]);
+		}
+	});
+
+	endShape(CLOSE);
+	pop();
+}
+
 function playModifiedShape2(history) {
-	// console.log('playModifiedShape2', history);
 	// Use the current frame counter as an iterator for looping through the recorded array
 	let cp = frameCount % history.length;
-	// console.log(cp);
-	// console.log(history[cp]);
 	drawModifiedShape2(history[cp]);
 	// Reset recorded state after finishing playback
 	// if (cp === history.length - 1) loopPlayback();
 }
 
+// only gets called with expressionHistory?
+function drawModifiedShape2(points) {
+	let hpoints = points.pose;
+	let hexp = points.exp;
+	retargetAnchorsFromPose(hpoints);
+	expanded = expand2(points);
+	hullSet = hull(expanded, par.roundness);
+
+	push();
+	stroke(255);
+	if (!par.showPreview) stroke(0);
+	strokeWeight(par.shapeStrokeWeight);
+	noFill();
+	beginShape();
+	hullSet.forEach(p => {
+		if (par.showCurves) {
+			curveVertex(p[0], p[1]);
+		} else {
+			vertex(p[0], p[1]);
+		}
+	});
+
+	endShape(CLOSE);
+	pop();
+}
+
 function loopPlayback() {
 	console.log('loopPlayback');
+}
+
+function playShape(history) {
+	// Use the current frame counter as an iterator for looping through the recorded array
+	let cp = frameCount % history.length;
+	drawShape(history[cp]);
+	// Reset recorded state after finishing playback
+	if (cp === history.length - 1) loopPlayback();
 }
 
 // Draws an outline based on posenet keypoints
@@ -729,7 +851,7 @@ function drawShape(points) {
 	push();
 	stroke(255);
 	if (!par.showPreview) stroke(0);
-	strokeWeight(6);
+	strokeWeight(par.shapeStrokeWeight);
 	noFill();
 	beginShape();
 	hullSet.forEach(p => {
@@ -744,70 +866,42 @@ function drawShape(points) {
 	pop();
 }
 
-function drawShape2(points) {
-	retargetAnchorsFromPose(points);
-	expanded = expand2(anchors);
-	hullSet = hull(expanded, par.roundness);
+// Takes anchors and returns 2D array of points for hull()
+// Pose will look like [{part:'nose',position: {x: 0,y:0},score:.99}]
+function expand1(pose) {
+	let newArr = [];
+	let xoff = 0.0;
+	let yoff = 0.0;
 
-	push();
-	stroke(255);
-	if (!par.showPreview) stroke(0);
-	strokeWeight(6);
-	noFill();
-	beginShape();
-	hullSet.forEach(p => {
-		if (par.showCurves) {
-			curveVertex(p[0], p[1]);
-		} else {
-			vertex(p[0], p[1]);
+	pose.forEach(p => {
+		for (let angle = 0; angle < 360; angle += par.angles) {
+			let radius;
+			let n = noise(xoff, yoff);
+			let ratio = par.manualRadiusRatio;
+			if (par.autoRadius) ratio = par.autoRadiusRatio;
+			if (p.part === 'nose') {
+				radius = eyeDist * ratio * par.noseExpandRatio;
+			} else {
+				radius = eyeDist * ratio;
+			}
+
+			let x = p.pos.x + n + radius * sin(angle);
+			let y = p.pos.y + n + radius * cos(angle);
+
+			let newP = [x, y];
+			newArr.push(newP);
+			xoff += par.noiseLevel;
+			yoff += par.noiseLevel;
 		}
 	});
 
-	endShape(CLOSE);
-	pop();
+	return newArr;
 }
 
-function drawModifiedShape2(points) {
-	// console.log('drawModifiedShape2 ', points);
-	retargetAnchorsFromPose(points);
-	expanded = expand2(anchors, points);
-	hullSet = hull(expanded, par.roundness);
-
-	push();
-	stroke(255);
-	if (!par.showPreview) stroke(0);
-	strokeWeight(6);
-	noFill();
-	beginShape();
-	hullSet.forEach(p => {
-		if (par.showCurves) {
-			curveVertex(p[0], p[1]);
-		} else {
-			vertex(p[0], p[1]);
-		}
-	});
-
-	endShape(CLOSE);
-	pop();
-}
 function deriveProportions(pose) {
 	eyeDist = floor(poseDist(pose, LEFTEYE, RIGHTEYE));
 	shoulderDist = floor(poseDist(pose, LEFTSHOULDER, RIGHTSHOULDER));
 	hipDist = floor(poseDist(pose, LEFTHIP, RIGHTHIP));
-}
-
-function faceReady() {
-	faceapi.detect(gotFaces);
-}
-
-function gotFaces(error, result) {
-	if (error) {
-		console.log(error);
-		return;
-	}
-	detections = result;
-	faceapiLoading = false;
-	faceapi.detect(gotFaces);
 }
 
 function graphExpressions() {
@@ -847,33 +941,17 @@ function graphExpressions() {
 	pop();
 }
 
-function emotionalPoints(pArr) {
-	let happy, surprised;
-
-	if (detections) {
-		if (detections[0]) {
-			// ({ expressions } = detections[0]);
-			happy = detections[0].expressions.happy;
-			surprised = detections[0].expressions.happy;
-		}
-	}
-
-	pArr.forEach(p => {
-		p[0] = p[0] + map(happy, 0, 1, -50, 50);
-		p[1] = p[1] + map(surprised, 0, 1, -50, 50);
-	});
-
-	return pArr;
-}
-
 function recordExpression(exp, pose) {
-	// console.log('recordExpression exp ', exp);
-	// console.log('recordExpression pose ', pose);
-	let newArr = pose.concat(exp);
+	let newArr = { pose: pose, exp: exp };
 	expressionHistory.push(newArr);
-	// console.log('expressionHistory ', expressionHistory);
 	setCounter(expressionHistory.length);
 	if (expressionHistory.length === par.framesToRecord) finishRecording();
+}
+
+function recordExpression2(history) {
+	expressionHistory2.push(history);
+	setCounter(expressionHistory2.length);
+	if (expressionHistory2.length === par.framesToRecord) finishRecording();
 }
 
 function mirror() {

@@ -17,10 +17,12 @@ class Anchor {
 	}
 
 	show() {
+		push()
 		noStroke();
 		fill('orange');
 		ellipse(this.pos.x, this.pos.y, this.r);
-		// text(this.part,this.pos.x,this.pos.y)
+		text(this.part,this.pos.x,this.pos.y)
+		pop()
 	}
 
 	addVertex() {

@@ -59,6 +59,10 @@ main p {
 /* ==Layout  **************************************************** */
 /* ************************************************************** */
 
+body,main {
+	height: 100vh
+}
+
 main {
 	display: grid;
 	place-items: center;
@@ -124,7 +128,6 @@ main .webcam-monitor-container {
 	grid-template-areas:
 		'sidebar . abstract'
 		'controls controls controls';
-	margin-top: 10vh; /* 10% viewport height */
 }
 
 #scene-00 .sidebar {
@@ -142,7 +145,6 @@ main .webcam-monitor-container {
 	text-align: center;
 }
 #scene-00 .pretitle {
-	height: 10rem;
 	display: flex;
 	width: 350px;
 	margin-bottom: 2rem;
@@ -350,6 +352,5 @@ body > #step-0 {
 }
 .card {
 	background: #e0e0e0;
-
 	color: black;
 }
