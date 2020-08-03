@@ -154,6 +154,7 @@ main .webcam-monitor-container {
 	display: flex;
 	width: 350px;
 	margin-bottom: 2rem;
+	height: 6rem;
 }
 #scene-00 .pretitle p {
 	align-self: flex-end;
@@ -188,7 +189,6 @@ canvas {
 .webcam-monitor-container video {
 	border-radius: 10px;
 	transform: scaleX(-1);
-	filter: grayscale(1);
 	width: 500px !important;
 	object-fit: cover;
 }
