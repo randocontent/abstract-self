@@ -1012,12 +1012,10 @@ function bodyNet(pose) {
 	pose.forEach(p => {
 		// Big circle around nose...
 		if (p.part === 'nose') {
-			let radius = par.noseRadius;
-			for (let angle = 0; angle < 360; angle += par.angles) {
-				let x = p.pos.x + radius * sin(angle);
-				let y = p.pos.y + radius * cos(angle) - par.noseYOffset;
-				newArr.push([x, y]);
-			}
+			let newP = expandBlob(p, max, par.minR, par.maxR, exp)
+			// console.log('bodyNet ',newP)
+			newArr.concat(newP);
+			// console.log('bodyNet newArr ',newArr)
 		}
 		if (p.part === 'leftEar' || p.part === 'rightEar') {
 			let radius = par.earRadius;
@@ -1055,11 +1053,12 @@ function bodyNet(pose) {
 			}
 		}
 	});
+	// console.log('just before',newArr)
 	return newArr;
 }
 
 function faceBodyNet(pose, exp) {
-	console.log('faceBodyNet ', pose, exp);
+	// console.log('faceBodyNet ', pose, exp);
 	// [{pos,part}...]
 	// Needs an array of objects that have pos.x,pos.y,part
 	// Will add points around the skeleton to increase the surface area
@@ -1068,7 +1067,9 @@ function faceBodyNet(pose, exp) {
 
 	pose.forEach(p => {
 		if (p.part === 'nose') {
-			newArr.push(expandBlob(p, max, par.minR, par.maxR, exp));
+			let newP = expandBlob(p, max, par.minR, par.maxR, exp)
+			// console.log(newP)
+			newArr.concat(newP);
 		}
 		if (p.part === 'leftEar' || p.part === 'rightEar') {
 			for (let a = 0; a < 360; a += par.angles) {
@@ -1285,9 +1286,9 @@ function voiceNet(points, level) {
 function noPreroll() {
 	startRecording();
 }
+
 function playPreroll() {
 	if (preroll) {
-		let iterator = frameCount % par.mississippi;
 		let counter = floor(map(prerollCounter, 0, par.mississippi, 4, 0));
 		if (counter > 0) {
 			vf.push();
@@ -1350,7 +1351,7 @@ function expandBlob(point, noiseMax, minR, maxR, exp) {
 		px = point[0];
 		py = point[1];
 	}
-	for (let a = 0; a < 360; a += 1) {
+	for (let a = 0; a < 360; a += 2) {
 		let xoff = map(cos(a + phase), -1, 1, 0, noiseMax);
 		let yoff = map(sin(a + phase), -1, 1, 0, noiseMax);
 		let r = map(noise(xoff, yoff, zoff), 0, 1, minR, maxR);
@@ -1361,5 +1362,47 @@ function expandBlob(point, noiseMax, minR, maxR, exp) {
 	let pOff = map(noise(zoff), 0, 1, 0, 0.1);
 	phase += pOff;
 	zoff += par.zNoiseOffset;
+	// console.log(newArr)
 	return newArr;
 }
+
+
+function bezierEllipse(pts, radius, controlRadius) {
+	let cx1 = 0;
+	let cy1 = 0;
+	let cx2 = 0;
+	let cy2 = 0;
+	let ax = 0;
+	let ay = 0;
+	let rot = TWO_PI / pts;
+	let theta = 0;
+	let controlTheta1 = rot / random(3.0); // 3.0;
+	let controlTheta2 = controlTheta1 * random(2.0); // 2.0;
+
+	let newArr = []
+	for (let i = 0; i < pts; i++) {
+		cx1 = cos(theta + controlTheta1) * controlRadius;
+		cy1 = sin(theta + controlTheta1) * controlRadius;
+		cx2 = cos(theta + controlTheta2) * controlRadius;
+		cy2 = sin(theta + controlTheta2) * controlRadius;
+		ax = cos(theta + rot) * radius;
+		ay = sin(theta + rot) * radius;
+
+		if (i == 0) {
+			// initial vertex required for bezierVertex()
+			newArr.push([cos(0) * radius, sin(0) * radius]);
+		}
+		// close ellipse
+		if (i == pts - 1) {
+			newArr.push([cx1, cy1, cx2, cy2, cos(0) * radius, sin(0) * radius]);
+		}
+		// ellipse body
+		else {
+			newArr.push([cx1, cy1, cx2, cy2, ax, ay]);
+		}
+
+
+		theta += rot;
+	}
+	return newArr
+} 
