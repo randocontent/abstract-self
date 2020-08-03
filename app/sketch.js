@@ -1,19 +1,19 @@
 class Paramaterize {
 	constructor() {
 		this.scene = 0;
-		this.framesToRecord = 20;
+		this.framesToRecord = 200;
 		this.shapeStrokeWeight = 2;
 
-		this.minR = 33; // scene 0
+		this.minR = 44; // scene 0
 		this.maxR = 66; // scene 0
-		this.xNoiseMax = 2; // scene 0
-		this.yNoiseMax = 2; // scene 0
-		this.zNoiseOffset = 0.01; // scene 0
-		this.phaseOffset = 0.001; // scene 0
-		this.inc = 2;
+		this.xNoiseMax = 1; // scene 0
+		this.yNoiseMax = 1; // scene 0
+		this.zNoiseOffset = 0.001; // scene 0
+		this.phaseMaxOffset = 0.1; // scene 0
+		this.inc = 12;
 
 		this.topSpeed = 10;
-		this.maxAcc = 10;
+		this.maxAcc = 4;
 		this.angles = 37;
 		this.autoRadius = true;
 		this.autoRadiusRatio = 0.5;
@@ -59,7 +59,7 @@ f1.add(par, 'maxR');
 f1.add(par, 'xNoiseMax');
 f1.add(par, 'yNoiseMax');
 f1.add(par, 'zNoiseOffset');
-f1.add(par, 'phaseOffset');
+f1.add(par, 'phaseMaxOffset');
 f1.add(par, 'inc');
 f1.close();
 
@@ -149,6 +149,7 @@ let expressionHistory2 = [];
 let voiceHistory = [];
 let options = { maxPoseDetections: 2 };
 
+let noseAnchor;
 let anchors = [];
 let expanded = [];
 let hullSet = [];
@@ -187,23 +188,27 @@ let mgr, g;
 p5.disableFriendlyErrors = true;
 
 function setup() {
+
+	
 	mgr = new SceneManager();
-	loadSample();
+	
+	// loadSample();
 	// // Preload scenes. Preloading is normally optional
 	// // ... but needed if showNextScene() is used.
+	
 	mgr.addScene(scene00);
 	mgr.addScene(scene01);
 	mgr.addScene(scene02);
 	mgr.addScene(scene03);
 	mgr.addScene(scene04);
-
+	
 	canvas = createCanvas(350, 350);
 	canvas.parent('#canvas-01');
-
+	
 	background(255);
-
+	
 	// --b
-
+	
 	select('#begin-button').mousePressed(() => {
 		mgr.showScene(scene01);
 	});
@@ -216,6 +221,9 @@ function setup() {
 	select('#record-button-02').mousePressed(() => {
 		startRecording();
 	});
+	
+	// Prepare a dedicated anchor for the intro screen
+	noseAnchor = new Anchor(width / 2, height / 2);
 
 	startWebcam(false, 467, 350);
 	gotoScene();
@@ -316,29 +324,46 @@ function scene00() {
 			background(255);
 			if (poses[0]) {
 				let p = createVector(poses[0].pose.nose.x, poses[0].pose.nose.y);
-				push();
-				let pad = constrain(par.maxR * 2, 0, width / 3);
-				let fx = map(p.x, 0, width, width, 0);
-				let cx = constrain(fx, pad, width - pad);
-				let cy = constrain(p.y, pad, height - pad);
+				noseAnchor.setTarget(p)
 
+		noseAnchor.behaviors();
+		noseAnchor.update();
+		if (par.showAnchors) noseAnchor.show();
+
+				let nx = noseAnchor.pos.x
+				let ny = noseAnchor.pos.y
+
+				// Keeps shape from reaching the corners
+				let pad = constrain(par.maxR * 2, 0, width / 4);
+				// Mirror? Flip back?
+				let fx = map(nx, 0, width, width, 0);
+				let cx = constrain(fx, pad, width - pad);
+				let cy = constrain(ny, pad, height - pad);
+
+				push();
 				translate(cx, cy);
 				stroke(0);
 				strokeWeight(par.shapeStrokeWeight);
 				noFill();
 				beginShape();
 				for (let a = 0; a < TWO_PI; a += radians(par.inc)) {
+					// Follow a circular path through the noise space to create a smooth flowing shape
 					let xoff = map(cos(a + phase), -1, 1, 0, par.xNoiseMax);
 					let yoff = map(sin(a + phase), -1, 1, 0, par.yNoiseMax);
 					let r = map(noise(xoff, yoff, zoff), 0, 1, par.minR, par.maxR);
 					let x = r * cos(a);
 					x = x;
 					let y = r * sin(a);
-					curveVertex(x, y);
+					if (par.showCurves) {
+						curveVertex(x, ay);
+					} else {
+						vertex(x, y);
+					}
 				}
 
 				endShape(CLOSE);
-				phase += par.phaseOffset;
+				let pOff = map(noise(zoff, phase), 0, 1, 0, par.phaseMaxOffset);
+				phase += pOff;
 				zoff += par.zNoiseOffset;
 				pop();
 			}
@@ -367,6 +392,7 @@ function scene01() {
 	};
 
 	this.setup = function () {
+
 		// Prepare anchors to chase the shape
 		PARTS.forEach(p => {
 			let anchor = new Anchor(width / 2, height / 2);
@@ -1042,6 +1068,8 @@ function updateAnchors() {
 		a.topSpeed = par.topSpeed;
 		a.maxForce = par.maxAcc;
 	});
+		noseAnchor.topSpeed = par.topSpeed;
+		noseAnchor.maxForce = par.maxAcc;
 }
 
 // Should get an array of hull points from the previous step (what about recording the )
