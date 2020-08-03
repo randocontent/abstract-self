@@ -1,5 +1,5 @@
 class Anchor {
-	constructor(x, y) {
+	constructor(x, y, p) {
 		this.pos = createVector(x, y);
 		this.target = createVector(x, y);
 		this.vel = p5.Vector.random2D();
@@ -7,7 +7,7 @@ class Anchor {
 		this.r = 10;
 		this.topSpeed = par.topSpeed;
 		this.maxForce = par.maxAcc;
-		this.part = '';
+		this.part = p;
 	}
 
 	update() {
@@ -19,9 +19,9 @@ class Anchor {
 	show() {
 		push()
 		noStroke();
-		fill('orange');
+		fill('mistyrose');
 		ellipse(this.pos.x, this.pos.y, this.r);
-		text(this.part,this.pos.x,this.pos.y)
+		// text(this.part,this.pos.x,this.pos.y)
 		pop()
 	}
 

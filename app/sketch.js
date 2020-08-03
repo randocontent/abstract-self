@@ -1,7 +1,7 @@
 class Paramaterize {
 	constructor() {
-		this.scene = 0;
-		this.framesToRecord = 200;
+		this.scene = 1;
+		this.framesToRecord = 100;
 		this.shapeStrokeWeight = 2;
 
 		this.minR = 44; // scene 0
@@ -10,11 +10,19 @@ class Paramaterize {
 		this.yNoiseMax = 1; // scene 0
 		this.zNoiseOffset = 0.001; // scene 0
 		this.phaseMaxOffset = 0.1; // scene 0
+		this.nosePhaseMax = 1;
 		this.inc = 12;
 
+		this.noseMinRadius = 100;
+		this.noseMaxRadius = 200;
 		this.topSpeed = 10;
 		this.maxAcc = 4;
-		this.angles = 37;
+		this.angles = 12;
+		this.radius = 50;
+		this.noseRadius = 120;
+		this.noseYOffset = 55;
+		this.earRadius = 35;
+		this.wristRadius = 55;
 		this.autoRadius = true;
 		this.autoRadiusRatio = 0.5;
 		this.manualRadiusRatio = 1;
@@ -22,11 +30,11 @@ class Paramaterize {
 		this.noiseLevel = 0.001;
 		this.roundness = 250;
 
+		this.showAnchors = true;
 		this.showPose = false;
 		this.showExpanded = false;
-		this.showHull = false;
+		this.showHull = true;
 		this.showPreview = false;
-		this.showAnchors = false;
 		this.fillShape = false;
 		this.showCurves = false;
 
@@ -40,7 +48,7 @@ let gui = new dat.GUI({ autoPlace: true });
 // let customContainer =document.getElementById('dat-gui-container');
 // customContainer.appendChild(gui.domElement);
 
-let f1 = gui.addFolder('Intro screen');
+let f1 = gui.addFolder('Blob');
 let f2 = gui.addFolder('Pose');
 let f3 = gui.addFolder('Face');
 let f4 = gui.addFolder('Voice');
@@ -66,10 +74,11 @@ f1.close();
 let speedControl = f2.add(par, 'topSpeed');
 let accControl = f2.add(par, 'maxAcc');
 f2.add(par, 'angles');
-f2.add(par, 'autoRadius');
-f2.add(par, 'autoRadiusRatio');
-f2.add(par, 'manualRadiusRatio');
-f2.add(par, 'noseExpandRatio');
+f2.add(par, 'radius');
+f2.add(par, 'noseRadius');
+f2.add(par, 'noseYOffset');
+f2.add(par, 'earRadius');
+f2.add(par, 'wristRadius');
 f2.add(par, 'noiseLevel');
 f2.add(par, 'roundness');
 speedControl.onFinishChange(() => updateAnchors());
@@ -188,27 +197,26 @@ let mgr, g;
 p5.disableFriendlyErrors = true;
 
 function setup() {
-
-	
+	angleMode(DEGREES);
 	mgr = new SceneManager();
-	
+
 	// loadSample();
 	// // Preload scenes. Preloading is normally optional
 	// // ... but needed if showNextScene() is used.
-	
+
 	mgr.addScene(scene00);
 	mgr.addScene(scene01);
 	mgr.addScene(scene02);
 	mgr.addScene(scene03);
 	mgr.addScene(scene04);
-	
+
 	canvas = createCanvas(350, 350);
 	canvas.parent('#canvas-01');
-	
+
 	background(255);
-	
+
 	// --b
-	
+
 	select('#begin-button').mousePressed(() => {
 		mgr.showScene(scene01);
 	});
@@ -221,7 +229,7 @@ function setup() {
 	select('#record-button-02').mousePressed(() => {
 		startRecording();
 	});
-	
+
 	// Prepare a dedicated anchor for the intro screen
 	noseAnchor = new Anchor(width / 2, height / 2);
 
@@ -319,19 +327,20 @@ function scene00() {
 		sample.size(467, 350);
 	};
 
+	// --0draw
 	this.draw = function () {
 		if (sceneReady) {
 			background(255);
 			if (poses[0]) {
 				let p = createVector(poses[0].pose.nose.x, poses[0].pose.nose.y);
-				noseAnchor.setTarget(p)
+				noseAnchor.setTarget(p);
 
-		noseAnchor.behaviors();
-		noseAnchor.update();
-		if (par.showAnchors) noseAnchor.show();
+				noseAnchor.behaviors();
+				noseAnchor.update();
+				if (par.showAnchors) noseAnchor.show();
 
-				let nx = noseAnchor.pos.x
-				let ny = noseAnchor.pos.y
+				let nx = noseAnchor.pos.x;
+				let ny = noseAnchor.pos.y;
 
 				// Keeps shape from reaching the corners
 				let pad = constrain(par.maxR * 2, 0, width / 4);
@@ -377,6 +386,7 @@ function scene01() {
 	// Will run when entering the scene, seems like a good place to do clean up
 	// from the previous one
 	this.enter = function () {
+		noseAnchor = '';
 		// hide the other scenes
 		select('#scene-00').addClass('hidden');
 		// show this scene
@@ -389,17 +399,14 @@ function scene01() {
 		// resize video for a larger preview this time
 		sample.size(666, 500);
 		button = select('#record-button-01');
-	};
-
-	this.setup = function () {
-
-		// Prepare anchors to chase the shape
+		// Prepare anchors to chase posenet points
 		PARTS.forEach(p => {
-			let anchor = new Anchor(width / 2, height / 2);
-			anchor.part = p;
+			let anchor = new Anchor(width / 2, height / 2, p);
 			anchors.push(anchor);
 		});
 	};
+
+	this.setup = function () {};
 
 	// --1draw
 	this.draw = function () {
@@ -417,12 +424,6 @@ function scene01() {
 			if (poses[0]) {
 				let pose = poses[0].pose.keypoints;
 
-				deriveProportions(pose);
-
-				if (rec) recordPose(pose);
-
-				if (!full) drawShape(pose);
-
 				// Draw pose for reference
 				if (par.showPose) {
 					push();
@@ -437,13 +438,19 @@ function scene01() {
 				// Draw expanded points for reference
 				if (par.showExpanded) {
 					push();
-					stroke('teal');
+					stroke('paleturquoise');
 					strokeWeight(5);
 					expanded.forEach(p => {
 						point(p[0], p[1]);
 					});
 					pop();
 				}
+
+				deriveProportions(pose);
+
+				if (rec) recordPose(pose);
+
+				if (!full) drawShape(pose);
 			}
 		}
 	};
@@ -468,7 +475,7 @@ function scene02() {
 		select('#scene-02').removeClass('hidden');
 		// move the canvas over
 		canvas.parent('#canvas-02');
-		resizeCanvas(820, 820);
+		resizeCanvas(800, 800);
 		// move the webcam monitor over
 		sample.parent('#webcam-monitor-02');
 		// resize video for a larger preview this time
@@ -489,7 +496,7 @@ function scene02() {
 		// Mirror canvas, to match the mirrored video
 		mirror();
 
-		if (full) playModifiedShape2(expressionHistory);
+		if (full) playShape3(expressionHistory2);
 
 		if (detections && !full) {
 			graphExpressions();
@@ -553,7 +560,6 @@ function scene03() {
 		let bins = pow(2, ceil(log(par.audioResolution) / log(2)));
 		let spectrum = fft.analyze(bins);
 
-		// if (!full) playModifiedShape2(expressionHistory);
 		if (!full) playShape3(expressionHistory2, spectrum);
 		if (full) playModifiedShape3(voiceHistory);
 	};
@@ -731,8 +737,19 @@ function playShape2(history) {
 }
 
 function drawShape2(points) {
+	console.log('drawShape2 ', points);
 	retargetAnchorsFromPose(points);
-	expanded = expand2(anchors);
+	let happy,
+		surprised = 0.5;
+
+	if (detections) {
+		if (detections[0]) {
+			happy = detections[0].expressions.happy;
+			surprised = detections[0].expressions.surprised;
+		}
+	}
+
+	expanded = faceBodyNet(anchors, happy);
 	if (rec && detections) recordExpression2(expanded);
 	hullSet = hull(expanded, par.roundness);
 
@@ -829,11 +846,11 @@ function playShape3(history, spectrum) {
 // `history` will have an array of expanded points from the previous scene
 // (expression data will already be factored into it)
 function drawShape3(history, spectrum) {
-	// console.log('drawShape3 ', history, spectrum);
+	console.log('drawShape3 ', history, spectrum);
 
 	// let concave = map(level, 0, 255, 50, 500);
-	let expanded = expand3(history, spectrum);
-	hullSet = hull(expanded, par.roundness);
+	// let expanded = faceBodyNet(history, spectrum);
+	hullSet = hull(history, par.roundness);
 	if (rec) recordVoice(expanded);
 
 	push();
@@ -943,7 +960,7 @@ function playShape(history) {
 // Draws an outline based on posenet keypoints
 function drawShape(points) {
 	retargetAnchorsFromPose(points);
-	expanded = expand1(anchors);
+	expanded = bodyNet(anchors);
 	hullSet = hull(expanded, par.roundness);
 
 	push();
@@ -962,6 +979,131 @@ function drawShape(points) {
 
 	endShape(CLOSE);
 	pop();
+}
+
+function bodyNet(pose) {
+	// [{pos,part}...]
+	// Needs an array of objects that have pos.x,pos.y,part
+	// Will add points around the skeleton to increase the surface area
+	let newArr = [];
+	pose.forEach(p => {
+		// Big circle around nose...
+		if (p.part === 'nose') {
+			let radius = par.noseRadius;
+			for (let angle = 0; angle < 360; angle += par.angles) {
+				let x = p.pos.x + radius * sin(angle);
+				let y = p.pos.y + radius * cos(angle) - par.noseYOffset;
+				newArr.push([x, y]);
+			}
+		}
+		if (p.part === 'leftEar' || p.part === 'rightEar') {
+			let radius = par.earRadius;
+			for (let angle = 0; angle < 360; angle += par.angles) {
+				let x = p.pos.x + radius * sin(angle);
+				let y = p.pos.y + radius * cos(angle);
+				newArr.push([x, y]);
+			}
+		}
+		if (p.part === 'leftWrist' || p.part === 'rightWrist') {
+			let radius = par.wristRadius;
+			for (let angle = 0; angle < 360; angle += par.angles) {
+				let x = p.pos.x + radius * sin(angle);
+				let y = p.pos.y + radius * cos(angle);
+				newArr.push([x, y]);
+			}
+		}
+		if (
+			p.part === 'leftAnkle' ||
+			p.part === 'rightAnkle' ||
+			p.part === 'leftElbow' ||
+			p.part === 'rightElbow' ||
+			p.part === 'leftShoulder' ||
+			p.part === 'rightShoulder' ||
+			p.part === 'leftKnee' ||
+			p.part === 'rightKnee' ||
+			p.part === 'leftHip' ||
+			p.part === 'rightHip'
+		) {
+			let radius = par.radius;
+			for (let angle = 0; angle < 360; angle += par.angles * 2) {
+				let x = p.pos.x + radius * sin(angle);
+				let y = p.pos.y + radius * cos(angle);
+				newArr.push([x, y]);
+			}
+		}
+	});
+	return newArr;
+}
+
+function faceBodyNet(pose, exp) {
+	console.log('faceBodyNet ', pose, exp);
+	// [{pos,part}...]
+	// Needs an array of objects that have pos.x,pos.y,part
+	// Will add points around the skeleton to increase the surface area
+	let newArr = [];
+	let phaseMax = par.nosePhaseMax;
+	if (exp) {
+		console.log(exp);
+		phaseMax = exp * 10;
+	}
+
+	pose.forEach(p => {
+		if (p.part === 'nose') {
+			for (let a = 0; a < 360; a += par.angles) {
+				let xoff = map(cos(a + phase), -1, 1, 0, par.xNoiseMax);
+				let yoff = map(sin(a + phase), -1, 1, 0, par.yNoiseMax);
+				let r = map(
+					noise(xoff, yoff, zoff),
+					0,
+					1,
+					par.noseMinRadius,
+					par.noseMaxRadius
+				);
+				let x = p.pos.x + r * cos(a);
+				let y = p.pos.y + r * sin(a);
+				newArr.push([x, y]);
+			}
+			let pOff = map(noise(zoff), 0, 1, 0, phaseMax);
+			phase += pOff;
+			zoff += par.zNoiseOffset;
+		}
+		if (p.part === 'leftEar' || p.part === 'rightEar') {
+			let radius = par.earRadius;
+			for (let angle = 0; angle < 360; angle += par.angles) {
+				let x = p.pos.x + radius * sin(angle);
+				let y = p.pos.y + radius * cos(angle);
+				newArr.push([x, y]);
+			}
+		}
+		if (p.part === 'leftWrist' || p.part === 'rightWrist') {
+			let radius = par.wristRadius;
+			for (let angle = 0; angle < 360; angle += par.angles) {
+				let x = p.pos.x + radius * sin(angle);
+				let y = p.pos.y + radius * cos(angle);
+				newArr.push([x, y]);
+			}
+		}
+		if (
+			p.part === 'leftAnkle' ||
+			p.part === 'rightAnkle' ||
+			p.part === 'leftElbow' ||
+			p.part === 'rightElbow' ||
+			p.part === 'leftShoulder' ||
+			p.part === 'rightShoulder' ||
+			p.part === 'leftKnee' ||
+			p.part === 'rightKnee' ||
+			p.part === 'leftHip' ||
+			p.part === 'rightHip'
+		) {
+			let radius = par.radius;
+			for (let angle = 0; angle < 360; angle += par.angles * 2) {
+				let x = p.pos.x + radius * sin(angle);
+				let y = p.pos.y + radius * cos(angle);
+				newArr.push([x, y]);
+			}
+		}
+	});
+	return newArr;
 }
 
 // Takes anchors and returns 2D array of points for hull()
@@ -1068,8 +1210,8 @@ function updateAnchors() {
 		a.topSpeed = par.topSpeed;
 		a.maxForce = par.maxAcc;
 	});
-		noseAnchor.topSpeed = par.topSpeed;
-		noseAnchor.maxForce = par.maxAcc;
+	noseAnchor.topSpeed = par.topSpeed;
+	noseAnchor.maxForce = par.maxAcc;
 }
 
 // Should get an array of hull points from the previous step (what about recording the )
