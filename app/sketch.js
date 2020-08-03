@@ -1,7 +1,7 @@
 class Paramaterize {
 	constructor() {
 		this.scene = 1;
-		this.framesToRecord = 100;
+		this.framesToRecord = 10;
 		this.shapeStrokeWeight = 2;
 
 		this.minR = 44; // scene 0
@@ -29,6 +29,7 @@ class Paramaterize {
 		this.noseExpandRatio = 3.5;
 		this.noiseLevel = 0.001;
 		this.roundness = 250;
+		this.emotionalScale = 100;
 
 		this.showAnchors = true;
 		this.showPose = false;
@@ -81,6 +82,7 @@ f2.add(par, 'earRadius');
 f2.add(par, 'wristRadius');
 f2.add(par, 'noiseLevel');
 f2.add(par, 'roundness');
+f2.add(par, 'emotionalScale');
 speedControl.onFinishChange(() => updateAnchors());
 accControl.onFinishChange(() => updateAnchors());
 f2.close();
@@ -276,9 +278,7 @@ function webcamReady() {
 	});
 }
 
-function modelReady() {
-	// console.log('modelReady');
-}
+function modelReady() {}
 
 function faceReady() {
 	faceapi.detect(gotFaces);
@@ -296,12 +296,10 @@ function gotFaces(error, result) {
 
 function loadSample() {
 	let f = '/assets/music/spk.mp3';
-	// console.log(f);
 	audioSample = loadSound(f, audioSampleReady);
 }
 
 function audioSampleReady() {
-	// console.log(audioSample);
 	isAudioSampleReady = true;
 	audioSample.disconnect();
 	audioSample.loop();
@@ -485,7 +483,6 @@ function scene02() {
 		button.html('Record');
 		faceapi = ml5.faceApi(sample, faceOptions, faceReady);
 		button.mousePressed(() => {
-			// console.log('button 2');
 			startRecording();
 		});
 	};
@@ -553,8 +550,8 @@ function scene03() {
 
 		mirror();
 
-		if (isAudioSampleReady) fft.setInput(audioSample);
-		// if (mic) fft.setInput(mic);
+		// if (isAudioSampleReady) fft.setInput(mic);
+		if (mic) fft.setInput(mic);
 
 		// Number of bins can only be a power of 2
 		let bins = pow(2, ceil(log(par.audioResolution) / log(2)));
@@ -737,7 +734,6 @@ function playShape2(history) {
 }
 
 function drawShape2(points) {
-	console.log('drawShape2 ', points);
 	retargetAnchorsFromPose(points);
 	let happy,
 		surprised = 0.5;
@@ -846,12 +842,13 @@ function playShape3(history, spectrum) {
 // `history` will have an array of expanded points from the previous scene
 // (expression data will already be factored into it)
 function drawShape3(history, spectrum) {
-	console.log('drawShape3 ', history, spectrum);
-
 	// let concave = map(level, 0, 255, 50, 500);
 	// let expanded = faceBodyNet(history, spectrum);
-	hullSet = hull(history, par.roundness);
-	if (rec) recordVoice(expanded);
+	let expanded = voiceNet(history, spectrum);
+	console.log('expanded ', expanded);
+
+	hullSet = hull(expanded, par.roundness);
+	if (rec) recordVoice(hullSet);
 
 	push();
 	stroke(255);
@@ -891,8 +888,6 @@ function playModifiedShape3(history) {
 }
 
 function drawModifiedShape3(history) {
-	hullSet = hull(history, par.roundness);
-
 	push();
 	stroke(255);
 	if (!par.showPreview) stroke(0);
@@ -1036,15 +1031,13 @@ function bodyNet(pose) {
 }
 
 function faceBodyNet(pose, exp) {
-	console.log('faceBodyNet ', pose, exp);
 	// [{pos,part}...]
 	// Needs an array of objects that have pos.x,pos.y,part
 	// Will add points around the skeleton to increase the surface area
 	let newArr = [];
 	let phaseMax = par.nosePhaseMax;
 	if (exp) {
-		console.log(exp);
-		phaseMax = exp * 10;
+		phaseMax = exp * par.emotionalScale;
 	}
 
 	pose.forEach(p => {
@@ -1236,4 +1229,23 @@ function drawFinalShape(points) {
 	});
 
 	pop();
+}
+
+function voiceNet(points, level) {
+	let newArr = [];
+	let r = 10;
+	points.forEach((p, i) => {
+		let x, y;
+		let offset = 0;
+		if (level) {
+			if (level[0]) {
+				offset = map(level[0],0,255,-100,100)
+			}
+		}
+		x = p[0] + phase + offset * sin(i);
+		y = p[1] + phase + offset * cos(i);
+		newArr.push([x, y]);
+	});
+	phase += par.phaseMaxOffset
+	return newArr;
 }
