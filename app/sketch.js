@@ -1,72 +1,88 @@
 class Paramaterize {
 	constructor() {
 		this.scene = 0;
+		this.framesToRecord = 200;
+
 		this.minR = 33; // scene 0
 		this.maxR = 66; // scene 0
 		this.xNoiseMax = 2; // scene 0
 		this.yNoiseMax = 2; // scene 0
 		this.zNoiseOffset = 0.01; // scene 0
 		this.phaseOffset = 0.001; // scene 0
-		this.inc = 26;
-		this.blobR = 100;
+		this.inc = 2;
+
+		this.topSpeed = 10;
+		this.maxAcc = 10;
+		this.angles = 37;
+		this.autoRadius = true;
+		this.autoRadiusRatio = 0.5;
+		this.manualRadiusRatio = 1;
+		this.noseExpandRatio = 3.5;
+		this.noiseLevel = 0.001;
+		this.roundness = 250;
+
 		this.showPose = false;
 		this.showExpanded = false;
 		this.showHull = false;
 		this.showPreview = false;
 		this.showAnchors = false;
-		this.showAbstract = true;
-		this.showAbstractFill = false;
-		this.showCurves = true;
-		this.isHeadOnly = true;
-		this.numAnchors = 20;
-		this.topSpeed = 10;
-		this.maxForce = 10;
-		this.autoRadius = true;
-		this.autoRadiusRatio = 1.2;
-		this.noiseStep = 0.001;
-		this.concave = 1000;
-		this.sampleSpeed = 0.5;
-		this.recLength = 50;
+		this.fillShape = false;
+		this.showCurves = false;
 	}
 }
 
 par = new Paramaterize();
 
-let gui = new dat.GUI({ autoPlace: false });
-let customContainer = document.getElementById('dat-gui-container');
-customContainer.appendChild(gui.domElement);
+let gui = new dat.GUI({ autoPlace: true });
+// let customContainer = document.getElementById('dat-gui-container');
+// customContainer.appendChild(gui.domElement);
 
-let sceneGui = gui.add(par, 'scene');
-sceneGui.onFinishChange(() => {
-	gotoScene();
+let f1 = gui.addFolder('Intro screen');
+let f2 = gui.addFolder('Pose');
+let f3 = gui.addFolder('Reference');
+
+// let sceneGui = gui.add(par, 'scene');
+// sceneGui.onFinishChange(() => {
+// 	gotoScene();
+// });
+
+gui.add(par, 'framesToRecord', 10, 10000, 1);
+
+f1.add(par, 'minR');
+f1.add(par, 'maxR');
+f1.add(par, 'xNoiseMax');
+f1.add(par, 'yNoiseMax');
+f1.add(par, 'zNoiseOffset');
+f1.add(par, 'phaseOffset');
+f1.add(par, 'inc');
+f1.close();
+
+
+let speedControl = f2.add(par, 'topSpeed');
+speedControl.onFinishChange(() => {
+	updateAnchors();
 });
-gui.add(par, 'minR');
-gui.add(par, 'minR');
-gui.add(par, 'maxR');
-gui.add(par, 'xNoiseMax');
-gui.add(par, 'yNoiseMax');
-gui.add(par, 'zNoiseOffset');
-gui.add(par, 'phaseOffset');
-gui.add(par, 'inc');
-gui.add(par, 'blobR');
-gui.add(par, 'showPose');
-gui.add(par, 'showExpanded');
-gui.add(par, 'showHull');
-gui.add(par, 'showPreview');
-gui.add(par, 'showAnchors');
-gui.add(par, 'showAbstract');
-gui.add(par, 'showAbstractFill');
-gui.add(par, 'showCurves');
-gui.add(par, 'isHeadOnly');
-gui.add(par, 'numAnchors');
-gui.add(par, 'topSpeed');
-gui.add(par, 'maxForce');
-gui.add(par, 'autoRadius');
-gui.add(par, 'autoRadiusRatio');
-gui.add(par, 'noiseStep');
-gui.add(par, 'concave');
-gui.add(par, 'sampleSpeed', 0.1, 2, 0.1);
-gui.add(par, 'recLength', 10, 10000, 1);
+let accControl = f2.add(par, 'maxAcc');
+accControl.onFinishChange(() => {
+	updateAnchors();
+});
+f2.add(par, 'angles');
+f2.add(par, 'autoRadius');
+f2.add(par, 'autoRadiusRatio');
+f2.add(par, 'manualRadiusRatio');
+f2.add(par, 'noseExpandRatio');
+f2.add(par, 'noiseLevel');
+f2.add(par, 'roundness');
+f2.close();
+
+f3.add(par, 'showPose');
+f3.add(par, 'showExpanded');
+f3.add(par, 'showHull');
+f3.add(par, 'showPreview');
+f3.add(par, 'showAnchors');
+f3.add(par, 'fillShape');
+f3.add(par, 'showCurves');
+f3.close();
 
 gui.close();
 
@@ -115,26 +131,17 @@ let webcamPreview;
 let button;
 
 let sceneReady = false;
-let recorded = false;
-let recording = false;
-let playback = false;
 
 let rec = false;
 let play = false;
-let replay = false;
 let full = false;
-// let recLength = 100; // in frames
 
 let posenet;
 let poses = [];
-let posesHistory = [];
-let history1 = [];
-let history2 = [];
+let poseHistory = [];
 let expressionHistory = [];
 let options = { maxPoseDetections: 2 };
 
-let numAnchors = 50;
-let points = [];
 let anchors = [];
 let expanded = [];
 let hullSet = [];
@@ -155,6 +162,7 @@ let shoulderWaistRatio;
 let faceapi;
 let detections = [];
 let expression;
+let faceapiLoading = true;
 
 const faceOptions = {
 	withLandmarks: false,
@@ -173,6 +181,7 @@ function setup() {
 	mgr.addScene(scene00);
 	mgr.addScene(scene01);
 	mgr.addScene(scene02);
+	mgr.addScene(scene03);
 
 	canvas = createCanvas(350, 350);
 	canvas.parent('#canvas-01');
@@ -185,6 +194,9 @@ function setup() {
 		mgr.showScene(scene01);
 	});
 	select('#record-button-01').mousePressed(() => {
+		startRecording();
+	});
+	select('#record-button-02').mousePressed(() => {
 		startRecording();
 	});
 	select('#record-button-02').mousePressed(() => {
@@ -268,20 +280,14 @@ function expand1(pose) {
 
 	pose.forEach(p => {
 		for (let angle = 0; angle < 360; angle += par.angles) {
-			let n = noise(xoff, yoff);
 			let radius;
-			if (par.autoRadius) {
-				if (p.part === 'nose') {
-					radius = eyeDist * par.autoRadiusRatio * 2.5;
-				} else {
-					radius = eyeDist * par.autoRadiusRatio;
-				}
+			let n = noise(xoff, yoff);
+			let ratio = par.manualRadiusRatio;
+			if (par.autoRadius) ratio = par.autoRadiusRatio;
+			if (p.part === 'nose') {
+				radius = eyeDist * ratio * par.noseExpandRatio;
 			} else {
-				if (p.part === 'nose') {
-					radius = par.radius * 2.5;
-				} else {
-					radius = par.radius;
-				}
+				radius = eyeDist * ratio;
 			}
 
 			let x = p.pos.x + n + radius * sin(angle);
@@ -289,15 +295,15 @@ function expand1(pose) {
 
 			let newP = [x, y];
 			newArr.push(newP);
-			xoff += par.noiseStep;
-			yoff += par.noiseStep;
+			xoff += par.noiseLevel;
+			yoff += par.noiseLevel;
 		}
 	});
 
 	return newArr;
 }
 
-function expand2(pose) {
+function expand2(pose, points) {
 	let newArr = [];
 	let xoff = 0.0;
 	let yoff = 0.0;
@@ -308,7 +314,14 @@ function expand2(pose) {
 		if (detections[0]) {
 			// ({ expressions } = detections[0]);
 			happy = detections[0].expressions.happy;
-			surprised = detections[0].expressions.happy;
+			surprised = detections[0].expressions.surprised;
+		}
+	}
+
+	if (points) {
+		if (points.length === 18) {
+			happy = points[17].expressions.happy;
+			surprised = points[17].expressions.surprised;
 		}
 	}
 
@@ -330,15 +343,15 @@ function expand2(pose) {
 				}
 			}
 
-			radius = map(happy, 0, 1, 200, 50);
+			radius = map(happy, 0, 1, 50, 200);
 
 			let x = p.pos.x + n + radius * sin(angle);
 			let y = p.pos.y + n + radius * cos(angle);
 
 			let newP = [x, y];
 			newArr.push(newP);
-			xoff += par.noiseStep;
-			yoff += par.noiseStep;
+			xoff += par.noiseLevel;
+			yoff += par.noiseLevel;
 		}
 	});
 
@@ -370,7 +383,7 @@ function checkEyeShoulderRatio() {
 }
 
 function drawAbstractShape() {
-	if (par.showAbstractFill) {
+	if (par.fillShape) {
 		stroke(0);
 		strokeWeight(10);
 		fill(255);
@@ -489,13 +502,11 @@ function scene01() {
 		translate(width, 0);
 		scale(-1, 1);
 
-		if (sample) sample.speed(par.sampleSpeed);
-
 		if (sample && par.showPreview) {
 			image(sample, 0, 0);
 		}
 
-		if (play) playShape(history1);
+		if (play) playShape(poseHistory);
 
 		if (poses) {
 			if (poses[0]) {
@@ -505,11 +516,7 @@ function scene01() {
 
 				if (rec) recordPose(pose);
 
-				if (replay) {
-					playShape(history1);
-				} else {
-					drawShape(pose);
-				}
+				if (!full) drawShape(pose);
 
 				// Draw pose for reference
 				if (par.showPose) {
@@ -544,6 +551,8 @@ function scene02() {
 	this.enter = function () {
 		// Entering this scene, cleanup the last one
 		full = false;
+		rec = false;
+		play = false;
 		// remove posenet listeners
 		posenet.removeAllListeners();
 		poses[0] = null;
@@ -562,44 +571,47 @@ function scene02() {
 		button.removeClass('primary');
 		button.html('Record');
 		faceapi = ml5.faceApi(sample, faceOptions, faceReady);
-	};
-
-	this.setup = function () {
-		// What's the difference between .enter() and .setup()? Does .setup() get run for all scenes when we start?
-	};
-
-	// --2draw
-	this.draw = function () {
 		button.mousePressed(() => {
 			console.log('button 2');
 			startRecording();
 		});
+	};
 
+	// --2draw
+	this.draw = function () {
 		background(255);
-		translate(width, 0);
-		scale(-1, 1);
+		// Mirror canvas, to match the mirrored video
+		mirror();
 
-		if (full) {
-			playShapeWithFace(history1);
-		} else if (replay) {
-			playShapeWithFace(history1);
+		if (full) playModifiedShape2(expressionHistory);
+
+		if (detections && !full) {
+			graphExpressions();
+			playShape2(poseHistory);
 		}
 
-		if (detections) {
-			graphExpressions();
-			if (rec) recordExpressions(detections);
+		// TODO: starte getting faceapi ready when we finish recording in scene01
+		if (faceapiLoading) {
+			push();
+			// Unmirror so we can write in the right direction
+			mirror();
+			textAlign(CENTER);
+			text('waiting for faceapi', width / 2, height / 2);
+			pop();
 		}
 	};
 	// this.counter = function () {};
 }
 
-
 // --3 speech
 
 function scene03() {
 	this.enter = function () {
+		console.log('Entering scene 3');
 		// Entering this scene, cleanup the last one
 		full = false;
+		rec = false;
+		play = false;
 		// Remove faceapi listeners?
 		// hide the other scenes
 		select('#scene-02').addClass('hidden');
@@ -609,35 +621,25 @@ function scene03() {
 		canvas.parent('#canvas-03');
 		resizeCanvas(820, 820);
 		// move the webcam monitor over
-		sample.parent('#webcam-monitor-03');
+		sample.hide();
 		// resize video for a larger preview this time
-		sample.size(666, 500);
+		// sample.size(666, 500);
 		button = select('#record-button-03');
 		button.removeClass('primary');
 		button.html('Record');
-	};
-
-	this.setup = function () {
-		// What's the difference between .enter() and .setup()? Does .setup() get run for all scenes when we start?
-	};
-
-	// --2draw
-	this.draw = function () {
 		button.mousePressed(() => {
 			console.log('button 3');
 			startRecording();
 		});
+	};
 
+	// --3draw
+	this.draw = function () {
 		background(255);
-		translate(width, 0);
-		scale(-1, 1);
 
-		if (full) {
-			playShapeWithFace(history1);
-		} else if (replay) {
-			playShapeWithFace(history1);
-		}
+		mirror();
 
+		playModifiedShape2(expressionHistory);
 	};
 }
 
@@ -647,7 +649,6 @@ function startRecording() {
 	console.log('startRecording');
 	if (!full) {
 		rec = true;
-		replay = false;
 		play = false;
 		button.addClass('rec');
 		// TODO start counter?
@@ -655,9 +656,9 @@ function startRecording() {
 }
 
 function recordPose(points) {
-	history1.push(points);
-	setCounter(history1.length);
-	if (history1.length === par.recLength) finishRecording();
+	poseHistory.push(points);
+	setCounter(poseHistory.length);
+	if (poseHistory.length === par.framesToRecord) finishRecording();
 }
 
 function setCounter(count) {
@@ -678,7 +679,7 @@ function finishRecording() {
 	button.addClass('primary');
 	button.html('Next');
 	button.mousePressed(() => {
-		console.log('button 1 next');
+		console.log('button next');
 		mgr.showNextScene();
 	});
 	let counters = selectAll('.counter');
@@ -695,26 +696,35 @@ function playShape(history) {
 	if (cp === history.length - 1) loopPlayback();
 }
 
-function playShapeWithFace(history) {
+function playShape2(history) {
 	// Use the current frame counter as an iterator for looping through the recorded array
 	let cp = frameCount % history.length;
-	drawShapeWithFace(history[cp]);
+	drawShape2(history[cp]);
+	if (rec && detections) recordExpression(detections, history[cp]);
 	// Reset recorded state after finishing playback
 	if (cp === history.length - 1) loopPlayback();
 }
 
-function loopPlayback() {
-	console.log('loopPlayback');
-	play = false;
-	replay = true;
-	// TODO add an event for the next button
-	// TODO change the counter to a Redo button
+function playModifiedShape2(history) {
+	// console.log('playModifiedShape2', history);
+	// Use the current frame counter as an iterator for looping through the recorded array
+	let cp = frameCount % history.length;
+	// console.log(cp);
+	// console.log(history[cp]);
+	drawModifiedShape2(history[cp]);
+	// Reset recorded state after finishing playback
+	// if (cp === history.length - 1) loopPlayback();
 }
 
+function loopPlayback() {
+	console.log('loopPlayback');
+}
+
+// Draws an outline based on posenet keypoints
 function drawShape(points) {
 	retargetAnchorsFromPose(points);
 	expanded = expand1(anchors);
-	hullSet = hull(expanded, par.concave);
+	hullSet = hull(expanded, par.roundness);
 
 	push();
 	stroke(255);
@@ -734,10 +744,10 @@ function drawShape(points) {
 	pop();
 }
 
-function drawShapeWithFace(points) {
+function drawShape2(points) {
 	retargetAnchorsFromPose(points);
 	expanded = expand2(anchors);
-	hullSet = hull(expanded, par.concave);
+	hullSet = hull(expanded, par.roundness);
 
 	push();
 	stroke(255);
@@ -757,6 +767,29 @@ function drawShapeWithFace(points) {
 	pop();
 }
 
+function drawModifiedShape2(points) {
+	// console.log('drawModifiedShape2 ', points);
+	retargetAnchorsFromPose(points);
+	expanded = expand2(anchors, points);
+	hullSet = hull(expanded, par.roundness);
+
+	push();
+	stroke(255);
+	if (!par.showPreview) stroke(0);
+	strokeWeight(6);
+	noFill();
+	beginShape();
+	hullSet.forEach(p => {
+		if (par.showCurves) {
+			curveVertex(p[0], p[1]);
+		} else {
+			vertex(p[0], p[1]);
+		}
+	});
+
+	endShape(CLOSE);
+	pop();
+}
 function deriveProportions(pose) {
 	eyeDist = floor(poseDist(pose, LEFTEYE, RIGHTEYE));
 	shoulderDist = floor(poseDist(pose, LEFTSHOULDER, RIGHTSHOULDER));
@@ -773,6 +806,7 @@ function gotFaces(error, result) {
 		return;
 	}
 	detections = result;
+	faceapiLoading = false;
 	faceapi.detect(gotFaces);
 }
 
@@ -825,17 +859,31 @@ function emotionalPoints(pArr) {
 	}
 
 	pArr.forEach(p => {
-		p[0] = p[0] + map(happy, 0, 1, -100, 100);
-		p[1] = p[1] + map(surprised, 0, 1, 100, 300);
+		p[0] = p[0] + map(happy, 0, 1, -50, 50);
+		p[1] = p[1] + map(surprised, 0, 1, -50, 50);
 	});
 
 	return pArr;
 }
 
-function recordExpressions(exp) {
-	console.log('recordExpressions');
-	history2.push(anchors);
-	expressionHistory.push(exp);
-	setCounter(history2.length);
-	if (history2.length === par.recLength) finishRecording();
+function recordExpression(exp, pose) {
+	// console.log('recordExpression exp ', exp);
+	// console.log('recordExpression pose ', pose);
+	let newArr = pose.concat(exp);
+	expressionHistory.push(newArr);
+	// console.log('expressionHistory ', expressionHistory);
+	setCounter(expressionHistory.length);
+	if (expressionHistory.length === par.framesToRecord) finishRecording();
+}
+
+function mirror() {
+	translate(width, 0);
+	scale(-1, 1);
+}
+
+function updateAnchors() {
+	anchors.forEach(a => {
+		a.topSpeed = par.topSpeed;
+		a.maxForce = par.maxAcc;
+	});
 }
