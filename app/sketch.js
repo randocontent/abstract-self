@@ -1,7 +1,7 @@
 class Paramaterize {
 	constructor() {
 		this.scene = 1;
-		this.framesToRecord = 10;
+		this.framesToRecord = 100;
 		this.shapeStrokeWeight = 2;
 
 		this.minR = 44; // scene 0
@@ -9,7 +9,7 @@ class Paramaterize {
 		this.xNoiseMax = 1; // scene 0
 		this.yNoiseMax = 1; // scene 0
 		this.zNoiseOffset = 0.001; // scene 0
-		this.phaseMaxOffset = 0.1; // scene 0
+		this.phaseMaxOffset = 0.01; // scene 0
 		this.nosePhaseMax = 1;
 		this.inc = 12;
 
@@ -29,7 +29,7 @@ class Paramaterize {
 		this.noseExpandRatio = 3.5;
 		this.noiseLevel = 0.001;
 		this.roundness = 250;
-		this.emotionalScale = 100;
+		this.emotionalScale = 2;
 
 		this.showAnchors = true;
 		this.showPose = false;
@@ -1061,12 +1061,23 @@ function faceBodyNet(pose, exp) {
 			zoff += par.zNoiseOffset;
 		}
 		if (p.part === 'leftEar' || p.part === 'rightEar') {
-			let radius = par.earRadius;
-			for (let angle = 0; angle < 360; angle += par.angles) {
-				let x = p.pos.x + radius * sin(angle);
-				let y = p.pos.y + radius * cos(angle);
+			for (let a = 0; a < 360; a += par.angles) {
+				let xoff = map(cos(a + phase), -1, 1, 0, par.xNoiseMax);
+				let yoff = map(sin(a + phase), -1, 1, 0, par.yNoiseMax);
+				let r = map(
+					noise(xoff, yoff, zoff),
+					0,
+					1,
+					par.earRadius-10,
+					par.earRadius+10
+				);
+				let x = p.pos.x + r * cos(a);
+				let y = p.pos.y + r * sin(a);
 				newArr.push([x, y]);
 			}
+			let pOff = map(noise(zoff), 0, 1, 0, phaseMax);
+			phase += pOff;
+			zoff += par.zNoiseOffset;
 		}
 		if (p.part === 'leftWrist' || p.part === 'rightWrist') {
 			let radius = par.wristRadius;
@@ -1088,12 +1099,23 @@ function faceBodyNet(pose, exp) {
 			p.part === 'leftHip' ||
 			p.part === 'rightHip'
 		) {
-			let radius = par.radius;
-			for (let angle = 0; angle < 360; angle += par.angles * 2) {
-				let x = p.pos.x + radius * sin(angle);
-				let y = p.pos.y + radius * cos(angle);
+			for (let a = 0; a < 360; a += par.angles) {
+				let xoff = map(cos(a + phase), -1, 1, 0, par.xNoiseMax);
+				let yoff = map(sin(a + phase), -1, 1, 0, par.yNoiseMax);
+				let r = map(
+					noise(xoff, yoff, zoff),
+					0,
+					1,
+					par.radius-10,
+					par.radius+50
+				);
+				let x = p.pos.x + r * cos(a);
+				let y = p.pos.y + r * sin(a);
 				newArr.push([x, y]);
 			}
+			let pOff = map(noise(zoff), 0, 1, 0, phaseMax);
+			phase += pOff;
+			zoff += par.zNoiseOffset;
 		}
 	});
 	return newArr;
@@ -1233,13 +1255,13 @@ function drawFinalShape(points) {
 
 function voiceNet(points, level) {
 	let newArr = [];
-	let r = 10;
+	let phase = 0.0
 	points.forEach((p, i) => {
 		let x, y;
 		let offset = 0;
 		if (level) {
 			if (level[0]) {
-				offset = map(level[0],0,255,-100,100)
+				offset = map(level[0],0,255,-50,50)
 			}
 		}
 		x = p[0] + phase + offset * sin(i);
