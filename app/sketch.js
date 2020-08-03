@@ -15,13 +15,16 @@ class Paramaterize {
 		this.phaseMax = 0.1;
 		this.inc = 12;
 
+		this.noseRadius = 120;
+		this.blobMin = 50;
+		this.blobMax = 100;
+		this.blobOffset = 0.1;
 		this.noseMinRadius = 100;
 		this.noseMaxRadius = 200;
 		this.topSpeed = 10;
 		this.maxAcc = 4;
 		this.angles = 12;
 		this.radius = 50;
-		this.noseRadius = 120;
 		this.noseYOffset = 55;
 		this.earRadius = 35;
 		this.wristRadius = 55;
@@ -36,7 +39,7 @@ class Paramaterize {
 
 		this.showAnchors = true;
 		this.showPose = false;
-		this.showExpanded = true;
+		this.showExpanded = false;
 		this.showHull = true;
 		this.showPreview = false;
 		this.fillShape = false;
@@ -78,7 +81,6 @@ let speedControl = f2.add(par, 'topSpeed');
 let accControl = f2.add(par, 'maxAcc');
 f2.add(par, 'angles');
 f2.add(par, 'radius');
-f2.add(par, 'noseRadius');
 f2.add(par, 'noseYOffset');
 f2.add(par, 'earRadius');
 f2.add(par, 'wristRadius');
@@ -89,6 +91,11 @@ f2.add(par, 'emotionalScale');
 speedControl.onFinishChange(() => updateAnchors());
 accControl.onFinishChange(() => updateAnchors());
 f2.close();
+
+f3.add(par,'blobMin')
+f3.add(par,'blobMax')
+f3.add(par,'blobOffset')
+f3.add(par,'noseRadius');
 
 f4.add(par, 'audioResolution');
 
@@ -1012,26 +1019,16 @@ function bodyNet(pose) {
 	pose.forEach(p => {
 		// Big circle around nose...
 		if (p.part === 'nose') {
-			let newP = expandBlob(p, max, par.minR, par.maxR, exp)
-			// console.log('bodyNet ',newP)
-			newArr.concat(newP);
-			// console.log('bodyNet newArr ',newArr)
+			let newP = expandBlob(p, 1, 80, 220)
+			newArr = newArr.concat(newP)
 		}
 		if (p.part === 'leftEar' || p.part === 'rightEar') {
-			let radius = par.earRadius;
-			for (let angle = 0; angle < 360; angle += par.angles) {
-				let x = p.pos.x + radius * sin(angle);
-				let y = p.pos.y + radius * cos(angle);
-				newArr.push([x, y]);
-			}
+			let newP = expandBlob(p, 1, 40, 120)
+			newArr = newArr.concat(newP)
 		}
 		if (p.part === 'leftWrist' || p.part === 'rightWrist') {
-			let radius = par.wristRadius;
-			for (let angle = 0; angle < 360; angle += par.angles) {
-				let x = p.pos.x + radius * sin(angle);
-				let y = p.pos.y + radius * cos(angle);
-				newArr.push([x, y]);
-			}
+			let newP = expandBlob(p, 1, 40, 120)
+			newArr = newArr.concat(newP)
 		}
 		if (
 			p.part === 'leftAnkle' ||
@@ -1045,15 +1042,11 @@ function bodyNet(pose) {
 			p.part === 'leftHip' ||
 			p.part === 'rightHip'
 		) {
-			let radius = par.radius;
-			for (let angle = 0; angle < 360; angle += par.angles * 2) {
-				let x = p.pos.x + radius * sin(angle);
-				let y = p.pos.y + radius * cos(angle);
-				newArr.push([x, y]);
-			}
+			let newP = expandBlob(p, 1, 40, 120)
+			newArr = newArr.concat(newP)
 		}
 	});
-	// console.log('just before',newArr)
+	// console.log('just before ',newArr)
 	return newArr;
 }
 
@@ -1063,11 +1056,11 @@ function faceBodyNet(pose, exp) {
 	// Needs an array of objects that have pos.x,pos.y,part
 	// Will add points around the skeleton to increase the surface area
 	let newArr = [];
-	let max = exp * par.emotionalScale;
+	let nmax = exp * par.emotionalScale;
 
 	pose.forEach(p => {
 		if (p.part === 'nose') {
-			let newP = expandBlob(p, max, par.minR, par.maxR, exp)
+			let newP = expandBlob(p, nmax, par.minR, par.maxR, exp)
 			// console.log(newP)
 			newArr.concat(newP);
 		}
@@ -1337,7 +1330,17 @@ function previewSkeleton(pose) {
 	}
 }
 
-function expandBlob(point, noiseMax, minR, maxR, exp) {
+function expandBlob(point, maxoff, minr, maxr, texp) {
+	// console.log('texp')
+	// console.log(texp)
+	// console.log('maxr')
+	// console.log(maxr)
+	// console.log('minr')
+	// console.log(minr)
+	// console.log('nmax')
+	// console.log(nmax)
+	// console.log('point')
+	// console.log(point)
 	let x, y;
 	let px, py;
 	let newArr = [];
@@ -1351,15 +1354,15 @@ function expandBlob(point, noiseMax, minR, maxR, exp) {
 		px = point[0];
 		py = point[1];
 	}
-	for (let a = 0; a < 360; a += 2) {
-		let xoff = map(cos(a + phase), -1, 1, 0, noiseMax);
-		let yoff = map(sin(a + phase), -1, 1, 0, noiseMax);
-		let r = map(noise(xoff, yoff, zoff), 0, 1, minR, maxR);
+	for (let a = 0; a < 360; a += 10) {
+		let xoff = map(cos(a + phase), -1, 1, 0, maxoff);
+		let yoff = map(sin(a + phase), -1, 1, 0, maxoff);
+		let r = map(noise(xoff, yoff, zoff), 0, 1, minr, maxr);
 		x = px + r * cos(a);
 		y = py + r * sin(a);
 		newArr.push([x, y]);
 	}
-	let pOff = map(noise(zoff), 0, 1, 0, 0.1);
+	let pOff = map(noise(zoff), 0, 1, 0, par.blobOffset);
 	phase += pOff;
 	zoff += par.zNoiseOffset;
 	// console.log(newArr)
