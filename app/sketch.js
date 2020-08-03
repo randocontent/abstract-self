@@ -1,7 +1,7 @@
 class Paramaterize {
 	constructor() {
 		this.scene = 0;
-		this.framesToRecord = 100;
+		this.framesToRecord = 250;
 		this.shapeStrokeWeight = 2;
 
 		this.minR = 44; // scene 0
@@ -344,7 +344,7 @@ function scene00() {
 
 				noseAnchor.behaviors();
 				noseAnchor.update();
-				if (par.showAnchors) noseAnchor.show();
+				// if (par.showAnchors) noseAnchor.show();
 
 				let nx = noseAnchor.pos.x;
 				let ny = noseAnchor.pos.y;
@@ -362,13 +362,12 @@ function scene00() {
 				strokeWeight(par.shapeStrokeWeight);
 				noFill();
 				beginShape();
-				for (let a = 0; a < TWO_PI; a += radians(par.inc)) {
+				for (let a = 0; a < 360; a += par.inc) {
 					// Follow a circular path through the noise space to create a smooth flowing shape
 					let xoff = map(cos(a + phase), -1, 1, 0, par.xNoiseMax);
 					let yoff = map(sin(a + phase), -1, 1, 0, par.yNoiseMax);
 					let r = map(noise(xoff, yoff, zoff), 0, 1, par.minR, par.maxR);
 					let x = r * cos(a);
-					x = x;
 					let y = r * sin(a);
 					if (par.showCurves) {
 						curveVertex(x, ay);
@@ -376,9 +375,8 @@ function scene00() {
 						vertex(x, y);
 					}
 				}
-
 				endShape(CLOSE);
-				let pOff = map(noise(zoff, phase), 0, 1, 0, par.phaseMaxOffset);
+				let pOff = map(noise(zoff, phase), 0, 1, 0, (par.phaseMaxOffset*1000));
 				phase += pOff;
 				zoff += par.zNoiseOffset;
 				pop();
