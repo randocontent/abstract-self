@@ -94,7 +94,7 @@ function playShape(history) {
 // Draws an outline based on posenet keypoints
 function drawShape(points) {
 	retargetAnchorsFromPose(points);
-	expanded = faceBodyNet(anchors);
+	expanded = faceBodyNet(anchors,par.happy);
 	hullSet = hull(expanded, par.roundness);
 
 	push();

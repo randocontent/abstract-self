@@ -117,24 +117,20 @@ function faceBodyNet(pose, fExp) {
 	// Needs an array of objects that have pos.x,pos.y,part
 	// Will add points around the skeleton to increase the surface area
 	let newArr = [];
-	let nmax = fExp * par.emotionalScale;
 
 	// We'll use these later for the torso
-	let lx1, ly1, lx2, ly2;
-	let rx1, ry1, rx2, ry2;
 	let l1, l2, r1, r2;
-	let stepOff = 0.01
 
 	pose.forEach(p => {
 		// console.log(p)
 		switch (p.part) {
 			case 'nose':
 				// function expandBlob(point, angles, minr, maxr, maxx,maxy, maxoff, texp) {
-				newArr = newArr.concat(expandBlob(p, 1, 1, 200, 2, 4, 0.05));
+				newArr = newArr.concat(expandBlob(p, 1, 1, 200, 2, 4, 0.05, fExp));
 				break;
 			case 'leftEar':
 			case 'rightEar':
-				newArr = newArr.concat(expandBlob(p,30,5,50,2,4,0.01));
+				newArr = newArr.concat(expandBlob(p, 5, 5, 50, 2, 4, 0.01, fExp));
 				break;
 			case 'leftEye':
 			case 'rightEye':
@@ -143,11 +139,11 @@ function faceBodyNet(pose, fExp) {
 			// Arms
 			case 'leftShoulder':
 				l1 = createVector(p.pos.x, p.pos.y);
-				newArr = newArr.concat(expandBlob(p,3,5,150,2,4,0.01));
+				newArr = newArr.concat(expandBlob(p, 5, 5, 150, 2, 4, 0.01, fExp));
 				break;
 			case 'rightShoulder':
 				r1 = createVector(p.pos.x, p.pos.y);
-				newArr = newArr.concat(expandBlob(p,3,5,150,2,4,-0.01));
+				newArr = newArr.concat(expandBlob(p, 5, 5, 150, 2, 4, -0.01, fExp));
 				break;
 			// case 'leftElbow':
 			// case 'rightElbow':
@@ -155,36 +151,36 @@ function faceBodyNet(pose, fExp) {
 			// case 'rightWrist':
 			case 'leftHip':
 				l2 = createVector(p.pos.x, p.pos.y);
-				newArr = newArr.concat(expandBlob(p,30,5,50,2,4,0.02));
+				newArr = newArr.concat(expandBlob(p, 10, 5, 50, 2, 4, 0.02, fExp));
 				break;
 			case 'rightHip':
 				r2 = createVector(p.pos.x, p.pos.y);
-				newArr = newArr.concat(expandBlob(p,30,5,50,2,4,-0.02));
+				newArr = newArr.concat(expandBlob(p, 10, 5, 50, 2, 4, -0.02, fExp));
 				break;
 			// case 'leftKnee':
 			// case 'rightKnee':
 			// case 'leftAnkle':
 			// case 'rightAnkle':
 			default:
-				newArr = newArr.concat(expandBlob(p,3,5,100,2,4,0.01));
+				newArr = newArr.concat(expandBlob(p, 5, 5, 100, 2, 4, 0.01, fExp));
 				break;
 		}
 	});
 
 	let leftSide = p5.Vector.lerp(l1, l2, 0.5);
 	let rightSide = p5.Vector.lerp(r1, r2, 0.5);
-	let middle1 = p5.Vector.lerp(l1,r1,0.5)
-	let middle2 = p5.Vector.lerp(l2,r2,0.5)
+	let middle1 = p5.Vector.lerp(l1, r1, 0.5);
+	let middle2 = p5.Vector.lerp(l2, r2, 0.5);
 
-	newArr = newArr.concat(expandBlob(leftSide, 1, 1, 100, 2, 4, 0.1));
-	newArr = newArr.concat(expandBlob(rightSide, 1, 1, 100, 2, 4, 0.1));
-	newArr = newArr.concat(expandBlob(middle1, 5, 1, 100, 2, 4, 0.1));
-	newArr = newArr.concat(expandBlob(middle2, 5, 1, 100, 2, 4, 0.1));
+	newArr = newArr.concat(expandBlob(leftSide, 5, 1, 100, 2, 4, 0.1, fExp));
+	newArr = newArr.concat(expandBlob(rightSide, 5, 1, 100, 2, 4, 0.1, fExp));
+	newArr = newArr.concat(expandBlob(middle1, 5, 1, 100, 2, 4, 0.1, fExp));
+	newArr = newArr.concat(expandBlob(middle2, 5, 1, 100, 2, 4, 0.1, fExp));
 
 	return newArr;
 }
 
-function expandBlob(point, angles, minr, maxr, maxx, maxy, maxoff, texp) {
+function expandBlob(point, angles, minR, maxR, maxX, maxY, maxOff, fExp) {
 	// console.log('texp')
 	// console.log(texp)
 	// console.log('maxr')
@@ -211,18 +207,19 @@ function expandBlob(point, angles, minr, maxr, maxx, maxy, maxoff, texp) {
 		px = point[0];
 		py = point[1];
 	}
+	if (!fExp) fExp = par.emotionalScale;
+	let effect = fExp 
+
+	console.log(effect)
 	for (let a = 0; a < 360; a += angles) {
-		// console.log(texp)
-		if (texp) maxr += texp * 2;
-		if (texp) minr -= texp * 2;
-		let xoff = map(cos(a + phase), -1, 1, 0, maxx);
-		let yoff = map(sin(a + phase), -1, 1, 0, maxy);
-		let r = map(noise(xoff, yoff, zoff), 0, 1, minr, maxr);
+		let xoff = map(cos(a + phase), -1, 1, 0, maxX * effect);
+		let yoff = map(sin(a + phase), -1, 1, 0, maxY * effect);
+		let r = map(noise(xoff, yoff, zoff), 0, 1, minR * effect, maxR * effect);
 		x = px + r * cos(a);
 		y = py + r * sin(a);
 		newArr.push([x, y]);
 	}
-	let pOff = map(noise(zoff), 0, 1, 0, maxoff);
+	let pOff = map(noise(zoff), 0, 1, 0, maxOff * effect);
 	phase += pOff;
 	zoff += par.zNoiseOffset;
 	// console.log(newArr)

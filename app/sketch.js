@@ -10,7 +10,7 @@ class Paramaterize {
 		this.noiseMax = 1; // scene 0
 		this.xNoiseMax = 1; // scene 0
 		this.yNoiseMax = 1; // scene 0
-		this.zNoiseOffset = 0.001; // scene 0
+		this.zNoiseOffset = 0.0001; // scene 0
 		this.phaseMaxOffset = 0.01; // scene 0
 		this.nosePhaseMax = 1;
 		this.phaseMax = 0.1;
@@ -34,8 +34,8 @@ class Paramaterize {
 		this.manualRadiusRatio = 1;
 		this.noseExpandRatio = 3.5;
 		this.noiseLevel = 0.001;
-		this.roundness = 20;
-		this.emotionalScale = 2;
+		this.roundness = 35;
+		this.emotionalScale = .5;
 
 		this.showAnchors = true;
 		this.showPose = false;
@@ -46,6 +46,8 @@ class Paramaterize {
 		this.showCurves = false;
 
 		this.audioResolution = 32; // bins
+		this.happy = 1;
+		this.angry = 1;
 	}
 }
 
@@ -55,11 +57,11 @@ let gui = new dat.GUI({ autoPlace: true });
 // let customContainer =document.getElementById('dat-gui-container');
 // customContainer.appendChild(gui.domElement);
 
-let f1 = gui.addFolder('Blob');
-let f2 = gui.addFolder('Pose');
-let f3 = gui.addFolder('Face');
-let f4 = gui.addFolder('Voice');
-let f5 = gui.addFolder('Reference');
+// let f1 = gui.addFolder('Blob');
+// let f2 = gui.addFolder('Pose');
+// let f3 = gui.addFolder('Face');
+// let f4 = gui.addFolder('Voice');
+// let f5 = gui.addFolder('Reference');
 
 // let sceneGui = gui.add(par, 'scene');
 // sceneGui.onFinishChange(() => {
@@ -69,46 +71,46 @@ let f5 = gui.addFolder('Reference');
 gui.add(par, 'framesToRecord', 10, 10000, 1);
 gui.add(par, 'shapeStrokeWeight');
 gui.add(par, 'mississippi');
+gui.add(par, 'roundness');
+gui.add(par, 'zNoiseOffset');
+gui.add(par, 'showExpanded');
+gui.add(par, 'happy');
+gui.add(par, 'angry');
+// gui.add(par, 'emotionalScale');
 
-f1.add(par, 'minR');
-f1.add(par, 'maxR');
-f1.add(par, 'noiseMax');
-f1.add(par, 'zNoiseOffset');
-f1.add(par, 'phaseMaxOffset');
-f1.add(par, 'inc');
-f1.close();
+// f1.add(par, 'minR');
+// f1.add(par, 'maxR');
+// f1.add(par, 'noiseMax');
+// f1.add(par, 'phaseMaxOffset');
+// f1.add(par, 'inc');
+// f1.close();
 
-let speedControl = f2.add(par, 'topSpeed');
-let accControl = f2.add(par, 'maxAcc');
-f2.add(par, 'radius');
-f2.add(par, 'noseYOffset');
-f2.add(par, 'earRadius');
-f2.add(par, 'wristRadius');
-f2.add(par, 'noiseLevel');
-f2.add(par, 'roundness');
-f2.add(par, 'emotionalScale');
-speedControl.onFinishChange(() => updateAnchors());
-accControl.onFinishChange(() => updateAnchors());
-f2.close();
+// let speedControl = f2.add(par, 'topSpeed');
+// let accControl = f2.add(par, 'maxAcc');
+// f2.add(par, 'radius');
+// f2.add(par, 'noseYOffset');
+// f2.add(par, 'earRadius');
+// f2.add(par, 'wristRadius');
+// f2.add(par, 'noiseLevel');
+// speedControl.onFinishChange(() => updateAnchors());
+// accControl.onFinishChange(() => updateAnchors());
+// f2.close();
 
-f3.add(par,'blobMin')
-f3.add(par,'blobMax')
-f3.add(par,'blobOffset')
-f3.add(par,'blobPhaseOffset')
-f3.add(par,'noseRadius');
+// f3.add(par,'blobMin')
+// f3.add(par,'blobMax')
+// f3.add(par,'blobOffset')
+// f3.add(par,'blobPhaseOffset')
+// f3.add(par,'noseRadius');
 
-f4.add(par, 'audioResolution');
+// f4.add(par, 'audioResolution');
 
-f5.add(par, 'showPose');
-f5.add(par, 'showExpanded');
-f5.add(par, 'showHull');
-f5.add(par, 'showPreview');
-f5.add(par, 'showAnchors');
-f5.add(par, 'fillShape');
-f5.add(par, 'showCurves');
-f5.close();
-
-gui.close();
+// f5.add(par, 'showPose');
+// f5.add(par, 'showHull');
+// f5.add(par, 'showPreview');
+// f5.add(par, 'showAnchors');
+// f5.add(par, 'fillShape');
+// f5.add(par, 'showCurves');
+// f5.close();
 
 const NOSE = 0;
 const LEFTEYE = 1;
@@ -152,7 +154,7 @@ const PARTS = [
 
 let canvas, vf;
 let status;
-let sample
+let sample;
 let webcamPreview;
 let button;
 
@@ -319,7 +321,6 @@ function gotFaces(error, result) {
 	faceapiLoading = false;
 	if (!stopFaceapi) faceapi.detect(gotFaces);
 }
-
 
 // =============================================================
 // =                         BEGIN SCENES                      =
@@ -594,7 +595,7 @@ function bezierEllipse(pts, radius, controlRadius) {
 	let controlTheta1 = rot / random(3.0); // 3.0;
 	let controlTheta2 = controlTheta1 * random(2.0); // 2.0;
 
-	let newArr = []
+	let newArr = [];
 	for (let i = 0; i < pts; i++) {
 		cx1 = cos(theta + controlTheta1) * controlRadius;
 		cy1 = sin(theta + controlTheta1) * controlRadius;
@@ -616,8 +617,7 @@ function bezierEllipse(pts, radius, controlRadius) {
 			newArr.push([cx1, cy1, cx2, cy2, ax, ay]);
 		}
 
-
 		theta += rot;
 	}
-	return newArr
-} 
+	return newArr;
+}
