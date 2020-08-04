@@ -4,6 +4,13 @@ class Paramaterize {
 		this.framesToRecord = 20;
 		this.shapeStrokeWeight = 2;
 		this.mississippi = 26;
+		this.roundness = 95;
+		this.emotionalScale = .5;
+		this.showExpanded = true;
+		this.innerStar = 100
+		this.outerStar = 200
+		this.starPoints = 9
+		this.noseOnly = false
 
 		this.minR = 44; // scene 0
 		this.maxR = 66; // scene 0
@@ -15,7 +22,6 @@ class Paramaterize {
 		this.nosePhaseMax = 1;
 		this.phaseMax = 0.1;
 		this.inc = 12;
-
 		this.noseRadius = 120;
 		this.blobMin = 50;
 		this.blobMax = 100;
@@ -34,17 +40,12 @@ class Paramaterize {
 		this.manualRadiusRatio = 1;
 		this.noseExpandRatio = 3.5;
 		this.noiseLevel = 0.001;
-		this.roundness = 35;
-		this.emotionalScale = .5;
-
 		this.showAnchors = true;
 		this.showPose = false;
-		this.showExpanded = false;
 		this.showHull = true;
 		this.showPreview = false;
 		this.fillShape = false;
 		this.showCurves = false;
-
 		this.audioResolution = 32; // bins
 		this.happy = 1;
 		this.angry = 1;
@@ -52,17 +53,14 @@ class Paramaterize {
 }
 
 par = new Paramaterize();
-
 let gui = new dat.GUI({ autoPlace: true });
 // let customContainer =document.getElementById('dat-gui-container');
 // customContainer.appendChild(gui.domElement);
-
 // let f1 = gui.addFolder('Blob');
 // let f2 = gui.addFolder('Pose');
 // let f3 = gui.addFolder('Face');
 // let f4 = gui.addFolder('Voice');
 // let f5 = gui.addFolder('Reference');
-
 // let sceneGui = gui.add(par, 'scene');
 // sceneGui.onFinishChange(() => {
 // 	gotoScene();
@@ -74,17 +72,20 @@ gui.add(par, 'mississippi');
 gui.add(par, 'roundness');
 gui.add(par, 'zNoiseOffset');
 gui.add(par, 'showExpanded');
-gui.add(par, 'happy');
-gui.add(par, 'angry');
-// gui.add(par, 'emotionalScale');
+// gui.add(par, 'happy');
+// gui.add(par, 'angry');
+		gui.add(par,'innerStar')
+		gui.add(par,'outerStar')
+		gui.add(par,'starPoints',1)
+		gui.add(par,'noseOnly')
 
+// gui.add(par, 'emotionalScale');
 // f1.add(par, 'minR');
 // f1.add(par, 'maxR');
 // f1.add(par, 'noiseMax');
 // f1.add(par, 'phaseMaxOffset');
 // f1.add(par, 'inc');
 // f1.close();
-
 // let speedControl = f2.add(par, 'topSpeed');
 // let accControl = f2.add(par, 'maxAcc');
 // f2.add(par, 'radius');
@@ -95,15 +96,12 @@ gui.add(par, 'angry');
 // speedControl.onFinishChange(() => updateAnchors());
 // accControl.onFinishChange(() => updateAnchors());
 // f2.close();
-
 // f3.add(par,'blobMin')
 // f3.add(par,'blobMax')
 // f3.add(par,'blobOffset')
 // f3.add(par,'blobPhaseOffset')
 // f3.add(par,'noseRadius');
-
 // f4.add(par, 'audioResolution');
-
 // f5.add(par, 'showPose');
 // f5.add(par, 'showHull');
 // f5.add(par, 'showPreview');
@@ -129,7 +127,6 @@ const LEFTKNEE = 13;
 const RIGHTKNEE = 14;
 const LEFTANKLE = 15;
 const RIGHTANKLE = 16;
-
 const PARTS = [
 	'nose',
 	'leftEye',
@@ -151,7 +148,6 @@ const PARTS = [
 ];
 
 // --posenet
-
 let canvas, vf;
 let status;
 let sample;
@@ -190,7 +186,6 @@ let eyeWaistRatio;
 let shoulderWaistRatio;
 
 // --faceapi
-
 let faceapi;
 let detections = [];
 let expression;

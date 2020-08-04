@@ -111,6 +111,71 @@ function drawShape2(points) {
 	pop();
 }
 
+function star(x, y, radius1, radius2, npoints) {
+	let newArr = [];
+	let xoff = x
+	let yoff = y
+	let offStep = 0.01
+	push()
+	angleMode(RADIANS)
+	let angle = TWO_PI / npoints;
+	let halfAngle = angle / 2.0;
+	for (let a = 0; a < TWO_PI; a += angle) {
+		let sx = map(noise(xoff,yoff),0,1,-10,10) + x + cos(a) * radius2;
+		xoff+=offStep
+		let sy = map(noise(xoff,yoff),0,1,-10,10) + y + sin(a) * radius2;
+		yoff+=offStep
+		newArr.push([sx, sy]);
+		sx = x + cos(a + halfAngle) * radius1;
+		sy = y + sin(a + halfAngle) * radius1;
+		newArr.push([sx, sy]);
+	}
+	pop()
+	return newArr
+}
+
+function starBodyNet(pose, fExp) {
+	// console.log('faceBodyNet')
+	// [{pos,part}...]
+	// Needs an array of objects that have pos.x,pos.y,part
+	// Will add points around the skeleton to increase the surface area
+	let newArr = [];
+
+	// We'll use these later for the torso
+	let l1, l2, r1, r2;
+
+	pose.forEach((p, i) => {
+		// console.log(p)
+		switch (p.part) {
+			case 'nose':
+				// function expandBlob(point, angles, minr, maxr, maxx,maxy, maxoff, texp) {
+				newArr = newArr.concat(star(p.pos.x,p.pos.y,par.innerStar,par.outerStar,par.starPoints));
+				break;
+			// case 'leftEar':
+			// case 'rightEar':
+			// case 'leftEye':
+			// case 'rightEye':
+			case 'leftShoulder':
+			case 'rightShoulder':
+			case 'leftElbow':
+			case 'rightElbow':
+			case 'leftWrist':
+			case 'rightWrist':
+			case 'leftHip':
+			case 'rightHip':
+			case 'leftKnee':
+			case 'rightKnee':
+			case 'leftAnkle':
+			case 'rightAnkle':
+			default:
+				if (!par.noseOnly) newArr = newArr.concat(star(p.pos.x,p.pos.y,par.innerStar,par.outerStar,par.starPoints));
+				break;
+		}
+	});
+
+	return newArr;
+}
+
 function faceBodyNet(pose, fExp) {
 	// console.log('faceBodyNet')
 	// [{pos,part}...]
@@ -121,16 +186,16 @@ function faceBodyNet(pose, fExp) {
 	// We'll use these later for the torso
 	let l1, l2, r1, r2;
 
-	pose.forEach(p => {
+	pose.forEach((p, i) => {
 		// console.log(p)
 		switch (p.part) {
 			case 'nose':
 				// function expandBlob(point, angles, minr, maxr, maxx,maxy, maxoff, texp) {
-				newArr = newArr.concat(expandBlob(p, 1, 1, 200, 2, 4, 0.05, fExp));
+				newArr = newArr.concat(expandBlob(p, 1, 1, 200, 2, 4, 0.05, i, fExp));
 				break;
 			case 'leftEar':
 			case 'rightEar':
-				newArr = newArr.concat(expandBlob(p, 5, 5, 50, 2, 4, 0.01, fExp));
+				newArr = newArr.concat(expandBlob(p, 5, 5, 50, 2, 4, 0.01, i, fExp));
 				break;
 			case 'leftEye':
 			case 'rightEye':
@@ -139,11 +204,11 @@ function faceBodyNet(pose, fExp) {
 			// Arms
 			case 'leftShoulder':
 				l1 = createVector(p.pos.x, p.pos.y);
-				newArr = newArr.concat(expandBlob(p, 5, 5, 150, 2, 4, 0.01, fExp));
+				newArr = newArr.concat(expandBlob(p, 5, 5, 150, 2, 4, 0.01, i, fExp));
 				break;
 			case 'rightShoulder':
 				r1 = createVector(p.pos.x, p.pos.y);
-				newArr = newArr.concat(expandBlob(p, 5, 5, 150, 2, 4, -0.01, fExp));
+				newArr = newArr.concat(expandBlob(p, 5, 5, 150, 2, 4, -0.01, i, fExp));
 				break;
 			// case 'leftElbow':
 			// case 'rightElbow':
@@ -151,18 +216,18 @@ function faceBodyNet(pose, fExp) {
 			// case 'rightWrist':
 			case 'leftHip':
 				l2 = createVector(p.pos.x, p.pos.y);
-				newArr = newArr.concat(expandBlob(p, 10, 5, 50, 2, 4, 0.02, fExp));
+				newArr = newArr.concat(expandBlob(p, 10, 5, 50, 2, 4, 0.02, i, fExp));
 				break;
 			case 'rightHip':
 				r2 = createVector(p.pos.x, p.pos.y);
-				newArr = newArr.concat(expandBlob(p, 10, 5, 50, 2, 4, -0.02, fExp));
+				newArr = newArr.concat(expandBlob(p, 10, 5, 50, 2, 4, -0.02, i, fExp));
 				break;
 			// case 'leftKnee':
 			// case 'rightKnee':
 			// case 'leftAnkle':
 			// case 'rightAnkle':
 			default:
-				newArr = newArr.concat(expandBlob(p, 5, 5, 100, 2, 4, 0.01, fExp));
+				newArr = newArr.concat(expandBlob(p, 5, 5, 100, 2, 4, 0.01, i, fExp));
 				break;
 		}
 	});
@@ -172,15 +237,19 @@ function faceBodyNet(pose, fExp) {
 	let middle1 = p5.Vector.lerp(l1, r1, 0.5);
 	let middle2 = p5.Vector.lerp(l2, r2, 0.5);
 
-	newArr = newArr.concat(expandBlob(leftSide, 5, 1, 100, 2, 4, 0.1, fExp));
-	newArr = newArr.concat(expandBlob(rightSide, 5, 1, 100, 2, 4, 0.1, fExp));
-	newArr = newArr.concat(expandBlob(middle1, 5, 1, 100, 2, 4, 0.1, fExp));
-	newArr = newArr.concat(expandBlob(middle2, 5, 1, 100, 2, 4, 0.1, fExp));
+	newArr = newArr.concat(
+		expandBlob(leftSide, 5, 1, 100, 2, 4, 0.001, -1, fExp)
+	);
+	newArr = newArr.concat(
+		expandBlob(rightSide, 5, 1, 100, 2, 4, 0.001, -2, fExp)
+	);
+	newArr = newArr.concat(expandBlob(middle1, 5, 1, 100, 2, 4, 0.001, -3, fExp));
+	newArr = newArr.concat(expandBlob(middle2, 5, 1, 100, 2, 4, 0.001, -4, fExp));
 
 	return newArr;
 }
 
-function expandBlob(point, angles, minR, maxR, maxX, maxY, maxOff, fExp) {
+function expandBlob(point, angles, minR, maxR, maxX, maxY, maxOff, i, fExp) {
 	// console.log('texp')
 	// console.log(texp)
 	// console.log('maxr')
@@ -208,12 +277,12 @@ function expandBlob(point, angles, minR, maxR, maxX, maxY, maxOff, fExp) {
 		py = point[1];
 	}
 	if (!fExp) fExp = par.emotionalScale;
-	let effect = fExp 
+	let effect = fExp;
 
-	console.log(effect)
+	console.log(effect);
 	for (let a = 0; a < 360; a += angles) {
-		let xoff = map(cos(a + phase), -1, 1, 0, maxX * effect);
-		let yoff = map(sin(a + phase), -1, 1, 0, maxY * effect);
+		let xoff = map(cos(a + phase), -1, 1, 0, maxX * effect) + i;
+		let yoff = map(sin(a + phase), -1, 1, 0, maxY * effect) + i;
 		let r = map(noise(xoff, yoff, zoff), 0, 1, minR * effect, maxR * effect);
 		x = px + r * cos(a);
 		y = py + r * sin(a);
