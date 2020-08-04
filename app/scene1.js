@@ -94,7 +94,7 @@ function playShape(history) {
 // Draws an outline based on posenet keypoints
 function drawShape(points) {
 	retargetAnchorsFromPose(points);
-	expanded = starBodyNet(anchors,par.happy);
+	expanded = bodyNet(anchors, par.happy);
 	hullSet = hull(expanded, par.roundness);
 
 	push();
@@ -116,17 +116,16 @@ function drawShape(points) {
 }
 
 function bodyNet(pose) {
-	console.log('bodynet')
-	// [{pos,part}...]
-	// Needs an array of objects that have pos.x,pos.y,part
-	// Will add points around the skeleton to increase the surface area
 	let newArr = [];
-	pose.forEach(p => {
+
+	// We'll use these later for the torso
+	let l1, l2, r1, r2;
+
+	pose.forEach((p, i) => {
 		// console.log(p)
 		switch (p.part) {
-			// head
 			case 'nose':
-				newArr = newArr.concat(expandEllipse(p, 120, 120,30));
+				newArr = newArr.concat(expandEllipse(p, 120, 120, 30));
 				break;
 			case 'leftEar':
 			case 'rightEar':
@@ -138,17 +137,24 @@ function bodyNet(pose) {
 				break;
 			// Arms
 			case 'leftShoulder':
+				l1 = createVector(p.pos.x, p.pos.y);
+				newArr = newArr.concat(expandEllipse(p, 50, 50, 54));
+				break;
 			case 'rightShoulder':
-				newArr = newArr.concat(expandEllipse(p, 50, 50,54));
+				r1 = createVector(p.pos.x, p.pos.y);
+				newArr = newArr.concat(expandEllipse(p, 50, 50, 54));
 				break;
 			// case 'leftElbow':
 			// case 'rightElbow':
 			// case 'leftWrist':
 			// case 'rightWrist':
-			// Legs
 			case 'leftHip':
+				l2 = createVector(p.pos.x, p.pos.y);
+				newArr = newArr.concat(expandEllipse(p, 50, 50, 54));
+				break;
 			case 'rightHip':
-				newArr = newArr.concat(expandEllipse(p, 50, 50,54));
+				r2 = createVector(p.pos.x, p.pos.y);
+				newArr = newArr.concat(expandEllipse(p, 50, 50, 54));
 				break;
 			// case 'leftKnee':
 			// case 'rightKnee':
@@ -159,7 +165,18 @@ function bodyNet(pose) {
 				break;
 		}
 	});
-	// console.log('just before ',newArr)
+
+	// Torso
+	let leftSide = p5.Vector.lerp(l1, l2, 0.5);
+	let rightSide = p5.Vector.lerp(r1, r2, 0.5);
+	let middle1 = p5.Vector.lerp(l1, r1, 0.5);
+	let middle2 = p5.Vector.lerp(l2, r2, 0.5);
+
+	newArr = newArr.concat(expandEllipseXY(leftSide.x,leftSide.y, 50, 50, 54));
+	newArr = newArr.concat(expandEllipseXY(rightSide.x,rightSide.y, 50, 50, 54));
+	newArr = newArr.concat(expandEllipseXY(middle1.x,middle1.y, 50, 50, 54));
+	newArr = newArr.concat(expandEllipseXY(middle2.x,middle2.y, 50, 50, 54));
+
 	return newArr;
 }
 
@@ -167,6 +184,20 @@ function recordPose(points) {
 	poseHistory.push(points);
 	setCounter(poseHistory.length);
 	if (poseHistory.length === par.framesToRecord) finishRecording();
+}
+
+function expandEllipseXY(px,py, minr, maxr, angles) {
+	if (!angles) angles = 30;
+	let newX, newY;
+	let newArr = [];
+	for (let a = 0; a < 360; a += angles) {
+		let r = random(minr, maxr);
+		newX = px + r * cos(a);
+		newY = py + r * sin(a);
+		newArr.push([newX, newY]);
+	}
+	// console.log(newArr)
+	return newArr;
 }
 
 function expandEllipse(point, minr, maxr, angles) {

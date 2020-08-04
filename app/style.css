@@ -44,9 +44,9 @@ h4,
 h5,
 h6,
 button {
-	font-size: 18px;
+	font-size: 16px;
 	line-height: 27px;
-	letter-spacing: 3.5px;
+	letter-spacing: 4px;
 }
 
 main .title {
@@ -58,6 +58,9 @@ main p {
 
 canvas {
 	border-radius: 10px;
+}
+.scene .sidebar .title {
+	font-weight: bold;
 }
 /* ==Layout  **************************************************** */
 /* ************************************************************** */
@@ -77,18 +80,18 @@ main .scene {
 }
 
 main .title {
-	margin-bottom: 2rem;
+	margin-bottom: 40px;
 	text-transform: uppercase;
 }
 
 main .directions {
 	padding: 2rem;
 	border-radius: 10px;
-	margin-bottom: 2rem;
+	margin-bottom: 40px;
 }
 
 main .controls {
-	margin-top: 2rem;
+	margin-top: 40px;
 	align-self: flex-end;
 }
 
@@ -107,6 +110,10 @@ main .webcam-monitor-container {
 	justify-content: space-between;
 }
 
+.scene .sidebar .controls {
+	display: flex;
+	align-self: flex-end;
+}
 .scene .abstract {
 	height: 100%;
 	background-color: white;
@@ -124,6 +131,8 @@ main .webcam-monitor-container {
 	margin: 0;
 	padding: 0;
 }
+button.rec-button {width: 300px;margin-right:40px;}
+button.counter {width: 164px}
 
 /* ==scenes  *************************************************** */
 /* ************************************************************** */
@@ -210,10 +219,9 @@ button,
 	background-color: var(--dark);
 	color: var(--secondary);
 	letter-spacing: 4px;
-	padding: 1.25rem 3rem;
+	padding: 1.25rem;
 	border-radius: 10px;
 	border: 2px solid var(--dark);
-	min-width: 14rem;
 	text-align: center;
 	text-transform: uppercase;
 }

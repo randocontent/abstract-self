@@ -37,7 +37,7 @@ function scene02() {
 			// vs is 500x470 but feed is 627x470
 			vf.image(sample, -50, 0);
 		}
-		playPreroll();
+		noPreroll();
 
 		if (full) playShape3(expressionHistory2);
 
@@ -232,6 +232,7 @@ function faceBodyNet(pose, fExp) {
 		}
 	});
 
+	// Torso
 	let leftSide = p5.Vector.lerp(l1, l2, 0.5);
 	let rightSide = p5.Vector.lerp(r1, r2, 0.5);
 	let middle1 = p5.Vector.lerp(l1, r1, 0.5);

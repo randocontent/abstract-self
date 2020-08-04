@@ -567,7 +567,7 @@ function playPreroll() {
 			vf.rect(0, 0, vf.width, vf.height);
 			vf.fill(255);
 			vf.textFont('Space Mono');
-			vf.textSize(280);
+			vf.textSize(180);
 			vf.textAlign(CENTER);
 			vf.text(counter, vf.width / 2, vf.height / 2 + 100);
 			vf.pop();
