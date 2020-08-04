@@ -2,16 +2,15 @@ function scene01() {
 	// Will run when entering the scene, seems like a good place to do clean up
 	// from the previous one
 	this.enter = function () {
+		full = false;
+		rec = false;
+		preroll = false;
+		play = false;
+		phase = 0.0;
 		noseAnchor = '';
-		// hide the other scenes
-		select('#scene-00').addClass('hidden');
-		// show this scene
-		select('#scene-01').removeClass('hidden');
-		// move the canvas over
+		hideScenes(); unhideScene('#scene-01');
 		canvas.parent('#canvas-01');
 		resizeCanvas(820, 820);
-		// move the webcam monitor over
-		// sample.parent('#webcam-monitor-01');
 		// resize video for a larger preview this time
 		sample.size(627, 470);
 		sample.hide();

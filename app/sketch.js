@@ -283,18 +283,23 @@ function gotoScene() {
 	switch (par.scene) {
 		case 0:
 			mgr.showScene(scene00);
+		hideScenes(); unhideScene('#scene-00');
 			break;
 		case 1:
 			mgr.showScene(scene01);
+		hideScenes(); unhideScene('#scene-01');
 			break;
 		case 2:
 			mgr.showScene(scene02);
+		hideScenes(); unhideScene('#scene-02');
 			break;
 		case 3:
 			mgr.showScene(scene03);
+		hideScenes(); unhideScene('#scene-03');
 			break;
 		case 4:
 			mgr.showScene(scene04);
+		hideScenes(); unhideScene('#scene-04');
 			break;
 		default:
 			break;
