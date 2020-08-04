@@ -1,16 +1,18 @@
 class Paramaterize {
 	constructor() {
-		this.scene = 1;
-		this.framesToRecord = 20; 
+		this.scene = 0;
+		this.framesToRecord = 200;
 		this.shapeStrokeWeight = 2;
-		this.mississippi = 26; // about 260
+		this.mississippi = 260; // about 260
 		this.roundness = 95;
-		this.emotionalScale = .5;
-		this.showExpanded = true;
-		this.innerStar = 100
-		this.outerStar = 200
-		this.starPoints = 9
-		this.noseOnly = false
+		this.emotionalScale = 0.5;
+		this.showExpanded = false;
+		this.innerStar = 100;
+		this.outerStar = 200;
+		this.starPoints = 9;
+		this.noseOnly = false;
+		this.useSamplePose = true;
+		this.showDebug = false;
 
 		this.minR = 44; // scene 0
 		this.maxR = 66; // scene 0
@@ -61,11 +63,13 @@ let gui = new dat.GUI({ autoPlace: true });
 // let f3 = gui.addFolder('Face');
 // let f4 = gui.addFolder('Voice');
 // let f5 = gui.addFolder('Reference');
-// let sceneGui = gui.add(par, 'scene');
-// sceneGui.onFinishChange(() => {
-// 	gotoScene();
-// });
 
+let sceneGui = gui.add(par, 'scene');
+sceneGui.onFinishChange(() => {
+	gotoScene();
+});
+
+gui.add(par, 'showDebug')
 gui.add(par, 'framesToRecord', 10, 10000, 1);
 gui.add(par, 'shapeStrokeWeight');
 gui.add(par, 'mississippi');
@@ -74,10 +78,12 @@ gui.add(par, 'zNoiseOffset');
 gui.add(par, 'showExpanded');
 // gui.add(par, 'happy');
 // gui.add(par, 'angry');
-		gui.add(par,'innerStar')
-		gui.add(par,'outerStar')
-		gui.add(par,'starPoints',1)
-		gui.add(par,'noseOnly')
+gui.add(par, 'innerStar');
+gui.add(par, 'outerStar');
+gui.add(par, 'starPoints', 1);
+gui.add(par, 'noseOnly');
+gui.add(par, 'useSamplePose');
+gui.close()
 
 // gui.add(par, 'emotionalScale');
 // f1.add(par, 'minR');
@@ -109,6 +115,7 @@ gui.add(par, 'showExpanded');
 // f5.add(par, 'fillShape');
 // f5.add(par, 'showCurves');
 // f5.close();
+
 
 const NOSE = 0;
 const LEFTEYE = 1;
@@ -164,9 +171,22 @@ let prerollCounter = 0;
 
 let posenet;
 let poses = [];
+
+/*
+Stores recording from step 1 as array of posenet poses
+[ 
+	{ part: 'nose', position: { x: 1, y: 1 } },
+	...
+] 
+*/
 let poseHistory = [];
+
+/*
+Stores recording from step 2 as 2D array of expanded points
+with expression data already applied
+*/
 let expressionHistory = [];
-let expressionHistory2 = [];
+
 let voiceHistory = [];
 let options = { maxPoseDetections: 2 };
 
@@ -188,7 +208,6 @@ let shoulderWaistRatio;
 // --faceapi
 let faceapi;
 let detections = [];
-let expression;
 let faceapiLoading = true;
 let stopFaceapi = false;
 
@@ -229,6 +248,11 @@ function setup() {
 
 	background(255);
 
+		// Prepare anchors to chase posenet points
+		PARTS.forEach(p => {
+			let anchor = new Anchor(width / 2, height / 2, p);
+			anchors.push(anchor);
+		});
 	// --b
 
 	select('#begin-button').mousePressed(() => {
@@ -309,7 +333,7 @@ function faceReady() {
 
 function gotFaces(error, result) {
 	if (error) {
-		console.log(error);
+		cl(error);
 		return;
 	}
 	detections = result;
@@ -399,6 +423,7 @@ function refreshAnchors() {
 // Takes an array of posenet keypoints
 // What happens if this array also has epxression data at index [17]?
 function retargetAnchorsFromPose(targets) {
+	cl('retargetAnchorsFromPose ',targets)
 	// TODO: mark anchors, text or color or something
 	anchors.forEach((a, i) => {
 		if (targets[i]) {
@@ -479,7 +504,6 @@ function noPreroll() {
 	startRecording();
 }
 
-
 function startRecording() {
 	preroll = false;
 	prerollCounter = 0;
@@ -489,7 +513,7 @@ function startRecording() {
 }
 
 function loopPlayback() {
-	// console.log('loopPlayback');
+	// cl('loopPlayback');
 }
 
 function setCounter(count) {
@@ -573,7 +597,7 @@ function playPreroll() {
 			vf.fill(255);
 			vf.textFont('Space Mono');
 			vf.textSize(180);
-			vf.textAlign(CENTER,CENTER);
+			vf.textAlign(CENTER, CENTER);
 			vf.text(counter, vf.width / 2, vf.height / 2);
 			vf.pop();
 			prerollCounter++;
@@ -620,4 +644,21 @@ function bezierEllipse(pts, radius, controlRadius) {
 		theta += rot;
 	}
 	return newArr;
+}
+
+function hideScenes() {
+	selectAll('.fullscreen').forEach(el => {
+		el.addClass('hidden');
+	});
+}
+function unhideScene(sceneId) {
+	cl('unhideScene')
+	cl(sceneId)
+	select(sceneId).removeClass('hidden');
+}
+
+function cl(message) {
+	if (par.showDebug) {
+		console.log(message)
+	}
 }

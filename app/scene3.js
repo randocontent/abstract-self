@@ -50,7 +50,6 @@ function scene03() {
 	};
 }
 
-
 function voiceNet(points, level) {
 	let newArr = [];
 	let phase = 0.0;

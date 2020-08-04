@@ -19,11 +19,6 @@ function scene01() {
 		vf.parent('#webcam-monitor-01');
 		vf.show();
 		button = select('#record-button-01');
-		// Prepare anchors to chase posenet points
-		PARTS.forEach(p => {
-			let anchor = new Anchor(width / 2, height / 2, p);
-			anchors.push(anchor);
-		});
 	};
 
 	this.setup = function () {};
@@ -122,7 +117,7 @@ function bodyNet(pose) {
 	let l1, l2, r1, r2;
 
 	pose.forEach((p, i) => {
-		// console.log(p)
+		// cl(p)
 		switch (p.part) {
 			case 'nose':
 				newArr = newArr.concat(expandEllipse(p, 120, 120, 30));
@@ -196,7 +191,7 @@ function expandEllipseXY(px,py, minr, maxr, angles) {
 		newY = py + r * sin(a);
 		newArr.push([newX, newY]);
 	}
-	// console.log(newArr)
+	// cl(newArr)
 	return newArr;
 }
 
@@ -221,7 +216,7 @@ function expandEllipse(point, minr, maxr, angles) {
 		y = py + r * sin(a);
 		newArr.push([x, y]);
 	}
-	// console.log(newArr)
+	// cl(newArr)
 	return newArr;
 }
 
