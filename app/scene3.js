@@ -70,10 +70,6 @@ function voiceNet(points, level) {
 	return newArr;
 }
 
-function noPreroll() {
-	startRecording();
-}
-
 function recordVoice(history) {
 	voiceHistory.push(history);
 	setCounter(voiceHistory.length);

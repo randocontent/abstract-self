@@ -1,9 +1,9 @@
 class Paramaterize {
 	constructor() {
 		this.scene = 1;
-		this.framesToRecord = 20;
+		this.framesToRecord = 20; 
 		this.shapeStrokeWeight = 2;
-		this.mississippi = 26;
+		this.mississippi = 26; // about 260
 		this.roundness = 95;
 		this.emotionalScale = .5;
 		this.showExpanded = true;
@@ -475,6 +475,11 @@ function startPreroll() {
 	button.html('...');
 }
 
+function noPreroll() {
+	startRecording();
+}
+
+
 function startRecording() {
 	preroll = false;
 	prerollCounter = 0;
@@ -568,8 +573,8 @@ function playPreroll() {
 			vf.fill(255);
 			vf.textFont('Space Mono');
 			vf.textSize(180);
-			vf.textAlign(CENTER);
-			vf.text(counter, vf.width / 2, vf.height / 2 + 100);
+			vf.textAlign(CENTER,CENTER);
+			vf.text(counter, vf.width / 2, vf.height / 2);
 			vf.pop();
 			prerollCounter++;
 		} else {

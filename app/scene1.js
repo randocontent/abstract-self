@@ -33,6 +33,43 @@ function scene01() {
 		background(255);
 		translate(width, 0);
 		scale(-1, 1);
+		
+				if (poses) {
+					if (poses[0]) {
+						let pose = poses[0].pose.keypoints;
+		
+						// Draw skeleton in vf
+						if (!preroll) previewSkeleton(poses[0]);
+		
+						// Draw pose for reference
+						if (par.showPose) {
+							push();
+							stroke('red');
+							strokeWeight(10);
+							pose.forEach(p => {
+								point(p.position.x, p.position.y);
+							});
+							pop();
+						}
+		
+						// Draw expanded points for reference
+						if (par.showExpanded) {
+							push();
+							stroke('paleturquoise');
+							strokeWeight(5);
+							expanded.forEach(p => {
+								point(p[0], p[1]);
+							});
+							pop();
+						}
+		
+						deriveProportions(pose);
+		
+						if (rec) recordPose(pose);
+		
+						if (!full) drawShape(pose);
+					}
+				}
 
 		if (sample) {
 			// vs is 500x470 but feed is 627x470
@@ -42,43 +79,6 @@ function scene01() {
 		playPreroll();
 
 		if (play && !preroll) playShape(poseHistory);
-
-		if (poses) {
-			if (poses[0]) {
-				let pose = poses[0].pose.keypoints;
-
-				// Draw skeleton in vf
-				if (!preroll) previewSkeleton(poses[0]);
-
-				// Draw pose for reference
-				if (par.showPose) {
-					push();
-					stroke('red');
-					strokeWeight(10);
-					pose.forEach(p => {
-						point(p.position.x, p.position.y);
-					});
-					pop();
-				}
-
-				// Draw expanded points for reference
-				if (par.showExpanded) {
-					push();
-					stroke('paleturquoise');
-					strokeWeight(5);
-					expanded.forEach(p => {
-						point(p[0], p[1]);
-					});
-					pop();
-				}
-
-				deriveProportions(pose);
-
-				if (rec) recordPose(pose);
-
-				if (!full) drawShape(pose);
-			}
-		}
 	};
 	// this.counter = function () {};
 }

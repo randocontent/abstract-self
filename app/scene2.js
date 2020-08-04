@@ -23,7 +23,7 @@ function scene02() {
 		button.html('Record');
 		faceapi = ml5.faceApi(sample, faceOptions, faceReady);
 		button.mousePressed(() => {
-			startPreroll();
+			noPreroll();
 		});
 	};
 
@@ -37,7 +37,7 @@ function scene02() {
 			// vs is 500x470 but feed is 627x470
 			vf.image(sample, -50, 0);
 		}
-		noPreroll();
+		// noPreroll();
 
 		if (full) playShape3(expressionHistory2);
 
@@ -64,7 +64,7 @@ function playShape2(history) {
 	// Use the current frame counter as an iterator for looping through the recorded array
 	let cp = frameCount % history.length;
 	drawShape2(history[cp]);
-	if (rec && detections) recordExpression(detections, history[cp]);
+	if (rec && detections) recordExpression2(detections, history[cp]);
 	// Reset recorded state after finishing playback
 	if (cp === history.length - 1) loopPlayback();
 }
