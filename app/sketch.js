@@ -34,7 +34,7 @@ class Paramaterize {
 		this.manualRadiusRatio = 1;
 		this.noseExpandRatio = 3.5;
 		this.noiseLevel = 0.001;
-		this.roundness = 60;
+		this.roundness = 20;
 		this.emotionalScale = 2;
 
 		this.showAnchors = true;

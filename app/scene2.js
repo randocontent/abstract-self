@@ -134,7 +134,7 @@ function faceBodyNet(pose, fExp) {
 				break;
 			case 'leftEar':
 			case 'rightEar':
-				newArr = newArr.concat(expandBlob(p,30,5,50,2,4,0.1));
+				newArr = newArr.concat(expandBlob(p,30,5,50,2,4,0.01));
 				break;
 			case 'leftEye':
 			case 'rightEye':
@@ -143,11 +143,11 @@ function faceBodyNet(pose, fExp) {
 			// Arms
 			case 'leftShoulder':
 				l1 = createVector(p.pos.x, p.pos.y);
-				newArr = newArr.concat(expandBlob(p,3,5,150,2,4,0.1));
+				newArr = newArr.concat(expandBlob(p,3,5,150,2,4,0.01));
 				break;
 			case 'rightShoulder':
 				r1 = createVector(p.pos.x, p.pos.y);
-				newArr = newArr.concat(expandBlob(p,3,5,150,2,4,-0.1));
+				newArr = newArr.concat(expandBlob(p,3,5,150,2,4,-0.01));
 				break;
 			// case 'leftElbow':
 			// case 'rightElbow':
@@ -155,18 +155,18 @@ function faceBodyNet(pose, fExp) {
 			// case 'rightWrist':
 			case 'leftHip':
 				l2 = createVector(p.pos.x, p.pos.y);
-				newArr = newArr.concat(expandBlob(p,30,5,50,2,4,0.2));
+				newArr = newArr.concat(expandBlob(p,30,5,50,2,4,0.02));
 				break;
 			case 'rightHip':
 				r2 = createVector(p.pos.x, p.pos.y);
-				newArr = newArr.concat(expandBlob(p,30,5,50,2,4,-0.2));
+				newArr = newArr.concat(expandBlob(p,30,5,50,2,4,-0.02));
 				break;
 			// case 'leftKnee':
 			// case 'rightKnee':
 			// case 'leftAnkle':
 			// case 'rightAnkle':
 			default:
-				newArr = newArr.concat(expandBlob(p,3,5,100,2,4,0.1));
+				newArr = newArr.concat(expandBlob(p,3,5,100,2,4,0.01));
 				break;
 		}
 	});
