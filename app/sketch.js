@@ -19,6 +19,7 @@ class Paramaterize {
 		this.blobMin = 50;
 		this.blobMax = 100;
 		this.blobOffset = 0.1;
+		this.blobPhaseOffset = 0.1;
 		this.noseMinRadius = 100;
 		this.noseMaxRadius = 200;
 		this.topSpeed = 10;
@@ -39,7 +40,7 @@ class Paramaterize {
 
 		this.showAnchors = true;
 		this.showPose = false;
-		this.showExpanded = false;
+		this.showExpanded = true;
 		this.showHull = true;
 		this.showPreview = false;
 		this.fillShape = false;
@@ -95,6 +96,7 @@ f2.close();
 f3.add(par,'blobMin')
 f3.add(par,'blobMax')
 f3.add(par,'blobOffset')
+f3.add(par,'blobPhaseOffset')
 f3.add(par,'noseRadius');
 
 f4.add(par, 'audioResolution');
@@ -152,12 +154,11 @@ const PARTS = [
 
 let canvas, vf;
 let status;
-let sample, audioSample;
+let sample
 let webcamPreview;
 let button;
 
 let sceneReady = false;
-let isAudioSampleReady = false;
 
 let rec = false;
 let preroll = false;
@@ -244,7 +245,7 @@ function setup() {
 	select('#record-button-02').mousePressed(() => {
 		startPreroll();
 	});
-	select('#record-button-02').mousePressed(() => {
+	select('#record-button-03').mousePressed(() => {
 		startPreroll();
 	});
 
@@ -266,6 +267,15 @@ function gotoScene() {
 			break;
 		case 1:
 			mgr.showScene(scene01);
+			break;
+		case 2:
+			mgr.showScene(scene02);
+			break;
+		case 3:
+			mgr.showScene(scene03);
+			break;
+		case 4:
+			mgr.showScene(scene04);
 			break;
 		default:
 			break;
@@ -294,7 +304,9 @@ function webcamReady() {
 	});
 }
 
-function modelReady() {}
+function modelReady() {
+	// modelReady
+}
 
 function faceReady() {
 	faceapi.detect(gotFaces);
@@ -310,16 +322,6 @@ function gotFaces(error, result) {
 	if (!stopFaceapi) faceapi.detect(gotFaces);
 }
 
-function loadSample() {
-	let f = '/assets/music/spk.mp3';
-	audioSample = loadSound(f, audioSampleReady);
-}
-
-function audioSampleReady() {
-	isAudioSampleReady = true;
-	audioSample.disconnect();
-	audioSample.loop();
-}
 
 // =============================================================
 // =                         BEGIN SCENES                      =
@@ -580,7 +582,6 @@ function scene03() {
 		}
 
 		if (preroll) noPreroll();
-		// if (isAudioSampleReady) fft.setInput(mic);
 		if (mic) fft.setInput(mic);
 
 		// Number of bins can only be a power of 2
@@ -728,6 +729,10 @@ function startRecording() {
 	button.html('Recording');
 }
 
+function loopPlayback() {
+	// console.log('loopPlayback');
+}
+
 function recordPose(points) {
 	poseHistory.push(points);
 	setCounter(poseHistory.length);
@@ -782,6 +787,16 @@ function drawShape2(points) {
 	}
 
 	expanded = faceBodyNet(anchors, happy + surprised);
+
+	if (par.showExpanded) {
+		push();
+		stroke('paleturquoise');
+		strokeWeight(5);
+		expanded.forEach(p => {
+			point(p[0], p[1]);
+		});
+		pop();
+	}
 
 	if (rec && detections) recordExpression2(expanded);
 	hullSet = hull(expanded, par.roundness);
@@ -975,10 +990,6 @@ function drawModifiedShape2(points) {
 	pop();
 }
 
-function loopPlayback() {
-	// console.log('loopPlayback');
-}
-
 function playShape(history) {
 	// Use the current frame counter as an iterator for looping through the recorded array
 	let cp = frameCount % history.length;
@@ -991,7 +1002,7 @@ function playShape(history) {
 function drawShape(points) {
 	retargetAnchorsFromPose(points);
 	expanded = bodyNet(anchors);
-	hullSet = hull(expanded, par.roundness);
+	hullSet = hull(expanded, 500);
 
 	push();
 	stroke(255);
@@ -1019,15 +1030,15 @@ function bodyNet(pose) {
 	pose.forEach(p => {
 		// Big circle around nose...
 		if (p.part === 'nose') {
-			let newP = expandBlob(p, 1, 80, 220)
+			let newP = expandEllipse(p, 200, 200)
 			newArr = newArr.concat(newP)
 		}
 		if (p.part === 'leftEar' || p.part === 'rightEar') {
-			let newP = expandBlob(p, 1, 40, 120)
+			let newP = expandEllipse(p, 20, 20)
 			newArr = newArr.concat(newP)
 		}
 		if (p.part === 'leftWrist' || p.part === 'rightWrist') {
-			let newP = expandBlob(p, 1, 40, 120)
+			let newP = expandEllipse(p, 120, 120)
 			newArr = newArr.concat(newP)
 		}
 		if (
@@ -1042,7 +1053,7 @@ function bodyNet(pose) {
 			p.part === 'leftHip' ||
 			p.part === 'rightHip'
 		) {
-			let newP = expandBlob(p, 1, 40, 120)
+			let newP = expandEllipse(p, 100, 100)
 			newArr = newArr.concat(newP)
 		}
 	});
@@ -1059,37 +1070,19 @@ function faceBodyNet(pose, exp) {
 	let nmax = exp * par.emotionalScale;
 
 	pose.forEach(p => {
+		// Big circle around nose...
 		if (p.part === 'nose') {
-			let newP = expandBlob(p, nmax, par.minR, par.maxR, exp)
-			// console.log(newP)
-			newArr.concat(newP);
+			// function expandBlob(point, maxoff, minr, maxr, texp) {
+			let newP = expandBlob(p, 1, 50, 300, nmax)
+			newArr = newArr.concat(newP)
 		}
 		if (p.part === 'leftEar' || p.part === 'rightEar') {
-			for (let a = 0; a < 360; a += par.angles) {
-				let xoff = map(cos(a + phase), -1, 1, 0, par.xNoiseMax);
-				let yoff = map(sin(a + phase), -1, 1, 0, par.yNoiseMax);
-				let r = map(
-					noise(xoff, yoff, zoff),
-					0,
-					1,
-					par.earRadius - 10,
-					par.earRadius + 10
-				);
-				let x = p.pos.x + r * cos(a);
-				let y = p.pos.y + r * sin(a);
-				newArr.push([x, y]);
-			}
-			let pOff = map(noise(zoff), 0, 1, 0, par.phaseMax);
-			phase += pOff;
-			zoff += par.zNoiseOffset;
+			let newP = expandBlob(p, 1, 50, 100,nmax)
+			newArr = newArr.concat(newP)
 		}
 		if (p.part === 'leftWrist' || p.part === 'rightWrist') {
-			let radius = par.wristRadius;
-			for (let angle = 0; angle < 360; angle += par.angles) {
-				let x = p.pos.x + radius * sin(angle);
-				let y = p.pos.y + radius * cos(angle);
-				newArr.push([x, y]);
-			}
+			let newP = expandBlob(p, 1, 50, 100,nmax)
+			newArr = newArr.concat(newP)
 		}
 		if (
 			p.part === 'leftAnkle' ||
@@ -1103,23 +1096,8 @@ function faceBodyNet(pose, exp) {
 			p.part === 'leftHip' ||
 			p.part === 'rightHip'
 		) {
-			for (let a = 0; a < 360; a += par.angles) {
-				let xoff = map(cos(a + phase), -1, 1, 0, par.xNoiseMax);
-				let yoff = map(sin(a + phase), -1, 1, 0, par.yNoiseMax);
-				let r = map(
-					noise(xoff, yoff, zoff),
-					0,
-					1,
-					par.radius - 10,
-					par.radius + 50
-				);
-				let x = p.pos.x + r * cos(a);
-				let y = p.pos.y + r * sin(a);
-				newArr.push([x, y]);
-			}
-			let pOff = map(noise(zoff), 0, 1, 0, par.phaseMax);
-			phase += pOff;
-			zoff += par.zNoiseOffset;
+			let newP = expandBlob(p, 1, 50, 100,nmax)
+			newArr = newArr.concat(newP)
 		}
 	});
 	return newArr;
@@ -1355,6 +1333,9 @@ function expandBlob(point, maxoff, minr, maxr, texp) {
 		py = point[1];
 	}
 	for (let a = 0; a < 360; a += 10) {
+		console.log(texp)
+		if (texp) maxr += texp*2;
+		if (texp) minr -= texp*2;
 		let xoff = map(cos(a + phase), -1, 1, 0, maxoff);
 		let yoff = map(sin(a + phase), -1, 1, 0, maxoff);
 		let r = map(noise(xoff, yoff, zoff), 0, 1, minr, maxr);
@@ -1362,13 +1343,36 @@ function expandBlob(point, maxoff, minr, maxr, texp) {
 		y = py + r * sin(a);
 		newArr.push([x, y]);
 	}
-	let pOff = map(noise(zoff), 0, 1, 0, par.blobOffset);
+	let pOff = map(noise(zoff), 0, 1, 0, par.blobPhaseOffset);
 	phase += pOff;
 	zoff += par.zNoiseOffset;
 	// console.log(newArr)
 	return newArr;
 }
 
+function expandEllipse(point, minr, maxr) {
+	let x, y;
+	let px, py;
+	let newArr = [];
+	if (point.position) {
+		px = point.position.x;
+		py = point.position.y;
+	} else if (point.pos) {
+		px = point.pos.x;
+		py = point.pos.y;
+	} else if (point[0]) {
+		px = point[0];
+		py = point[1];
+	}
+	for (let a = 0; a < 360; a += 10) {
+		let r = random(minr, maxr);
+		x = px + r * cos(a);
+		y = py + r * sin(a);
+		newArr.push([x, y]);
+	}
+	// console.log(newArr)
+	return newArr;
+}
 
 function bezierEllipse(pts, radius, controlRadius) {
 	let cx1 = 0;
