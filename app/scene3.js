@@ -1,53 +1,42 @@
-
-// --3 speech
-
 function scene03() {
+	// --enter
 	this.enter = function () {
-		// Entering this scene, cleanup the last one
-		full = false;
-		rec = false;
-		preroll = false;
-		play = false;
-		// Stop faceapi
-		stopFaceapi = true;
+		if (posenet) {
+			posenet.removeAllListeners();
+			poses = null;
+		}
+		faceapiStandby = true;
+		fft = new p5.FFT();
 		startMic();
-		// hide the other scenes
-		select('#scene-02').addClass('hidden');
-		// show this scene
-		select('#scene-03').removeClass('hidden');
-		// move the canvas over
-		canvas.parent('#canvas-03');
 		vf.hide();
+
+		resetRecVariables()
+		chooseScene('#scene-03')
+		resizeCanvas(820, 820);
+		canvas.parent('#canvas-03');
 		button = select('#record-button-03');
 		button.removeClass('primary');
 		button.html('Record');
 		button.mousePressed(() => {
-			startPreroll();
+			noPreroll();
 		});
-		fft = new p5.FFT();
 	};
 
 	// --3draw
 	this.draw = function () {
-		background(255);
-
-		mirror();
-
-		if (sample) {
-			// vs is 500x470 but feed is 627x470
-			vf.image(sample, -50, 0);
-		}
-
-		if (preroll) noPreroll();
 		if (mic) fft.setInput(mic);
-
 		// Number of bins can only be a power of 2
 		let bins = pow(2, ceil(log(par.audioResolution) / log(2)));
 		let spectrum = fft.analyze(bins);
 
-		if (!full) playShape3(expressionHistory2, spectrum);
+		background(255);
+		mirror(); // Mirror canvas to match mirrored video
+
+		if (!full) playShape3(expressionHistory, spectrum);
 		if (full) playModifiedShape3(voiceHistory);
+		if (par.frameRate) fps()
 	};
+
 }
 
 function voiceNet(points, level) {
@@ -93,7 +82,6 @@ function drawShape3(history, spectrum) {
 
 	push();
 	stroke(255);
-	if (!par.showPreview) stroke(0);
 	strokeWeight(par.shapeStrokeWeight);
 	noFill();
 	beginShape();
@@ -131,7 +119,6 @@ function playModifiedShape3(history) {
 function drawModifiedShape3(history) {
 	push();
 	stroke(255);
-	if (!par.showPreview) stroke(0);
 	strokeWeight(par.shapeStrokeWeight);
 	noFill();
 	beginShape();

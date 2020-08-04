@@ -1,121 +1,77 @@
-class Paramaterize {
-	constructor() {
-		this.scene = 0;
-		this.framesToRecord = 200;
-		this.shapeStrokeWeight = 2;
-		this.mississippi = 260; // about 260
-		this.roundness = 95;
-		this.emotionalScale = 0.5;
-		this.showExpanded = false;
-		this.innerStar = 100;
-		this.outerStar = 200;
-		this.starPoints = 9;
-		this.noseOnly = false;
-		this.useSamplePose = true;
-		this.showDebug = false;
+// --posenet
+let canvas, vf;
+let status;
+let sample;
+let webcamPreview;
+let button;
 
-		this.minR = 44; // scene 0
-		this.maxR = 66; // scene 0
-		this.noiseMax = 1; // scene 0
-		this.xNoiseMax = 1; // scene 0
-		this.yNoiseMax = 1; // scene 0
-		this.zNoiseOffset = 0.0001; // scene 0
-		this.phaseMaxOffset = 0.01; // scene 0
-		this.nosePhaseMax = 1;
-		this.phaseMax = 0.1;
-		this.inc = 12;
-		this.noseRadius = 120;
-		this.blobMin = 50;
-		this.blobMax = 100;
-		this.blobOffset = 0.1;
-		this.blobPhaseOffset = 0.1;
-		this.noseMinRadius = 100;
-		this.noseMaxRadius = 200;
-		this.topSpeed = 10;
-		this.maxAcc = 4;
-		this.radius = 50;
-		this.noseYOffset = 55;
-		this.earRadius = 35;
-		this.wristRadius = 55;
-		this.autoRadius = true;
-		this.autoRadiusRatio = 0.5;
-		this.manualRadiusRatio = 1;
-		this.noseExpandRatio = 3.5;
-		this.noiseLevel = 0.001;
-		this.showAnchors = true;
-		this.showPose = false;
-		this.showHull = true;
-		this.showPreview = false;
-		this.fillShape = false;
-		this.showCurves = false;
-		this.audioResolution = 32; // bins
-		this.happy = 1;
-		this.angry = 1;
-	}
-}
+let sceneReady = false;
 
-par = new Paramaterize();
-let gui = new dat.GUI({ autoPlace: true });
-// let customContainer =document.getElementById('dat-gui-container');
-// customContainer.appendChild(gui.domElement);
-// let f1 = gui.addFolder('Blob');
-// let f2 = gui.addFolder('Pose');
-// let f3 = gui.addFolder('Face');
-// let f4 = gui.addFolder('Voice');
-// let f5 = gui.addFolder('Reference');
+let rec = false;
+let preroll = false;
+let play = false;
+let full = false;
+let prerollCounter = 0;
 
-let sceneGui = gui.add(par, 'scene');
-sceneGui.onChange(() => {
-	gotoScene();
-});
+let posenet;
+let poses = [];
 
-gui.add(par, 'showDebug')
-gui.add(par, 'framesToRecord', 10, 10000, 1);
-gui.add(par, 'shapeStrokeWeight');
-gui.add(par, 'mississippi');
-gui.add(par, 'roundness');
-gui.add(par, 'zNoiseOffset');
-gui.add(par, 'showExpanded');
-// gui.add(par, 'happy');
-// gui.add(par, 'angry');
-gui.add(par, 'innerStar');
-gui.add(par, 'outerStar');
-gui.add(par, 'starPoints', 1);
-gui.add(par, 'noseOnly');
-gui.add(par, 'useSamplePose');
-gui.close()
+/*
+Stores recording from step 1 as array of posenet poses
+[ 
+	{ part: 'nose', position: { x: 1, y: 1 } },
+	...
+] 
+*/
+let poseHistory = [];
 
-// gui.add(par, 'emotionalScale');
-// f1.add(par, 'minR');
-// f1.add(par, 'maxR');
-// f1.add(par, 'noiseMax');
-// f1.add(par, 'phaseMaxOffset');
-// f1.add(par, 'inc');
-// f1.close();
-// let speedControl = f2.add(par, 'topSpeed');
-// let accControl = f2.add(par, 'maxAcc');
-// f2.add(par, 'radius');
-// f2.add(par, 'noseYOffset');
-// f2.add(par, 'earRadius');
-// f2.add(par, 'wristRadius');
-// f2.add(par, 'noiseLevel');
-// speedControl.onFinishChange(() => updateAnchors());
-// accControl.onFinishChange(() => updateAnchors());
-// f2.close();
-// f3.add(par,'blobMin')
-// f3.add(par,'blobMax')
-// f3.add(par,'blobOffset')
-// f3.add(par,'blobPhaseOffset')
-// f3.add(par,'noseRadius');
-// f4.add(par, 'audioResolution');
-// f5.add(par, 'showPose');
-// f5.add(par, 'showHull');
-// f5.add(par, 'showPreview');
-// f5.add(par, 'showAnchors');
-// f5.add(par, 'fillShape');
-// f5.add(par, 'showCurves');
-// f5.close();
+/*
+Stores recording from step 2 as 2D array of expanded points
+with expression data already applied
+*/
+let expressionHistory = [];
 
+/*
+Used separately to choose the final expression
+*/
+let expressionAggregate = []
+
+let voiceHistory = [];
+let options = { maxPoseDetections: 2 };
+
+let noseAnchor;
+let anchors = [];
+let expanded = [];
+let hullSet = [];
+
+let phase = 0.0;
+let zoff = 0.0;
+
+let eyeDist;
+let shoulderDist;
+let hipDist;
+let eyeShoulderRatio;
+let eyeWaistRatio;
+let shoulderWaistRatio;
+
+// --faceapi
+let faceapi;
+let detections = [];
+let faceapiLoaded = false;
+let faceapiStandby = true;
+
+const faceOptions = {
+	withLandmarks: false,
+	withExpressions: true,
+	withDescriptors: false,
+};
+
+// --sound
+
+let fft;
+let mic;
+
+let mgr, g;
 
 const NOSE = 0;
 const LEFTEYE = 1;
@@ -154,75 +110,6 @@ const PARTS = [
 	'rightAnkle',
 ];
 
-// --posenet
-let canvas, vf;
-let status;
-let sample;
-let webcamPreview;
-let button;
-
-let sceneReady = false;
-
-let rec = false;
-let preroll = false;
-let play = false;
-let full = false;
-let prerollCounter = 0;
-
-let posenet;
-let poses = [];
-
-/*
-Stores recording from step 1 as array of posenet poses
-[ 
-	{ part: 'nose', position: { x: 1, y: 1 } },
-	...
-] 
-*/
-let poseHistory = [];
-
-/*
-Stores recording from step 2 as 2D array of expanded points
-with expression data already applied
-*/
-let expressionHistory = [];
-
-let voiceHistory = [];
-let options = { maxPoseDetections: 2 };
-
-let noseAnchor;
-let anchors = [];
-let expanded = [];
-let hullSet = [];
-
-let phase = 0.0;
-let zoff = 0.0;
-
-let eyeDist;
-let shoulderDist;
-let hipDist;
-let eyeShoulderRatio;
-let eyeWaistRatio;
-let shoulderWaistRatio;
-
-// --faceapi
-let faceapi;
-let detections = [];
-let faceapiLoading = true;
-let stopFaceapi = false;
-
-const faceOptions = {
-	withLandmarks: false,
-	withExpressions: true,
-	withDescriptors: false,
-};
-
-// --sound
-
-let fft;
-let mic;
-
-let mgr, g;
 p5.disableFriendlyErrors = true;
 
 function setup() {
@@ -245,14 +132,16 @@ function setup() {
 	vf = createGraphics(500, 470);
 	vf.translate(vf.width, 0);
 	vf.scale(-1, 1);
+	vf.textFont('Space Mono');
 
 	background(255);
+	textFont('Space Mono');
 
-		// Prepare anchors to chase posenet points
-		PARTS.forEach(p => {
-			let anchor = new Anchor(width / 2, height / 2, p);
-			anchors.push(anchor);
-		});
+	// Prepare anchors to chase posenet points
+	PARTS.forEach(p => {
+		let anchor = new Anchor(width / 2, height / 2, p);
+		anchors.push(anchor);
+	});
 	// --b
 
 	select('#begin-button').mousePressed(() => {
@@ -271,7 +160,10 @@ function setup() {
 	// Prepare a dedicated anchor for the intro screen
 	noseAnchor = new Anchor(width / 2, height / 2);
 
+	// start getting faceapi ready
+
 	startWebcam(false, 467, 350);
+	if (!faceapiLoaded) faceapi = ml5.faceApi(sample, faceOptions, faceReady);
 	gotoScene();
 }
 
@@ -283,23 +175,18 @@ function gotoScene() {
 	switch (par.scene) {
 		case 0:
 			mgr.showScene(scene00);
-		hideScenes(); unhideScene('#scene-00');
 			break;
 		case 1:
 			mgr.showScene(scene01);
-		hideScenes(); unhideScene('#scene-01');
 			break;
 		case 2:
 			mgr.showScene(scene02);
-		hideScenes(); unhideScene('#scene-02');
 			break;
 		case 3:
 			mgr.showScene(scene03);
-		hideScenes(); unhideScene('#scene-03');
 			break;
 		case 4:
 			mgr.showScene(scene04);
-		hideScenes(); unhideScene('#scene-04');
 			break;
 		default:
 			break;
@@ -338,12 +225,12 @@ function faceReady() {
 
 function gotFaces(error, result) {
 	if (error) {
-		cl(error);
+		l(error);
 		return;
 	}
 	detections = result;
-	faceapiLoading = false;
-	if (!stopFaceapi) faceapi.detect(gotFaces);
+	faceapiLoaded = true;
+	if (!faceapiStandby) faceapi.detect(gotFaces);
 }
 
 // =============================================================
@@ -368,8 +255,8 @@ function scene00() {
 
 	// --0draw
 	this.draw = function () {
+		background(255);
 		if (sceneReady) {
-			background(255);
 			if (poses[0]) {
 				let p = createVector(poses[0].pose.nose.x, poses[0].pose.nose.y);
 				noseAnchor.setTarget(p);
@@ -414,6 +301,7 @@ function scene00() {
 				pop();
 			}
 		}
+		if (par.frameRate) fps();
 	};
 }
 
@@ -428,7 +316,6 @@ function refreshAnchors() {
 // Takes an array of posenet keypoints
 // What happens if this array also has epxression data at index [17]?
 function retargetAnchorsFromPose(targets) {
-	cl('retargetAnchorsFromPose ',targets)
 	// TODO: mark anchors, text or color or something
 	anchors.forEach((a, i) => {
 		if (targets[i]) {
@@ -517,10 +404,6 @@ function startRecording() {
 	button.html('Recording');
 }
 
-function loopPlayback() {
-	// cl('loopPlayback');
-}
-
 function setCounter(count) {
 	// Easier than trying to figure out which counter is shown...
 	let counters = selectAll('.counter');
@@ -545,6 +428,7 @@ function finishRecording() {
 		counter.html('redo');
 	});
 }
+
 function deriveProportions(pose) {
 	eyeDist = floor(poseDist(pose, LEFTEYE, RIGHTEYE));
 	shoulderDist = floor(poseDist(pose, LEFTSHOULDER, RIGHTSHOULDER));
@@ -561,34 +445,9 @@ function updateAnchors() {
 		a.topSpeed = par.topSpeed;
 		a.maxForce = par.maxAcc;
 	});
-	noseAnchor.topSpeed = par.topSpeed;
-	noseAnchor.maxForce = par.maxAcc;
 }
 
-// Should get an array of hull points from the previous step (what about recording the )
-function playFinalShape(history) {
-	let cp = frameCount % history.length;
-	drawFinalShape(history[cp]);
-}
-
-function drawFinalShape(points) {
-	push();
-	stroke(255);
-	if (!par.showPreview) stroke(0);
-	strokeWeight(par.shapeStrokeWeight);
-	noFill();
-	beginShape();
-	points.forEach(p => {
-		if (par.showCurves) {
-			curveVertex(p[0], p[1]);
-		} else {
-			vertex(p[0], p[1]);
-		}
-	});
-
-	pop();
-}
-
+// Shows a 3...2..1... animation on the second canvas
 function playPreroll() {
 	if (preroll) {
 		let counter = floor(map(prerollCounter, 0, par.mississippi, 4, 0));
@@ -600,7 +459,6 @@ function playPreroll() {
 			vf.fill(0, 200);
 			vf.rect(0, 0, vf.width, vf.height);
 			vf.fill(255);
-			vf.textFont('Space Mono');
 			vf.textSize(180);
 			vf.textAlign(CENTER, CENTER);
 			vf.text(counter, vf.width / 2, vf.height / 2);
@@ -612,58 +470,30 @@ function playPreroll() {
 	}
 }
 
-function bezierEllipse(pts, radius, controlRadius) {
-	let cx1 = 0;
-	let cy1 = 0;
-	let cx2 = 0;
-	let cy2 = 0;
-	let ax = 0;
-	let ay = 0;
-	let rot = TWO_PI / pts;
-	let theta = 0;
-	let controlTheta1 = rot / random(3.0); // 3.0;
-	let controlTheta2 = controlTheta1 * random(2.0); // 2.0;
-
-	let newArr = [];
-	for (let i = 0; i < pts; i++) {
-		cx1 = cos(theta + controlTheta1) * controlRadius;
-		cy1 = sin(theta + controlTheta1) * controlRadius;
-		cx2 = cos(theta + controlTheta2) * controlRadius;
-		cy2 = sin(theta + controlTheta2) * controlRadius;
-		ax = cos(theta + rot) * radius;
-		ay = sin(theta + rot) * radius;
-
-		if (i == 0) {
-			// initial vertex required for bezierVertex()
-			newArr.push([cos(0) * radius, sin(0) * radius]);
-		}
-		// close ellipse
-		if (i == pts - 1) {
-			newArr.push([cx1, cy1, cx2, cy2, cos(0) * radius, sin(0) * radius]);
-		}
-		// ellipse body
-		else {
-			newArr.push([cx1, cy1, cx2, cy2, ax, ay]);
-		}
-
-		theta += rot;
-	}
-	return newArr;
-}
-
-function hideScenes() {
+// Hides everything and then shows the desired scene
+function chooseScene(sceneId) {
+	if (par.debug) console.log('Going to ', sceneId);
 	selectAll('.fullscreen').forEach(el => {
 		el.addClass('hidden');
 	});
-}
-function unhideScene(sceneId) {
-	cl('unhideScene')
-	cl(sceneId)
 	select(sceneId).removeClass('hidden');
 }
 
-function cl(message) {
-	if (par.showDebug) {
-		console.log(message)
-	}
+// Use in draw() to show framerate in bottom left corner
+function fps() {
+	push();
+	mirror(); // Unmirror so we can read the text
+	textSize(14);
+	text(floor(frameRate()), 20, height - 20);
+	pop();
+}
+
+// Call this when entering a scene to reset variables that hold record state
+function resetRecVariables() {
+	if (par.debug) console.log('Resetting play heads');
+	full = false;
+	rec = false;
+	preroll = false;
+	play = false;
+	phase = 0.0;
 }

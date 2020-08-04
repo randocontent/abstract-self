@@ -33,7 +33,6 @@ let hullPoints = [];
 let showPoseNet = true;
 let showExpanded = true;
 let showHull = true;
-let showPreview = true;
 
 let isHeadOnly = false;
 

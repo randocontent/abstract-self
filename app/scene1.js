@@ -1,14 +1,8 @@
 function scene01() {
-	// Will run when entering the scene, seems like a good place to do clean up
-	// from the previous one
 	this.enter = function () {
-		full = false;
-		rec = false;
-		preroll = false;
-		play = false;
-		phase = 0.0;
 		noseAnchor = '';
-		hideScenes(); unhideScene('#scene-01');
+		resetRecVariables();
+		chooseScene('#scene-01')
 		canvas.parent('#canvas-01');
 		resizeCanvas(820, 820);
 		// resize video for a larger preview this time
@@ -27,43 +21,43 @@ function scene01() {
 		background(255);
 		translate(width, 0);
 		scale(-1, 1);
-		
-				if (poses) {
-					if (poses[0]) {
-						let pose = poses[0].pose.keypoints;
-		
-						// Draw skeleton in vf
-						if (!preroll) previewSkeleton(poses[0]);
-		
-						// Draw pose for reference
-						if (par.showPose) {
-							push();
-							stroke('red');
-							strokeWeight(10);
-							pose.forEach(p => {
-								point(p.position.x, p.position.y);
-							});
-							pop();
-						}
-		
-						// Draw expanded points for reference
-						if (par.showExpanded) {
-							push();
-							stroke('paleturquoise');
-							strokeWeight(5);
-							expanded.forEach(p => {
-								point(p[0], p[1]);
-							});
-							pop();
-						}
-		
-						deriveProportions(pose);
-		
-						if (rec) recordPose(pose);
-		
-						if (!full) drawShape(pose);
-					}
+
+		if (poses) {
+			if (poses[0]) {
+				let pose = poses[0].pose.keypoints;
+
+				// Draw skeleton in vf
+				if (!preroll) previewSkeleton(poses[0]);
+
+				// Draw pose for reference
+				if (par.showPose) {
+					push();
+					stroke('red');
+					strokeWeight(10);
+					pose.forEach(p => {
+						point(p.position.x, p.position.y);
+					});
+					pop();
 				}
+
+				// Draw expanded points for reference
+				if (par.showExpanded) {
+					push();
+					stroke('paleturquoise');
+					strokeWeight(5);
+					expanded.forEach(p => {
+						point(p[0], p[1]);
+					});
+					pop();
+				}
+
+				deriveProportions(pose);
+
+				if (rec) recordPose(pose);
+
+				if (!full) drawShape(pose);
+			}
+		}
 
 		if (sample) {
 			// vs is 500x470 but feed is 627x470
@@ -73,16 +67,14 @@ function scene01() {
 		playPreroll();
 
 		if (play && !preroll) playShape(poseHistory);
+		if (par.frameRate) fps();
 	};
-	// this.counter = function () {};
 }
 
 function playShape(history) {
 	// Use the current frame counter as an iterator for looping through the recorded array
 	let cp = frameCount % history.length;
 	drawShape(history[cp]);
-	// Reset recorded state after finishing playback
-	if (cp === history.length - 1) loopPlayback();
 }
 
 // Draws an outline based on posenet keypoints
@@ -93,7 +85,6 @@ function drawShape(points) {
 
 	push();
 	stroke(255);
-	if (!par.showPreview) stroke(0);
 	strokeWeight(par.shapeStrokeWeight);
 	noFill();
 	beginShape();
@@ -166,10 +157,10 @@ function bodyNet(pose) {
 	let middle1 = p5.Vector.lerp(l1, r1, 0.5);
 	let middle2 = p5.Vector.lerp(l2, r2, 0.5);
 
-	newArr = newArr.concat(expandEllipseXY(leftSide.x,leftSide.y, 50, 50, 54));
-	newArr = newArr.concat(expandEllipseXY(rightSide.x,rightSide.y, 50, 50, 54));
-	newArr = newArr.concat(expandEllipseXY(middle1.x,middle1.y, 50, 50, 54));
-	newArr = newArr.concat(expandEllipseXY(middle2.x,middle2.y, 50, 50, 54));
+	newArr = newArr.concat(expandEllipseXY(leftSide.x, leftSide.y, 50, 50, 54));
+	newArr = newArr.concat(expandEllipseXY(rightSide.x, rightSide.y, 50, 50, 54));
+	newArr = newArr.concat(expandEllipseXY(middle1.x, middle1.y, 50, 50, 54));
+	newArr = newArr.concat(expandEllipseXY(middle2.x, middle2.y, 50, 50, 54));
 
 	return newArr;
 }
@@ -180,7 +171,7 @@ function recordPose(points) {
 	if (poseHistory.length === par.framesToRecord) finishRecording();
 }
 
-function expandEllipseXY(px,py, minr, maxr, angles) {
+function expandEllipseXY(px, py, minr, maxr, angles) {
 	if (!angles) angles = 30;
 	let newX, newY;
 	let newArr = [];

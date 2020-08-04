@@ -1,30 +1,22 @@
-
 function scene04() {
+	// --enter
 	this.enter = function () {
-		// Entering this scene, cleanup the last one
-		full = false;
-		rec = false;
-		preroll = false;
-		play = false;
-		// Stop faceapi
-		// hide the other scenes
-		select('#scene-03').addClass('hidden');
-		// show this scene
-		select('#scene-04').removeClass('hidden');
-		// move the canvas over
-		canvas.parent('#canvas-04');
+		if (posenet) {
+			posenet.removeAllListeners();
+			poses = null;
+		}
+		faceapiStandby = true;
+
+		resetRecVariables()
+		chooseScene('#scene-04')
 		resizeCanvas(820, 820);
-		// move the webcam monitor over
-		sample.hide();
-		// resize video for a larger preview this time
-		// sample.size(666, 500);
+		canvas.parent('#canvas-04');
 		button = select('#save-button');
 		button.removeClass('primary');
 		button.html('Save');
 		button.mousePressed(() => {
-			startPreroll();
+			saveAbstractYou();
 		});
-		fft = new p5.FFT();
 	};
 
 	// --4draw
@@ -34,5 +26,11 @@ function scene04() {
 		mirror();
 
 		playModifiedShape3(voiceHistory);
+
+		if (par.frameRate) fps()
 	};
+}
+
+function saveAbstractYou() {
+
 }

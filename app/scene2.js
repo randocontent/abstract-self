@@ -1,26 +1,20 @@
-// --2 face
-
 function scene02() {
+	// --enter
 	this.enter = function () {
-		full = false;
-		rec = false;
-		preroll = false;
-		play = false;
-		phase = 0.0;
 		if (posenet) {
 			posenet.removeAllListeners();
 			poses = null;
 		}
-		hideScenes();
-		unhideScene('#scene-02');
-		// move the canvas over
+		faceapiStandby = false;
+		if (!faceapiLoaded) faceapi = ml5.faceApi(sample, faceOptions, faceReady);
+		resetRecVariables();
+		chooseScene('#scene-02');
 		canvas.parent('#canvas-02');
 		resizeCanvas(820, 820);
 		vf.parent('#webcam-monitor-02');
 		button = select('#record-button-02');
 		button.removeClass('primary');
 		button.html('Record');
-		faceapi = ml5.faceApi(sample, faceOptions, faceReady);
 		button.mousePressed(() => {
 			noPreroll();
 		});
@@ -32,44 +26,39 @@ function scene02() {
 		mirror(); // Mirror canvas to match mirrored video
 		// The preview is 500x470 but the cam feed is 627x470
 		if (sample) vf.image(sample, -50, 0);
-		if (!faceapiLoading) {
-			// Just the graph
-			if (detections) graphExpressions();
-			// Play the recording	from this step (using the logic from the next step)
-			if (full && expressionHistory) {
-				cl('playing from history');
-				playShape3(expressionHistory);
-			}
-			// Play the recording from the previous step with expressions applied
-			if (detections && poseHistory[0] && !full) {
-				cl('playing live');
+		if (faceapiLoaded) {
+			// First just the graph
+			if (detections[0]) graphExpressions();
+			if (!full && poseHistory[0] && detections[0]) {
+				// Play the recording from the previous step with expressions applied
 				playLiveShape2(poseHistory);
-			}
-			if (par.useSamplePose) {
-				cl('playing from sample');
+			} else if (full && expressionHistory[0]) {
+				// Play the recording	from this step (using the logic from the next step)
+				playHistoryShape2(
+					expressionHistory,
+					topExpression(detections[0].expressions)
+				);
+				// playShape3(expressionHistory);
+			} else if (par.useSamplePose) {
+				// Play a prerecorded pose
 				playLiveShape2(samplePose);
 			}
 		} else {
-			// Show a notice while we wait for faceapi
-			// todo: preload faceapi
+			// Show a notice if we have to wait for the api
 			checkFaceApi();
 		}
+		if (par.frameRate) fps();
 	};
 }
 
 // Plays the history from step1 and applies expression data on top of it
 // Gets loaded with `poseHistory` which is an array of posenet poses
 function playLiveShape2(history) {
-	cl('playLiveShape2 ', history);
 	let cp = frameCount % history.length; // TODO: sync iterator
 	drawLiveShape2(history[cp]);
-	if (rec && detections) recordExpression(detections, history[cp]);
-	// Reset recorded state after finishing playback
-	if (cp === history.length - 1) loopPlayback();
 }
 
 function drawLiveShape2(points) {
-	cl('drawLiveShape2 ', points);
 	retargetAnchorsFromPose(points);
 	let expression;
 	let expressions = [];
@@ -98,7 +87,11 @@ function drawLiveShape2(points) {
 				expressions.push([p[0], newP]);
 			});
 			soft = expressions[0][1] + expressions[1][1] + expressions[6][1];
-			sharp = expressions[2][1] + expressions[3][1] + expressions[4][1] + expressions[5][1];
+			sharp =
+				expressions[2][1] +
+				expressions[3][1] +
+				expressions[4][1] +
+				expressions[5][1];
 
 			expression = topExpression(expressions);
 			switch (expression) {
@@ -117,7 +110,7 @@ function drawLiveShape2(points) {
 	if (soft > sharp) {
 		expanded = faceBodyNet(anchors, soft);
 	} else {
-		expanded = starBodyNet(anchors, sharp)
+		expanded = starBodyNet(anchors, sharp);
 	}
 	if (par.showExpanded) {
 		push();
@@ -129,12 +122,38 @@ function drawLiveShape2(points) {
 		pop();
 	}
 
-	if (rec && detections) recordExpression(expanded);
+	if (rec && detections[0])
+		recordExpression(expanded, detections[0].expressions);
 	hullSet = hull(expanded, par.roundness);
 
 	push();
 	stroke(255);
-	if (!par.showPreview) stroke(0);
+	strokeWeight(par.shapeStrokeWeight);
+	noFill();
+	beginShape();
+	hullSet.forEach(p => {
+		if (par.showCurves) {
+			curveVertex(p[0], p[1]);
+		} else {
+			vertex(p[0], p[1]);
+		}
+	});
+
+	endShape(CLOSE);
+	pop();
+}
+
+function playHistoryShape2(history, shapeType) {
+	let cp = frameCount % history.length;
+	drawShape3(history[cp], shapeType);
+}
+
+function drawHistoryShape2(history, shapeType) {
+
+	hullSet = hull(history, par.roundness);
+
+	push();
+	stroke(255);
 	strokeWeight(par.shapeStrokeWeight);
 	noFill();
 	beginShape();
@@ -151,7 +170,6 @@ function drawLiveShape2(points) {
 }
 
 function starBodyNet(pose, fExp) {
-	// cl('starBodyNet')
 	// [{pos,part}...]
 	// Needs an array of objects that have pos.x,pos.y,part
 	// Will add points around the skeleton to increase the surface area
@@ -161,7 +179,6 @@ function starBodyNet(pose, fExp) {
 	let l1, l2, r1, r2;
 
 	pose.forEach((p, i) => {
-		// cl(p)
 		switch (p.part) {
 			case 'nose':
 				// function expandBlob(point, angles, minr, maxr, maxx,maxy, maxoff, texp) {
@@ -221,7 +238,6 @@ function star(x, y, radius1, radius2, npoints) {
 }
 
 function faceBodyNet(pose, fExp) {
-	cl('faceBodyNet ', pose, fExp);
 	// [{pos,part}...]
 	// Needs an array of objects that have pos.x,pos.y,part
 	// Will add points around the skeleton to increase the surface area
@@ -231,7 +247,6 @@ function faceBodyNet(pose, fExp) {
 	let l1, l2, r1, r2;
 
 	pose.forEach((p, i) => {
-		// cl(p)
 		switch (p.part) {
 			case 'nose':
 				// function expandBlob(point, angles, minr, maxr, maxx,maxy, maxoff, texp) {
@@ -295,16 +310,6 @@ function faceBodyNet(pose, fExp) {
 }
 
 function expandBlob(point, angles, minR, maxR, maxX, maxY, maxOff, i, fExp) {
-	// cl('texp')
-	// cl(texp)
-	// cl('maxr')
-	// cl(maxr)
-	// cl('minr')
-	// cl(minr)
-	// cl('nmax')
-	// cl(nmax)
-	// cl('point')
-	// cl(point)
 	let x, y;
 	let px, py;
 	let newArr = [];
@@ -335,7 +340,6 @@ function expandBlob(point, angles, minR, maxR, maxX, maxY, maxOff, i, fExp) {
 	let pOff = map(noise(zoff), 0, 1, 0, maxOff * effect);
 	phase += pOff;
 	zoff += par.zNoiseOffset;
-	// cl(newArr)
 	return newArr;
 }
 
@@ -350,7 +354,6 @@ function graphExpressions() {
 			let keys = Object.keys(expressions);
 			keys.forEach((item, idx) => {
 				textAlign(RIGHT);
-				textFont('Space Mono');
 				text(item, 110, idx * 20 + 22);
 				const val = map(expressions[item], 0, 1, 0, 100);
 				text(floor(val), 140, idx * 20 + 22);
@@ -373,51 +376,44 @@ function topExpression(unsorted) {
 	return sorted[0][0];
 }
 
-function recordExpression(history) {
-	expressionHistory.push(history);
+function recordExpression(hist, exps) {
+	expressionHistory.push(hist);
+	expressionAggregate.push(topExpression(exps));
 	setCounter(expressionHistory.length);
 	if (expressionHistory.length === par.framesToRecord) finishRecording();
 }
 
-function playHistoryShape2(history) {
-	// Use the current frame counter as an iterator for looping through the recorded array
-	let cp = frameCount % history.length;
-	drawHistoryShape2(history[cp]);
-	// Reset recorded state after finishing playback
-	// if (cp === history.length - 1) loopPlayback();
-}
 
-function drawHistoryShape2(points) {
-	let hpoints = points.pose;
-	let hexp = points.exp;
-	retargetAnchorsFromPose(hpoints);
-	expanded = expand2(points);
-	hullSet = hull(expanded, par.roundness);
-
-	push();
-	stroke(255);
-	if (!par.showPreview) stroke(0);
-	strokeWeight(par.shapeStrokeWeight);
-	noFill();
-	beginShape();
-	hullSet.forEach(p => {
-		if (par.showCurves) {
-			curveVertex(p[0], p[1]);
-		} else {
-			vertex(p[0], p[1]);
+function analyzeExpressions(exps) {
+	let softer = 0;
+	let sharper = 0;
+	exps.forEach(ex => {
+		switch (ex) {
+			case 'happy':
+			case 'neutral':
+			case 'surprised':
+				softer++;
+				break;
+			case 'sad':
+			case 'angry':
+			case 'fearful':
+			case 'disgusted':
+				sharper++;
+				break;
+			default:
+				break;
 		}
 	});
-
-	endShape(CLOSE);
-	pop();
+	softer > sharper ? 'soft' : 'sharp';
 }
 
 function checkFaceApi() {
-	if (faceapiLoading) {
+	if (!faceapiLoaded) {
 		push();
 		mirror(); // Unmirror so we can write in the right direction
 		textAlign(CENTER);
-		text('waiting for faceapi', width / 2, height / 2);
+		textSize(14);
+		text('Waiting for faceapi', width / 2, height / 2);
 		pop();
 	}
 }
