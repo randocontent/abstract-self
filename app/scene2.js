@@ -123,13 +123,14 @@ function faceBodyNet(pose, fExp) {
 	let lx1, ly1, lx2, ly2;
 	let rx1, ry1, rx2, ry2;
 	let l1, l2, r1, r2;
+	let stepOff = 0.01
 
 	pose.forEach(p => {
 		// console.log(p)
 		switch (p.part) {
 			case 'nose':
 				// function expandBlob(point, angles, minr, maxr, maxx,maxy, maxoff, texp) {
-				newArr = newArr.concat(expandBlob(p, 1, 1, 200, 2, 4, 0.1));
+				newArr = newArr.concat(expandBlob(p, 1, 1, 200, 2, 4, 0.05));
 				break;
 			case 'leftEar':
 			case 'rightEar':
@@ -154,11 +155,11 @@ function faceBodyNet(pose, fExp) {
 			// case 'rightWrist':
 			case 'leftHip':
 				l2 = createVector(p.pos.x, p.pos.y);
-				newArr = newArr.concat(expandBlob(p,30,5,50,2,4,0.1));
+				newArr = newArr.concat(expandBlob(p,30,5,50,2,4,0.2));
 				break;
 			case 'rightHip':
 				r2 = createVector(p.pos.x, p.pos.y);
-				newArr = newArr.concat(expandBlob(p,30,5,50,2,4,0.1));
+				newArr = newArr.concat(expandBlob(p,30,5,50,2,4,-0.2));
 				break;
 			// case 'leftKnee':
 			// case 'rightKnee':
@@ -172,11 +173,13 @@ function faceBodyNet(pose, fExp) {
 
 	let leftSide = p5.Vector.lerp(l1, l2, 0.5);
 	let rightSide = p5.Vector.lerp(r1, r2, 0.5);
-	let middle = p5.Vector.lerp(l1,r1,0.5)
+	let middle1 = p5.Vector.lerp(l1,r1,0.5)
+	let middle2 = p5.Vector.lerp(l2,r2,0.5)
 
 	newArr = newArr.concat(expandBlob(leftSide, 1, 1, 100, 2, 4, 0.1));
 	newArr = newArr.concat(expandBlob(rightSide, 1, 1, 100, 2, 4, 0.1));
-	newArr = newArr.concat(expandBlob(middle, 1, 1, 100, 2, 4, 0.1));
+	newArr = newArr.concat(expandBlob(middle1, 5, 1, 100, 2, 4, 0.1));
+	newArr = newArr.concat(expandBlob(middle2, 5, 1, 100, 2, 4, 0.1));
 
 	return newArr;
 }
