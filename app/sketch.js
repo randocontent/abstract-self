@@ -64,7 +64,7 @@ let gui = new dat.GUI({ autoPlace: true });
 // let f4 = gui.addFolder('Voice');
 // let f5 = gui.addFolder('Reference');
 
-let sceneGui = gui.add(par, 'scene')
+let sceneGui = gui.add(par, 'scene');
 sceneGui.onChange(() => {
 	gotoScene();
 });
