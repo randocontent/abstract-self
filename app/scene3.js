@@ -34,7 +34,7 @@ function scene03() {
 		mirror(); // Mirror canvas to match mirrored video
 
 		if (!full) {
-			playLiveShape3(poseHistory, analyzeExpressions(expressionAggregate));
+			playLiveShape3(history1, analyzeExpressionHistory(expressionAggregate));
 		}
 		if (full) playHistoryShape3(voiceHistory);
 		if (par.frameRate) fps();

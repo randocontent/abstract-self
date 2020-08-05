@@ -23,13 +23,13 @@ Stores recording from step 1 as array of posenet poses
 	...
 ] 
 */
-let poseHistory = [];
+let history1 = [];
 
 /*
 Stores recording from step 2 as 2D array of expanded points
 with expression data already applied
 */
-let expressionHistory = [];
+let history2 = [];
 
 /*
 Used separately to choose the final expression

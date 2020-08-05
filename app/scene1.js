@@ -66,7 +66,7 @@ function scene01() {
 
 		playPreroll();
 
-		if (play && !preroll) playShape(poseHistory);
+		if (play && !preroll) playShape(history1);
 		if (par.frameRate) fps();
 	};
 }
@@ -166,9 +166,9 @@ function bodyNet(pose) {
 }
 
 function recordPose(points) {
-	poseHistory.push(points);
-	setCounter(par.framesToRecord-poseHistory.length);
-	if (poseHistory.length === par.framesToRecord) finishRecording();
+	history1.push(points);
+	setCounter(par.framesToRecord-history1.length);
+	if (history1.length === par.framesToRecord) finishRecording();
 }
 
 function expandEllipseXY(px, py, minr, maxr, angles) {

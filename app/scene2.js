@@ -29,13 +29,14 @@ function scene02() {
 		if (faceapiLoaded) {
 			// First just the graph
 			if (detections[0] && par.debug) graphExpressions();
-			if (!full && poseHistory[0] && detections[0]) {
+			if (!full && history1[0] && detections[0]) {
 				// Play the recording from the previous step with expressions applied
-				playLiveShape2(poseHistory);
-			} else if (full && expressionHistory[0]) {
+				// Record into 
+				playLiveShape2(history1);
+			} else if (full && history2[0]) {
 				// Play the recording	from this step (using the logic from the next step)
-				playHistoryShape2(poseHistory, analyzeExpressions(expressionAggregate));
-				// playShape3(expressionHistory);
+				playHistoryShape2(history1, analyzeExpressionHistory(expressionAggregate));
+				// playShape3(history2);
 			} else if (par.useSamplePose) {
 				// Play a prerecorded pose
 				playLiveShape2(samplePose);
@@ -49,74 +50,27 @@ function scene02() {
 }
 
 // Plays the history from step1 and applies expression data on top of it
-// Gets loaded with `poseHistory` which is an array of posenet poses
+// Gets loaded with `history1` which is an array of posenet poses
 function playLiveShape2(history) {
+	console.log('playLiveShape2 ', history);
 	let cp = frameCount % history.length; // TODO: sync iterator
 	drawLiveShape2(history[cp]);
 }
 
 function drawLiveShape2(points) {
 	console.log('drawLiveShape2 ', points);
-
-	let expression;
-	let expressions = [];
-	let soft;
-	let sharp;
-	let shapeType;
-	if (detections) {
-		if (detections[0]) {
-			// Will result in something like:
-			//	[
-			//		["neutral",0.9881573915481567],
-			//		["happy",0.011685466393828392],
-			//		["sad",0.01],
-			//		["angry",0.01],
-			//		["fearful",0.01],
-			//		["disgusted",0.01],
-			//		["surprised",0.01]
-			//	]
-			Object.entries(detections[0].expressions).forEach(p => {
-				let newP;
-				if (p[1] > 0.01) {
-					newP = p[1];
-				} else {
-					newP = 0.01;
-				}
-				expressions.push([p[0], newP]);
-			});
-			soft = expressions[0][1] + expressions[1][1] + expressions[6][1];
-			sharp =
-				expressions[2][1] +
-				expressions[3][1] +
-				expressions[4][1] +
-				expressions[5][1];
-
-			expression = topExpression(expressions);
-			switch (expression) {
-				case 'happy':
-				case 'surprised':
-				case 'neutral':
-					shapeType = 'softShape';
-					break;
-				default:
-					shapeType = 'sharpShape';
-					break;
-			}
-		}
-	}
-
-	if (rec && detections[0]) recordExpression(points, detections[0].expressions);
+	let shapeType = getShapeType();
+	if (rec && detections[0]) recordExpression(points, shapeType);
 
 	retargetAnchorsFromPose(points);
 
-	if (soft > sharp) {
-		console.log('soft: ', soft);
-		expanded = faceBodyNet(anchors, soft);
+	if (shapeType === 'softer') {
+		expanded = faceBodyNet(anchors);
 	} else {
-		console.log('sharp: ', sharp);
-		expanded = starBodyNet(anchors, sharp);
+		expanded = starBodyNet(anchors);
 	}
 
+	// Show expansions for reference
 	if (par.showExpanded) {
 		push();
 		stroke('paleturquoise');
@@ -161,7 +115,7 @@ function drawHistoryShape2(history, shapeType) {
 	console.log('drawHistoryShape2', history, shapeType);
 
 	retargetAnchorsFromPose(history);
-	if ((shapeType = 'softer')) {
+	if (shapeType === 'softer') {
 		expanded = faceBodyNet(anchors, 1.1);
 	} else {
 		expanded = starBodyNet(anchors, 1.1);
@@ -404,30 +358,25 @@ function topExpression(unsorted) {
 	return sorted[0][0];
 }
 
-function recordExpression(hist, exps) {
-	expressionHistory.push(hist);
-	expressionAggregate.push(topExpression(exps));
-	setCounter(par.framesToRecord - expressionHistory.length);
-	if (expressionHistory.length === par.framesToRecord) finishRecording();
+function recordExpression(hist, typ) {
+	history2.push(hist);
+	expressionAggregate.push(typ);
+	setCounter(par.framesToRecord - history2.length);
+	if (history2.length === par.framesToRecord) finishRecording();
 }
 
-function analyzeExpressions(exps) {
+// Runs on expressionAggregate which is an array of shape types (softer/sharper)
+function analyzeExpressionHistory(exps) {
+	console.log('analyzeExpressionHistory',exps)
 	let softer = 0;
 	let sharper = 0;
 	exps.forEach(ex => {
 		switch (ex) {
-			case 'happy':
-			case 'neutral':
-			case 'surprised':
+			case 'softer':
 				softer++;
 				break;
-			case 'sad':
-			case 'angry':
-			case 'fearful':
-			case 'disgusted':
+			case 'sharper':
 				sharper++;
-				break;
-			default:
 				break;
 		}
 	});
@@ -453,13 +402,52 @@ function checkFaceApi() {
 function prepareShape(history, shapeType) {
 	let newArr = [];
 	if (shapeType === 'softer') {
-		history.forEach(p=>{
-			newArr.push(faceBodyNet(p))
-		})
+		history.forEach(p => {
+			newArr.push(faceBodyNet(p));
+		});
 	} else {
-		history.forEach(p=>{
-			newArr.push(starBodyNet(p))
-		})
+		history.forEach(p => {
+			newArr.push(starBodyNet(p));
+		});
 	}
 	return newArr;
 }
+
+function normalizeExpression(expression) {
+	if (expression[1] > 0.01) {
+		return expression[1];
+	} else {
+		return 0.01;
+	}
+}
+
+function getShapeType() {
+	let expression, type;
+	if (detections) {
+		if (detections[0]) {
+			expression = topExpression(detections[0].expressions);
+			switch (expression) {
+				case 'happy':
+				case 'surprised':
+				case 'neutral':
+					type = 'softer';
+					break;
+				default:
+					type = 'sharper';
+					break;
+			}
+		}
+	} else {
+		type = 'softer';
+	}
+	return type;
+}
+
+// // soft = expressions[0][1] + expressions[1][1] + expressions[6][1];
+// // sharp =
+// // 	expressions[2][1] +
+// // 	expressions[3][1] +
+// // 	expressions[4][1] +
+// // 	expressions[5][1];
+
+// expression = topExpression(expressions);
