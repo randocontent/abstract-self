@@ -34,10 +34,7 @@ function scene03() {
 		mirror(); // Mirror canvas to match mirrored video
 
 		if (!full) {
-			playLiveShape3(
-
-				ampl.getLevel()
-			);
+			playLiveShape3(history2, ampl.getLevel());
 		}
 		if (full) playHistoryShape3(voiceHistory);
 		if (par.frameRate) fps();
@@ -71,19 +68,19 @@ function recordVoice(history) {
 
 function playLiveShape3(history, type, level) {
 	if (!history[0]) {
-		history = samplePose;
+		// history = samplePose;
 	}
 	let cp = frameCount % history.length;
 	drawLiveShape3(history[cp], type, level);
 }
 
 function drawLiveShape3(history, type, level) {
-	let scale = map(level,0,1,.5,3.5)
+	let scale = map(level, 0, 1, 0.5, 3.5);
 	retargetAnchorsFromPose(history);
 	if (type === 'softer') {
-		expanded = softerBody(anchors, 1,scale*par.voiceScaleModifier);
+		expanded = softerBody(anchors, 1, scale * par.voiceScaleModifier);
 	} else {
-		expanded = sharperBody(anchors, 1,scale*par.voiceScaleModifier);
+		expanded = sharperBody(anchors, 1, scale * par.voiceScaleModifier);
 	}
 	hullSet = hull(expanded, par.roundness);
 	if (rec) recordVoice(hullSet);
@@ -129,14 +126,14 @@ function drawHistoryShape3(history) {
 }
 
 function graphVoice(rms) {
-	push()
+	push();
 	fill(127);
 	stroke(127);
-	textAlign(CENTER, CENTER)
+	textAlign(CENTER, CENTER);
 
 	// Draw an ellipse with size based on volume
 	// ellipse(width / 2, height / 2, 10 + rms * 200, 10 + rms * 200);
 	ellipse(width / 2, height - 100, 10 + rms * 200);
-	text(floor(rms*200),width/2,height - 150)
-	pop()
+	text(floor(rms * 200), width / 2, height - 150);
+	pop();
 }

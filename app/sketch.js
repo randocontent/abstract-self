@@ -223,7 +223,6 @@ function gotFaces(error, result) {
 		return;
 	}
 	detections = result;
-	console.log(detections)
 	faceapiLoaded = true;
 	if (!faceapiStandby) faceapi.detect(gotFaces);
 }
