@@ -26,10 +26,7 @@ Stores recording from step 1 as array of posenet poses
 let history1 = [];
 
 /*
-???????
-Stores recording from step 2 as 2D array of expanded points
-with expression data already applied
-*/
+ */
 let history2 = [];
 
 let history3 = [];
@@ -37,7 +34,7 @@ let history3 = [];
 /*
 Used separately to choose the final expression
 */
-let expressionAggregate = []
+let expressionAggregate = [];
 
 let voiceHistory = [];
 let options = { maxPoseDetections: 2 };
@@ -119,7 +116,7 @@ const PARTS = [
 p5.disableFriendlyErrors = true;
 
 function setup() {
-	song = loadSound('../assets/music/spk.mp3',songReady);
+	song = loadSound('../assets/music/spk.mp3', songReady);
 
 	angleMode(DEGREES);
 	mgr = new SceneManager();
@@ -154,15 +151,6 @@ function setup() {
 
 	select('#begin-button').mousePressed(() => {
 		mgr.showScene(scene01);
-	});
-	select('#record-button-01').mousePressed(() => {
-		startPreroll();
-	});
-	select('#record-button-02').mousePressed(() => {
-		startPreroll();
-	});
-	select('#record-button-03').mousePressed(() => {
-		startPreroll();
 	});
 
 	// Prepare a dedicated anchor for the intro screen
@@ -303,14 +291,14 @@ function scene00() {
 					}
 				}
 				endShape(CLOSE);
-				phase += 0.01
+				phase += 0.01;
 				zoff += par.zNoiseOffset;
 				pop();
 			}
 		}
-		mirror()
+		mirror();
 		if (par.frameRate) fps();
-		mirror() // Yeah, perfectly reasonable solution...
+		mirror(); // Yeah, perfectly reasonable solution...
 	};
 }
 
@@ -399,6 +387,23 @@ function startPreroll() {
 	preroll = true;
 	button.addClass('preroll');
 	button.html('...');
+	button.mousePressed(finishRecording);
+}
+
+function cancelRecording() {
+	resetRecVariables();
+	button.removeClass('preroll');
+	button.removeClass('rec');
+	button.html('Record')
+	if (mgr.isCurrent(scene01)) {
+		button.mousePressed(() => {
+			startPreroll();
+		});
+	} else {
+		button.mousePressed(() => {
+			noPreroll();
+		});
+	}
 }
 
 function noPreroll() {
@@ -410,7 +415,8 @@ function startRecording() {
 	prerollCounter = 0;
 	rec = true;
 	button.addClass('rec');
-	button.html('Recording');
+	button.html('Stop');
+	button.mousePressed(finishRecording);
 }
 
 function setCounter(count) {
@@ -465,7 +471,7 @@ function playPreroll() {
 			vf.translate(vf.width, 0);
 			vf.scale(-1, 1);
 			vf.noStroke();
-			vf.background(0)
+			vf.background(0);
 			vf.fill(0, 200);
 			vf.rect(0, 0, vf.width, vf.height);
 			vf.fill(255);
@@ -494,7 +500,7 @@ function fps() {
 	push();
 	mirror(); // Unmirror so we can read the text
 	textSize(14);
-	fill(200)
+	fill(200);
 	text(floor(frameRate()), 20, height - 20);
 	pop();
 }

@@ -8,10 +8,12 @@ function scene01() {
 		// resize video for a larger preview this time
 		sample.size(627, 470);
 		sample.hide();
-
 		vf.parent('#webcam-monitor-01');
 		vf.show();
 		button = select('#record-button-01');
+		button.mousePressed(() => {
+			startPreroll();
+		});
 	};
 
 	this.setup = function () {};

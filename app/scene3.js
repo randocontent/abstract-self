@@ -6,7 +6,7 @@ function scene03() {
 			poses = null;
 		}
 		faceapiStandby = true;
-		// startMic();
+		startMic();
 		ampl = new p5.Amplitude();
 		vf.hide();
 
@@ -26,15 +26,11 @@ function scene03() {
 	// --3draw
 
 	this.draw = function () {
-		if (isSongReady) {
-			ampl.setInput(song);
-		}
-		// Number of bins can only be a power of 2
-		// let bins = pow(2, ceil(log(par.audioResolution) / log(2)));
-		// spectrum = fft.analyze(bins);
+		ampl.setInput(mic);
 
 		background(255);
-		if (par.debug) graphVoice();
+
+		if (par.debug) graphVoice(ampl.getLevel());
 		mirror(); // Mirror canvas to match mirrored video
 
 		if (!full) {
@@ -133,8 +129,7 @@ function drawHistoryShape3(history) {
 	pop();
 }
 
-function graphVoice() {
-	let rms = ampl.getLevel();
+function graphVoice(rms) {
 	push()
 	fill(127);
 	stroke(127);

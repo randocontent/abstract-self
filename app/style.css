@@ -74,7 +74,7 @@ canvas {
 .scene .sidebar .title {
 	font-weight: bold;
 }
-light .directions {
+.light .directions {
 	background-color: var(--primary);
 	color: var(--dark)
 }
@@ -229,6 +229,8 @@ button.counter {
 #scene-04 .controls {
 	display: flex;
 	flex-direction: column;
+	align-items: center;
+	justify-items: center;
 }
 #scene-04 button {margin-bottom: 1rem;}
 
