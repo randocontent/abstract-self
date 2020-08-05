@@ -22,8 +22,8 @@ class Paramaterize {
 		this.yNoiseMax = 1; // scene 0
 		this.zNoiseOffset = 0.0001; // scene 0
 		this.phaseMaxOffset = 0.01; // scene 0
-		this.nosePhaseMax = 1;
-		this.phaseMax = 0.1;
+		this.nosePhaseMax = 0.0001;
+		this.phaseMax = 0.0001;
 		this.inc = 12;
 		this.noseRadius = 120;
 		this.blobMin = 50;

@@ -296,7 +296,7 @@ function scene00() {
 				}
 				endShape(CLOSE);
 				let pOff = map(noise(zoff, phase), 0, 1, 0, par.phaseMaxOffset * 1000);
-				phase += pOff;
+				phase += 0.00001
 				zoff += par.zNoiseOffset;
 				pop();
 			}
