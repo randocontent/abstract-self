@@ -85,12 +85,21 @@ function drawLiveShape2(points) {
 
 	hullSet = hull(expanded, par.roundness);
 
+	let padded = [];
+
+	hullSet.forEach(p => {
+		padded.push([
+			remap(p[0], par.sampleWidth, width, par.padding),
+			remap(p[1], par.sampleHeight, height, par.padding),
+		]);
+	});
+
 	push();
 	stroke(0);
 	strokeWeight(par.shapeStrokeWeight);
 	noFill();
 	beginShape();
-	hullSet.forEach(p => {
+	padded.forEach(p => {
 		if (par.showCurves) {
 			curveVertex(p[0], p[1]);
 		} else {
@@ -118,14 +127,24 @@ function drawHistoryShape2(history, shapeType) {
 	} else {
 		expanded = sharperBody(anchors);
 	}
+
 	hullSet = hull(expanded, par.roundness);
+
+	let padded = [];
+
+	hullSet.forEach(p => {
+		padded.push([
+			remap(p[0], par.sampleWidth, width, par.padding),
+			remap(p[1], par.sampleHeight, height, par.padding),
+		]);
+	});
 
 	push();
 	stroke(0);
 	strokeWeight(par.shapeStrokeWeight);
 	noFill();
 	beginShape();
-	hullSet.forEach(p => {
+	padded.forEach(p => {
 		if (par.showCurves) {
 			curveVertex(p[0], p[1]);
 		} else {
@@ -247,12 +266,12 @@ function softerBody(pose) {
 				newArr = newArr.concat(
 					expandBlob(
 						p, 
-						20, // angle increments
+						10, // angle increments
 						10, // minimum radius 
 						200, // maxium radius
 						2, // x offset in noise space
-						4, // y offset in noise space
-						0.05, // phase shift
+						6, // y offset in noise space
+						0.09, // phase shift
 						i)
 				);
 				break;
@@ -302,13 +321,13 @@ function softerBody(pose) {
 	let middle2 = p5.Vector.lerp(l2, r2, 0.5);
 
 	newArr = newArr.concat(
-		expandBlob(leftSide, 5, 1, 100, 2, 4, 0.001, -1)
+		expandBlob(leftSide, 5, 1, 100, 2, 4, 0.01, -1)
 	);
 	newArr = newArr.concat(
-		expandBlob(rightSide, 5, 1, 100, 2, 4, 0.001, -2)
+		expandBlob(rightSide, 5, 1, 100, 2, 4, 0.01, -2)
 	);
-	newArr = newArr.concat(expandBlob(middle1, 5, 1, 100, 2, 4, 0.001, -3));
-	newArr = newArr.concat(expandBlob(middle2, 5, 1, 100, 2, 4, 0.001, -4));
+	newArr = newArr.concat(expandBlob(middle1, 5, 1, 100, 2, 4, 0.01, -3));
+	newArr = newArr.concat(expandBlob(middle2, 5, 1, 100, 2, 4, 0.01, -4));
 
 	return newArr;
 }
