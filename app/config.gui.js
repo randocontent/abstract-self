@@ -1,6 +1,6 @@
 class Paramaterize {
 	constructor() {
-		this.scene = 0;
+		this.scene = 1;
 		this.framesToRecord = 20;
 		this.shapeStrokeWeight = 2;
 		this.mississippi = 26; // about 260
@@ -72,4 +72,5 @@ gui.add(par, 'outerStar');
 gui.add(par, 'starPoints', 1);
 gui.add(par, 'noseOnly');
 gui.add(par, 'useSamplePose');
+gui.add(par, 'frameRate');
 gui.close()

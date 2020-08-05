@@ -84,7 +84,7 @@ function drawShape(points) {
 	hullSet = hull(expanded, par.roundness);
 
 	push();
-	stroke(255);
+	stroke(0);
 	strokeWeight(par.shapeStrokeWeight);
 	noFill();
 	beginShape();

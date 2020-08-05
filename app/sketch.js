@@ -296,12 +296,14 @@ function scene00() {
 				}
 				endShape(CLOSE);
 				let pOff = map(noise(zoff, phase), 0, 1, 0, par.phaseMaxOffset * 1000);
-				phase += 0.00001
+				phase += 0.001
 				zoff += par.zNoiseOffset;
 				pop();
 			}
 		}
+		mirror()
 		if (par.frameRate) fps();
+		mirror() // Yeah, perfectly reasonable solution...
 	};
 }
 
