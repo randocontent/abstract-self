@@ -456,6 +456,7 @@ function playPreroll() {
 			vf.translate(vf.width, 0);
 			vf.scale(-1, 1);
 			vf.noStroke();
+			vf.background(0)
 			vf.fill(0, 200);
 			vf.rect(0, 0, vf.width, vf.height);
 			vf.fill(255);
