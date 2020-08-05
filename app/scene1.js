@@ -2,7 +2,7 @@ function scene01() {
 	this.enter = function () {
 		noseAnchor = '';
 		resetRecVariables();
-		chooseScene('#scene-01')
+		chooseScene('#scene-01');
 		canvas.parent('#canvas-01');
 		resizeCanvas(820, 820);
 		// resize video for a larger preview this time
@@ -14,15 +14,22 @@ function scene01() {
 		button.mousePressed(() => {
 			startPreroll();
 		});
+		// if (par.debug) getNewVideo('assets/01.mp4')
 	};
 
 	this.setup = function () {};
 
 	// --1draw
 	this.draw = function () {
-		background(255);
-		translate(width, 0);
+		vf.background(0);
+		background('#f9f9f9');
+		translate(width, false);
 		scale(-1, 1);
+
+		if (sample) {
+			// vs is 500x470 but feed is 627x470
+			vf.image(sample, -50, 0);
+		}
 
 		if (poses) {
 			if (poses[0]) {
@@ -32,15 +39,15 @@ function scene01() {
 				if (!preroll) previewSkeleton(poses[0]);
 
 				// Draw pose for reference
-				if (par.showPose) {
-					push();
-					stroke('red');
-					strokeWeight(10);
-					pose.forEach(p => {
-						point(p.position.x, p.position.y);
-					});
-					pop();
-				}
+				// if (par.showPose) {
+				// 	push();
+				// 	stroke('red');
+				// 	strokeWeight(10);
+				// 	pose.forEach(p => {
+				// 		point(p.position.x, p.position.y);
+				// 	});
+				// 	pop();
+				// }
 
 				// Draw expanded points for reference
 				if (par.showExpanded) {
@@ -61,11 +68,6 @@ function scene01() {
 			}
 		}
 
-		if (sample) {
-			// vs is 500x470 but feed is 627x470
-			vf.image(sample, -50, 0);
-		}
-
 		playPreroll();
 
 		if (play && !preroll) playShape(history1);
@@ -81,24 +83,34 @@ function playShape(history) {
 
 // Draws an outline based on posenet keypoints
 function drawShape(points) {
+	// console.log('drawShape',points)
 	retargetAnchorsFromPose(points);
-	expanded = bodyNet(anchors, par.happy);
-	hullSet = hull(expanded, par.roundness);
+	expanded = bodyNet(anchors);
+	hullSet = hull(expanded, 150);
+
+	// Looks better than endShape(CLOSE)
+	hullSet.push(hullSet[1]);
+	hullSet.push(hullSet[0]);
+
+	let padded = [];
+
+	hullSet.forEach(p => {
+		padded.push([
+			remap(p[0], par.sampleWidth, width, par.padding),
+			remap(p[1], par.sampleHeight, height, par.padding),
+		]);
+	});
 
 	push();
 	stroke(0);
 	strokeWeight(par.shapeStrokeWeight);
 	noFill();
 	beginShape();
-	hullSet.forEach(p => {
-		if (par.showCurves) {
-			curveVertex(p[0], p[1]);
-		} else {
-			vertex(p[0], p[1]);
-		}
+	padded.forEach(p => {
+		curveVertex(p[0], p[1]);
 	});
 
-	endShape(CLOSE);
+	endShape();
 	pop();
 }
 
@@ -108,52 +120,62 @@ function bodyNet(pose) {
 	// We'll use these later for the torso
 	let l1, l2, r1, r2;
 
+	// expandEllipse(point, 50, 50, 52)
+	//
+	// The first argument is the point to expand
+	// The next two arguments are the minimum and maximum radius for the circle
+	// (by default both are 50 so the size is fixed. If there's a range, it will
+	// slowly move between the two extremes at random)
+	// The last argument is the distance between each point in angles
+	// (for example, an angle distance of 1 will add 360 points)
+
 	pose.forEach((p, i) => {
-		// cl(p)
 		switch (p.part) {
 			case 'nose':
-				newArr = newArr.concat(expandEllipse(p, 120, 120, 30));
+				newArr = newArr.concat(expandEllipse(p, 80,95,20));
 				break;
 			case 'leftEar':
 			case 'rightEar':
-				newArr = newArr.concat(expandEllipse(p, 50, 50));
+				newArr = newArr.concat(expandEllipse(p, 20,35));
 				break;
 			case 'leftEye':
 			case 'rightEye':
-				newArr.push([p.position.x, p.position.y]); // no expansion
 				break;
-			// Arms
 			case 'leftShoulder':
 				l1 = createVector(p.position.x, p.position.y);
-				newArr = newArr.concat(expandEllipse(p, 50, 50, 54));
+				newArr = newArr.concat(expandEllipse(p, 20,35));
 				break;
 			case 'rightShoulder':
 				r1 = createVector(p.position.x, p.position.y);
-				newArr = newArr.concat(expandEllipse(p, 50, 50, 54));
+				newArr = newArr.concat(expandEllipse(p));
 				break;
-			// case 'leftElbow':
-			// case 'rightElbow':
-			// case 'leftWrist':
-			// case 'rightWrist':
+			case 'leftElbow':
+			case 'rightElbow':
+				newArr = newArr.concat(expandEllipse(p, 70, 96));
+				break;
+			case 'leftWrist':
+			case 'rightWrist':
 			case 'leftHip':
 				l2 = createVector(p.position.x, p.position.y);
-				newArr = newArr.concat(expandEllipse(p, 50, 50, 54));
+				newArr = newArr.concat(expandEllipse(p));
 				break;
 			case 'rightHip':
 				r2 = createVector(p.position.x, p.position.y);
-				newArr = newArr.concat(expandEllipse(p, 50, 50, 54));
+				newArr = newArr.concat(expandEllipse(p, 70, 96, 20));
 				break;
-			// case 'leftKnee':
-			// case 'rightKnee':
-			// case 'leftAnkle':
-			// case 'rightAnkle':
+			case 'leftKnee':
+			case 'rightKnee':
+				newArr = newArr.concat(expandEllipse(p, 70, 96, 20));
+				break;
+			case 'leftAnkle':
+			case 'rightAnkle':
 			default:
-				newArr.push([p.position.x, p.position.y]); // no expansion
+				newArr = newArr.concat(expandEllipse(p));
 				break;
 		}
 	});
 
-	// Torso
+	// fill in the torso area so the convex hull algorithm has more to work with
 	let leftSide = p5.Vector.lerp(l1, l2, 0.5);
 	let rightSide = p5.Vector.lerp(r1, r2, 0.5);
 	let middle1 = p5.Vector.lerp(l1, r1, 0.5);
@@ -169,7 +191,7 @@ function bodyNet(pose) {
 
 function recordPose(points) {
 	history1.push(points);
-	setCounter(par.framesToRecord-history1.length);
+	setCounter(par.framesToRecord - history1.length);
 	if (history1.length === par.framesToRecord) finishRecording();
 }
 
@@ -187,8 +209,8 @@ function expandEllipseXY(px, py, minr, maxr, angles) {
 	return newArr;
 }
 
-function expandEllipse(point, minr, maxr, angles) {
-	if (!angles) angles = 30;
+function expandEllipse(point, minr = 50, maxr = 50, inc = 60) {
+	// console.log('expandEllipse ', point, minr, maxr, inc);
 	let x, y;
 	let px, py;
 	let newArr = [];
@@ -199,8 +221,9 @@ function expandEllipse(point, minr, maxr, angles) {
 		px = point[0];
 		py = point[1];
 	}
-	for (let a = 0; a < 360; a += angles) {
-		let r = random(minr, maxr);
+	for (let a = 0; a < 360; a += inc) {
+		let offset = (frameCount % 10) / 1000;
+		let r = map(noise(offset), 0, 1, minr, maxr);
 		x = px + r * cos(a);
 		y = py + r * sin(a);
 		newArr.push([x, y]);
@@ -232,6 +255,29 @@ function previewSkeleton(pose) {
 				vf.ellipse(partB.position.x, partB.position.y, 5);
 				vf.pop();
 			}
+		}
+	}
+}
+
+// Shows a 3...2..1... animation on the second canvas
+function playPreroll() {
+	if (preroll) {
+		let counter = floor(map(prerollCounter, 0, par.mississippi, 4, 0));
+		if (counter > 0) {
+			vf.push();
+			vf.translate(vf.width, 0);
+			vf.scale(-1, 1);
+			vf.noStroke();
+			vf.fill(0, 200);
+			vf.rect(0, 0, vf.width, vf.height);
+			vf.fill(255);
+			vf.textSize(180);
+			vf.textAlign(CENTER, CENTER);
+			vf.text(counter, vf.width / 2, vf.height / 2);
+			vf.pop();
+			prerollCounter++;
+		} else {
+			startRecording();
 		}
 	}
 }

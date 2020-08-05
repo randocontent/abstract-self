@@ -28,7 +28,7 @@ function scene03() {
 	this.draw = function () {
 		ampl.setInput(mic);
 
-		background(255);
+		background('#f9f9f9');
 
 		if (par.debug) graphVoice(ampl.getLevel());
 		mirror(); // Mirror canvas to match mirrored video
@@ -81,9 +81,9 @@ function drawLiveShape3(history, type, level) {
 	let scale = map(level,0,1,.5,3.5)
 	retargetAnchorsFromPose(history);
 	if (type === 'softer') {
-		expanded = faceBodyNet(anchors, 1,scale*par.voiceScaleModifier);
+		expanded = softerBody(anchors, 1,scale*par.voiceScaleModifier);
 	} else {
-		expanded = starBodyNet(anchors, 1,scale*par.voiceScaleModifier);
+		expanded = sharperBody(anchors, 1,scale*par.voiceScaleModifier);
 	}
 	hullSet = hull(expanded, par.roundness);
 	if (rec) recordVoice(hullSet);
