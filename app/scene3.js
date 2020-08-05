@@ -10,8 +10,8 @@ function scene03() {
 		startMic();
 		vf.hide();
 
-		resetRecVariables()
-		chooseScene('#scene-03')
+		resetRecVariables();
+		chooseScene('#scene-03');
 		resizeCanvas(820, 820);
 		canvas.parent('#canvas-03');
 		button = select('#record-button-03');
@@ -26,17 +26,19 @@ function scene03() {
 	this.draw = function () {
 		if (mic) fft.setInput(mic);
 		// Number of bins can only be a power of 2
-		let bins = pow(2, ceil(log(par.audioResolution) / log(2)));
-		let spectrum = fft.analyze(bins);
+		// let bins = pow(2, ceil(log(par.audioResolution) / log(2)));
+		// let spectrum = fft.analyze(bins);
+		if (par.debug) graphVoice();
 
 		background(255);
 		mirror(); // Mirror canvas to match mirrored video
 
-		if (!full) playShape3(expressionHistory, spectrum);
-		if (full) playModifiedShape3(voiceHistory);
-		if (par.frameRate) fps()
+		if (!full) {
+			playLiveShape3(poseHistory, analyzeExpressions(expressionAggregate));
+		}
+		if (full) playHistoryShape3(voiceHistory);
+		if (par.frameRate) fps();
 	};
-
 }
 
 function voiceNet(points, level) {
@@ -60,28 +62,31 @@ function voiceNet(points, level) {
 
 function recordVoice(history) {
 	voiceHistory.push(history);
-	setCounter(par.framesToRecord-voiceHistory.length);
+	setCounter(par.framesToRecord - voiceHistory.length);
 	if (voiceHistory.length === par.framesToRecord) finishRecording();
 }
 
-
-function playShape3(history, spectrum) {
+function playLiveShape3(history, type, voice) {
+	if (!history[0]) {
+		history = samplePose;
+		console.log('Using sample pose');
+	}
+	console.log('playLiveShap3', history, type, voice);
 	let cp = frameCount % history.length;
-	drawShape3(history[cp], spectrum);
+	drawLiveShape3(history[cp], type, voice);
 }
 
 // `history` will have an array of expanded points from the previous scene
 // (expression data will already be factored into it)
-function drawShape3(history, spectrum) {
-	// let concave = map(level, 0, 255, 50, 500);
-	// let expanded = faceBodyNet(history, spectrum);
-	let expanded = voiceNet(history, spectrum);
-
+function drawLiveShape3(history, type, voice) {
+	console.log('drawLiveShape3 ', history, type, voice);
+	retargetAnchorsFromPose(history);
+	let expanded = faceBodyNet(history,1);
 	hullSet = hull(expanded, par.roundness);
 	if (rec) recordVoice(hullSet);
 
 	push();
-	stroke(255);
+	stroke(0);
 	strokeWeight(par.shapeStrokeWeight);
 	noFill();
 	beginShape();
@@ -111,18 +116,20 @@ function expand3(points, levels) {
 	return newArr;
 }
 
-function playModifiedShape3(history) {
+function playHistoryShape3(history) {
+	console.log('playHistoryShape3 ',history)
 	let cp = frameCount % history.length;
-	drawModifiedShape3(history[cp]);
+	drawHistoryShape3(history[cp]);
 }
 
-function drawModifiedShape3(history) {
+function drawHistoryShape3(history) {
+	console.log('drawHistoryShape3 ', history)
 	push();
-	stroke(255);
+	stroke(0);
 	strokeWeight(par.shapeStrokeWeight);
 	noFill();
 	beginShape();
-	hullSet.forEach(p => {
+	history.forEach(p => {
 		if (par.showCurves) {
 			curveVertex(p[0], p[1]);
 		} else {
@@ -133,3 +140,5 @@ function drawModifiedShape3(history) {
 	endShape(CLOSE);
 	pop();
 }
+
+function graphVoice() {}

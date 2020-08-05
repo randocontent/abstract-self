@@ -34,10 +34,7 @@ function scene02() {
 				playLiveShape2(poseHistory);
 			} else if (full && expressionHistory[0]) {
 				// Play the recording	from this step (using the logic from the next step)
-				playHistoryShape2(
-					poseHistory,
-					analyzeExpressions(expressionAggregate)
-				);
+				playHistoryShape2(poseHistory, analyzeExpressions(expressionAggregate));
 				// playShape3(expressionHistory);
 			} else if (par.useSamplePose) {
 				// Play a prerecorded pose
@@ -59,9 +56,8 @@ function playLiveShape2(history) {
 }
 
 function drawLiveShape2(points) {
-	if (rec && detections[0]) recordExpression(points, detections[0].expressions);
+	console.log('drawLiveShape2 ', points);
 
-	retargetAnchorsFromPose(points);
 	let expression;
 	let expressions = [];
 	let soft;
@@ -100,20 +96,27 @@ function drawLiveShape2(points) {
 				case 'happy':
 				case 'surprised':
 				case 'neutral':
-					shapeType = 0;
+					shapeType = 'softShape';
 					break;
 				default:
-					shapeType = 1;
+					shapeType = 'sharpShape';
 					break;
 			}
 		}
 	}
 
+	if (rec && detections[0]) recordExpression(points, detections[0].expressions);
+
+	retargetAnchorsFromPose(points);
+
 	if (soft > sharp) {
+		console.log('soft: ', soft);
 		expanded = faceBodyNet(anchors, soft);
 	} else {
+		console.log('sharp: ', sharp);
 		expanded = starBodyNet(anchors, sharp);
 	}
+
 	if (par.showExpanded) {
 		push();
 		stroke('paleturquoise');
@@ -145,18 +148,23 @@ function drawLiveShape2(points) {
 
 // Play from a stored array of anchor positions and use the shaetype to determine how to expand them
 function playHistoryShape2(history, shapeType) {
-	if (!history[0]) history = samplePose
-	console.log('playHistoryShape2',history,shapeType)
+	if (!history[0]) {
+		history = samplePose;
+		console.log('Using sample pose');
+	}
+	console.log('playHistoryShape2', history, shapeType);
 	let cp = frameCount % history.length;
 	drawHistoryShape2(history[cp], shapeType);
 }
 
 function drawHistoryShape2(history, shapeType) {
-	console.log('drawHistoryShape2',history,shapeType)
-	if (shapeType = 'softer') {
-		expanded = faceBodyNet(history,2);
+	console.log('drawHistoryShape2', history, shapeType);
+
+	retargetAnchorsFromPose(history);
+	if ((shapeType = 'softer')) {
+		expanded = faceBodyNet(anchors, 1.1);
 	} else {
-		expanded = starBodyNet(history,2);
+		expanded = starBodyNet(anchors, 1.1);
 	}
 	// console.log('expanded ', expanded)
 	hullSet = hull(expanded, par.roundness);
@@ -180,6 +188,7 @@ function drawHistoryShape2(history, shapeType) {
 }
 
 function starBodyNet(pose, fExp) {
+	console.log('starBodyNet: ', pose, fExp);
 	// [{pos,part}...]
 	// Needs an array of objects that have postion.x,position.y,part
 	// Will add points around the skeleton to increase the surface area
@@ -193,7 +202,13 @@ function starBodyNet(pose, fExp) {
 			case 'nose':
 				// function expandBlob(point, angles, minr, maxr, maxx,maxy, maxoff, texp) {
 				newArr = newArr.concat(
-					star(p.position.x, p.position.y, par.innerStar, par.outerStar, par.starPoints)
+					star(
+						p.position.x,
+						p.position.y,
+						par.innerStar,
+						par.outerStar,
+						par.starPoints
+					)
 				);
 				break;
 			// case 'leftEar':
@@ -215,7 +230,13 @@ function starBodyNet(pose, fExp) {
 			default:
 				if (!par.noseOnly)
 					newArr = newArr.concat(
-						star(p.position.x, p.position.y, par.innerStar, par.outerStar, par.starPoints)
+						star(
+							p.position.x,
+							p.position.y,
+							par.innerStar,
+							par.outerStar,
+							par.starPoints
+						)
 					);
 				break;
 		}
@@ -248,7 +269,7 @@ function star(x, y, radius1, radius2, npoints) {
 }
 
 function faceBodyNet(pose, fExp) {
-	console.log('faceBodyNet ', pose, fExp)
+	console.log('faceBodyNet ', pose, fExp);
 	// [{pos,part}...]
 	// Needs an array of objects that have position.x,position.y,part
 	// Will add points around the skeleton to increase the surface area
@@ -426,4 +447,19 @@ function checkFaceApi() {
 		text('Waiting for faceapi', width / 2, height / 2);
 		pop();
 	}
+}
+
+// Takes pose history, creates an array of expanded points based on shape type
+function prepareShape(history, shapeType) {
+	let newArr = [];
+	if (shapeType === 'softer') {
+		history.forEach(p=>{
+			newArr.push(faceBodyNet(p))
+		})
+	} else {
+		history.forEach(p=>{
+			newArr.push(starBodyNet(p))
+		})
+	}
+	return newArr;
 }

@@ -1,6 +1,6 @@
 class Paramaterize {
 	constructor() {
-		this.scene = 2;
+		this.scene = 0;
 		this.framesToRecord = 50;
 		this.shapeStrokeWeight = 2;
 		this.mississippi = 26; // about 260
@@ -15,7 +15,7 @@ class Paramaterize {
 		this.debug = true;
 		this.frameRate = true;
 		this.phaseMultiplier = 0.1;
-
+		this.emotionalIntensity = 10;
 		this.minR = 44; // scene 0
 		this.maxR = 66; // scene 0
 		this.noiseMax = 1; // scene 0
@@ -75,4 +75,5 @@ gui.add(par, 'noseOnly');
 gui.add(par, 'useSamplePose');
 gui.add(par, 'frameRate');
 gui.add(par, 'phaseMultiplier');
+gui.add(par, 'emotionalIntensity');
 gui.close()

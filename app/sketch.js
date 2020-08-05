@@ -265,8 +265,8 @@ function scene00() {
 				noseAnchor.update();
 				// if (par.showAnchors) noseAnchor.show();
 
-				let nx = noseAnchor.pos.x;
-				let ny = noseAnchor.pos.y;
+				let nx = noseAnchor.position.x;
+				let ny = noseAnchor.position.y;
 
 				// Keeps shape from reaching the corners
 				let pad = constrain(par.maxR * 2, 0, width / 4);
@@ -370,9 +370,9 @@ function drawAbstractShape() {
 	beginShape();
 	anchors.forEach(a => {
 		if (par.showCurves) {
-			curveVertex(a.pos.x, a.pos.y);
+			curveVertex(a.position.x, a.position.y);
 		} else {
-			vertex(a.pos.x, a.pos.y);
+			vertex(a.position.x, a.position.y);
 		}
 	});
 	endShape(CLOSE);

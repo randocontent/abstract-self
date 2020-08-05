@@ -6,14 +6,15 @@ function scene04() {
 			poses = null;
 		}
 		faceapiStandby = true;
+		select('body').addClass('light');
 
-		resetRecVariables()
-		chooseScene('#scene-04')
+		resetRecVariables();
+		chooseScene('#scene-04');
 		resizeCanvas(820, 820);
 		canvas.parent('#canvas-04');
 		button = select('#save-button');
 		button.removeClass('primary');
-		button.html('Save');
+		button.html('Download the abstract you');
 		button.mousePressed(() => {
 			saveAbstractYou();
 		});
@@ -22,15 +23,10 @@ function scene04() {
 	// --4draw
 	this.draw = function () {
 		background(255);
-
 		mirror();
-
-		playModifiedShape3(voiceHistory);
-
-		if (par.frameRate) fps()
+		playHistoryShape3(voiceHistory);
+		if (par.frameRate) fps();
 	};
 }
 
-function saveAbstractYou() {
-
-}
+function saveAbstractYou() {}
