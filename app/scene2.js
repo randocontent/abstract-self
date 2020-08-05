@@ -52,13 +52,11 @@ function scene02() {
 // Plays the history from step1 and applies expression data on top of it
 // Gets loaded with `history1` which is an array of posenet poses
 function playLiveShape2(history) {
-	console.log('playLiveShape2 ', history);
 	let cp = frameCount % history.length; // TODO: sync iterator
 	drawLiveShape2(history[cp]);
 }
 
 function drawLiveShape2(points) {
-	console.log('drawLiveShape2 ', points);
 	let shapeType = getShapeType();
 	if (rec && detections[0]) recordExpression(points, shapeType);
 
@@ -104,15 +102,12 @@ function drawLiveShape2(points) {
 function playHistoryShape2(history, shapeType) {
 	if (!history[0]) {
 		history = samplePose;
-		console.log('Using sample pose');
 	}
-	console.log('playHistoryShape2', history, shapeType);
 	let cp = frameCount % history.length;
 	drawHistoryShape2(history[cp], shapeType);
 }
 
 function drawHistoryShape2(history, shapeType) {
-	console.log('drawHistoryShape2', history, shapeType);
 
 	retargetAnchorsFromPose(history);
 	if (shapeType === 'softer') {
@@ -120,9 +115,7 @@ function drawHistoryShape2(history, shapeType) {
 	} else {
 		expanded = starBodyNet(anchors, 1.1);
 	}
-	// console.log('expanded ', expanded)
 	hullSet = hull(expanded, par.roundness);
-	// console.log('hullSet',hullSet)
 
 	push();
 	stroke(0);
@@ -141,8 +134,7 @@ function drawHistoryShape2(history, shapeType) {
 	pop();
 }
 
-function starBodyNet(pose, fExp) {
-	console.log('starBodyNet: ', pose, fExp);
+function starBodyNet(pose, fExp, scaleMulti = 1) {
 	// [{pos,part}...]
 	// Needs an array of objects that have postion.x,position.y,part
 	// Will add points around the skeleton to increase the surface area
@@ -159,8 +151,8 @@ function starBodyNet(pose, fExp) {
 					star(
 						p.position.x,
 						p.position.y,
-						par.innerStar,
-						par.outerStar,
+							par.innerStar*scaleMulti,
+							par.outerStar*scaleMulti,
 						par.starPoints
 					)
 				);
@@ -187,8 +179,8 @@ function starBodyNet(pose, fExp) {
 						star(
 							p.position.x,
 							p.position.y,
-							par.innerStar,
-							par.outerStar,
+							par.innerStar*scaleMulti,
+							par.outerStar*scaleMulti,
 							par.starPoints
 						)
 					);
@@ -222,8 +214,7 @@ function star(x, y, radius1, radius2, npoints) {
 	return newArr;
 }
 
-function faceBodyNet(pose, fExp) {
-	console.log('faceBodyNet ', pose, fExp);
+function faceBodyNet(pose, fExp, scaleMulti=1) {
 	// [{pos,part}...]
 	// Needs an array of objects that have position.x,position.y,part
 	// Will add points around the skeleton to increase the surface area
@@ -236,7 +227,7 @@ function faceBodyNet(pose, fExp) {
 		switch (p.part) {
 			case 'nose':
 				// function expandBlob(point, angles, minr, maxr, maxx,maxy, maxoff, texp) {
-				newArr = newArr.concat(expandBlob(p, 1, 1, 200, 2, 4, 0.05, i, fExp));
+				newArr = newArr.concat(expandBlob(p, 1, 1, 200*scaleMulti, 2, 4, 0.05, i, fExp));
 				break;
 			case 'leftEar':
 			case 'rightEar':
@@ -367,7 +358,6 @@ function recordExpression(hist, typ) {
 
 // Runs on expressionAggregate which is an array of shape types (softer/sharper)
 function analyzeExpressionHistory(exps) {
-	console.log('analyzeExpressionHistory',exps)
 	let softer = 0;
 	let sharper = 0;
 	exps.forEach(ex => {

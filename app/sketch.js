@@ -26,10 +26,13 @@ Stores recording from step 1 as array of posenet poses
 let history1 = [];
 
 /*
+???????
 Stores recording from step 2 as 2D array of expanded points
 with expression data already applied
 */
 let history2 = [];
+
+let history3 = [];
 
 /*
 Used separately to choose the final expression
@@ -68,8 +71,11 @@ const faceOptions = {
 
 // --sound
 
-let fft;
 let mic;
+let spectrum;
+let ampl;
+let song;
+let isSongReady = false;
 
 let mgr, g;
 
@@ -113,6 +119,8 @@ const PARTS = [
 p5.disableFriendlyErrors = true;
 
 function setup() {
+	song = loadSound('../assets/music/spk.mp3',songReady);
+
 	angleMode(DEGREES);
 	mgr = new SceneManager();
 
@@ -499,4 +507,8 @@ function resetRecVariables() {
 	preroll = false;
 	play = false;
 	phase = 0.0;
+}
+
+function songReady() {
+	isSongReady = true;
 }

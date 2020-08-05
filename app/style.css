@@ -38,6 +38,7 @@ body,button {
 
 	font-family: 'Space Mono', monospace;
 }
+
 a,
 a:visited {
 	color: inherit;
@@ -72,6 +73,14 @@ canvas {
 }
 .scene .sidebar .title {
 	font-weight: bold;
+}
+light .directions {
+	background-color: var(--primary);
+	color: var(--dark)
+}
+.directions {
+	background-color: var(--dark);
+	color: var(--primary)
 }
 /* ==Layout  **************************************************** */
 /* ************************************************************** */
