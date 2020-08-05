@@ -49,7 +49,7 @@ function voiceNet(points, level) {
 		let offset = 0;
 		if (level) {
 			if (level[0]) {
-				offset = map(level[0], 0, 255, -50, 50);
+				offset = map(level[0], 0, 255, par.levelHigh, par.levelLow);
 			}
 		}
 		x = p[0] + phase + offset * sin(i);

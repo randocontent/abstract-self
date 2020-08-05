@@ -1,9 +1,11 @@
 class Paramaterize {
 	constructor() {
 		this.scene = 0;
+		this.levelLow = -50;
+		this.levelHigh = 50;
 		this.effect = 1;
-		this.minR = 40;
-		this.maxR = 150; 
+		this.minR = 5;
+		this.maxR = 350; 
 		this.maxY = 20; 
 		this.maxX = 20; 
 		this.minSoundLevel = 300;
@@ -12,9 +14,9 @@ class Paramaterize {
 		this.framesToRecord = 100; // 900 frames is about 15 seconds
 		this.shapeStrokeWeight = 2;
 		this.mississippi = 24; // 240 frames is about 4 seconds
-		this.roundness = 95;
+		this.roundness2 = 120;
 		this.angles = 6;
-		this.phase = 1
+		this.phase = 0.0001
 		this.emotionalScale = 0.5;
 		this.innerStar = 100;
 		this.outerStar = 200;
@@ -56,7 +58,7 @@ class Paramaterize {
 		this.showPose = false;
 		this.showHull = false;
 		this.fillShape = false;
-		this.showCurves = false;
+		this.showCurves = true;
 		this.audioResolution = 32; // bins
 		this.happy = 1;
 		this.angry = 1;
@@ -77,7 +79,7 @@ gui.add(par, 'frameRate');
 gui.add(par, 'framesToRecord');
 gui.add(par, 'shapeStrokeWeight');
 gui.add(par, 'mississippi');
-gui.add(par, 'roundness');
+gui.add(par, 'roundness2');
 gui.add(par, 'padding');
 gui.add(par, 'sampleWidth');
 gui.add(par, 'sampleHeight');
@@ -90,4 +92,9 @@ gui.add(par, 'minR');
 gui.add(par, 'maxR');
 gui.add(par, 'maxY');
 gui.add(par, 'maxX');
+gui.add(par, 'levelLow');
+gui.add(par, 'levelHigh');
+gui.add(par, 'showCurves');
+gui.add(par, 'topSpeed');
+gui.add(par, 'maxAcc');
 gui.close()

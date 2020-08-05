@@ -72,16 +72,6 @@ function drawLiveShape2(points) {
 		expanded = sharperBody(anchors);
 	}
 
-				// Draw expanded points for reference
-				if (par.showExpanded) {
-					push();
-					stroke('paleturquoise');
-					strokeWeight(5);
-					expanded.forEach(p => {
-						point(p[0], p[1]);
-					});
-					pop();
-				}
 	// Show expansions for reference
 	if (par.showExpanded) {
 		push();
@@ -93,7 +83,7 @@ function drawLiveShape2(points) {
 		pop();
 	}
 
-	hullSet = hull(expanded, par.roundness);
+	hullSet = hull(expanded, par.roundness2);
 
 	let padded = [];
 
@@ -110,7 +100,11 @@ function drawLiveShape2(points) {
 	noFill();
 	beginShape();
 	padded.forEach(p => {
+		if (par.showCurves) {
+			curveVertex(p[0], p[1]);
+		} else {
 			vertex(p[0], p[1]);
+		}
 	});
 
 	endShape(CLOSE);
@@ -134,7 +128,7 @@ function drawHistoryShape2(history, shapeType) {
 		expanded = sharperBody(anchors);
 	}
 
-	hullSet = hull(expanded, par.roundness);
+	hullSet = hull(expanded, par.roundness2);
 
 	let padded = [];
 
@@ -276,9 +270,7 @@ function softerBody(pose) {
 	pose.forEach((p, i) => {
 		switch (p.part) {
 			case 'nose':
-				newArr = newArr.concat(
-					expandBlob(p,1,10,200)
-				);
+				newArr = newArr.concat(expandBlob(p, 1, 10, 200));
 				break;
 			case 'leftEar':
 			case 'rightEar':
@@ -291,11 +283,11 @@ function softerBody(pose) {
 			// Arms
 			case 'leftShoulder':
 				l1 = createVector(p.position.x, p.position.y);
-				newArr = newArr.concat(expandBlob(p,1,10,200,50,20,-1));
+				newArr = newArr.concat(expandBlob(p, 1, 10, 200, 50, 20, -1));
 				break;
 			case 'rightShoulder':
 				r1 = createVector(p.position.x, p.position.y);
-				newArr = newArr.concat(expandBlob(p,1,10,200,50,20,-1));
+				newArr = newArr.concat(expandBlob(p, 1, 10, 200, 50, 20, -1));
 				break;
 			// case 'leftElbow':
 			// case 'rightElbow':
@@ -314,7 +306,7 @@ function softerBody(pose) {
 			// case 'leftAnkle':
 			// case 'rightAnkle':
 			default:
-				newArr.push([p.position.x, p.position.y])
+				newArr.push([p.position.x, p.position.y]);
 				break;
 		}
 	});
@@ -359,7 +351,13 @@ function expandBlob(
 	for (let a = 0; a < 360; a += par.angles) {
 		let xoff = map(cos(a + phase), -1, 1, 0, par.maxY * par.effect);
 		let yoff = map(sin(a + phase), -1, 1, 0, par.maxX * par.effect);
-		let r = map(noise(xoff, yoff, zoff), 0, 1, par.minR * par.effect, par.maxR * par.effect);
+		let r = map(
+			noise(xoff, yoff, zoff),
+			0,
+			1,
+			par.minR * par.effect,
+			par.maxR * par.effect
+		);
 		x = px + r * cos(a);
 		y = py + r * sin(a);
 		newArr.push([x, y]);
