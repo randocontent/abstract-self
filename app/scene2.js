@@ -6,7 +6,8 @@ function scene02() {
 			poses = null;
 		}
 		faceapiStandby = false;
-		if (!faceapiLoaded) faceapi = ml5.faceApi(sample, faceOptions, faceReady);
+		faceapi.detect(gotFaces);
+		if (!isFaceApiReady) faceapi = ml5.faceApi(sample, faceOptions, faceReady);
 		resetRecVariables();
 		chooseScene('#scene-02');
 		canvas.parent('#canvas-02');
