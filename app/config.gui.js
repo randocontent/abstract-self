@@ -12,7 +12,7 @@ class Paramaterize {
 		this.starPoints = 9;
 		this.noseOnly = false;
 		this.useSamplePose = true;
-		this.debug = false;
+		this.debug = true;
 		this.frameRate = false;
 		this.phaseMultiplier = 0.1;
 		this.emotionalIntensity = 10;
