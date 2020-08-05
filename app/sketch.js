@@ -295,8 +295,7 @@ function scene00() {
 					}
 				}
 				endShape(CLOSE);
-				let pOff = map(noise(zoff, phase), 0, 1, 0, par.phaseMaxOffset * 1000);
-				phase += 0.001
+				phase += 0.01
 				zoff += par.zNoiseOffset;
 				pop();
 			}
@@ -487,6 +486,7 @@ function fps() {
 	push();
 	mirror(); // Unmirror so we can read the text
 	textSize(14);
+	fill(200)
 	text(floor(frameRate()), 20, height - 20);
 	pop();
 }

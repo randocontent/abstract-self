@@ -28,7 +28,7 @@ function scene02() {
 		if (sample) vf.image(sample, -50, 0);
 		if (faceapiLoaded) {
 			// First just the graph
-			if (detections[0]) graphExpressions();
+			if (detections[0] && par.debug) graphExpressions();
 			if (!full && poseHistory[0] && detections[0]) {
 				// Play the recording from the previous step with expressions applied
 				playLiveShape2(poseHistory);
@@ -127,7 +127,7 @@ function drawLiveShape2(points) {
 	hullSet = hull(expanded, par.roundness);
 
 	push();
-	stroke(255);
+	stroke(0);
 	strokeWeight(par.shapeStrokeWeight);
 	noFill();
 	beginShape();
@@ -328,7 +328,6 @@ function expandBlob(point, angles, minR, maxR, maxX, maxY, maxOff, i, fExp) {
 	}
 	if (!fExp) fExp = par.emotionalScale;
 	let effect = fExp;
-
 	for (let a = 0; a < 360; a += angles) {
 		let xoff = map(cos(a + phase), -1, 1, 0, maxX * effect) + i;
 		let yoff = map(sin(a + phase), -1, 1, 0, maxY * effect) + i;
@@ -338,7 +337,7 @@ function expandBlob(point, angles, minR, maxR, maxX, maxY, maxOff, i, fExp) {
 		newArr.push([x, y]);
 	}
 	let pOff = map(noise(zoff), 0, 1, 0, maxOff * effect);
-	phase += pOff;
+	phase += pOff*par.phaseMultiplier;
 	zoff += par.zNoiseOffset;
 	return newArr;
 }
