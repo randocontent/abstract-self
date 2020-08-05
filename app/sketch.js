@@ -440,7 +440,7 @@ function finishRecording() {
 	});
 	let counters = selectAll('.counter');
 	counters.forEach(counter => {
-		counter.html('redo');
+		counter.html('000');
 	});
 }
 

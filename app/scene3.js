@@ -35,8 +35,7 @@ function scene03() {
 
 		if (!full) {
 			playLiveShape3(
-				history1,
-				analyzeExpressionHistory(expressionAggregate),
+
 				ampl.getLevel()
 			);
 		}
