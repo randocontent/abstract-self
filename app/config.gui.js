@@ -78,6 +78,6 @@ gui.add(par, 'frameRate');
 gui.add(par, 'phaseMultiplier');
 gui.add(par, 'emotionalIntensity');
 gui.add(par, 'voiceScaleModifier');
-gui.add(par, 'par.showPose');
-gui.add(par, 'par.showAnchors');
+gui.add(par, 'showPose');
+gui.add(par, 'showAnchors');
 gui.close()
