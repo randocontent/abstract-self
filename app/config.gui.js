@@ -2,9 +2,9 @@ class Paramaterize {
 	constructor() {
 		this.scene = 0;
 		this.voiceScaleModifier = 1;
-		this.framesToRecord = 5;
+		this.framesToRecord = 50;
 		this.shapeStrokeWeight = 2;
-		this.mississippi = 2; // about 260
+		this.mississippi = 260; // about 260
 		this.roundness = 95;
 		this.emotionalScale = 0.5;
 		this.showExpanded = false;
@@ -78,4 +78,6 @@ gui.add(par, 'frameRate');
 gui.add(par, 'phaseMultiplier');
 gui.add(par, 'emotionalIntensity');
 gui.add(par, 'voiceScaleModifier');
+gui.add(par, 'par.showPose');
+gui.add(par, 'par.showAnchors');
 gui.close()
