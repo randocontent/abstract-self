@@ -1,6 +1,6 @@
 class Anchor {
 	constructor(x, y, p) {
-		this.pos = createVector(x, y);
+		this.position = createVector(x, y);
 		this.target = createVector(x, y);
 		this.vel = p5.Vector.random2D();
 		this.acc = createVector();
@@ -11,7 +11,7 @@ class Anchor {
 	}
 
 	update() {
-		this.pos.add(this.vel);
+		this.position.add(this.vel);
 		this.vel.add(this.acc);
 		this.acc.mult(0);
 	}
@@ -20,13 +20,13 @@ class Anchor {
 		push()
 		noStroke();
 		fill('mistyrose');
-		ellipse(this.pos.x, this.pos.y, this.r);
-		// text(this.part,this.pos.x,this.pos.y)
+		ellipse(this.position.x, this.position.y, this.r);
+		// text(this.part,this.position.x,this.position.y)
 		pop()
 	}
 
 	addVertex() {
-		curveVertex(this.pos.x, this.pos.y);
+		curveVertex(this.position.x, this.position.y);
 	}
 
 	setTarget(v) {
@@ -45,14 +45,14 @@ class Anchor {
 	}
 
 	seek(target) {
-		let desired = p5.Vector.sub(target, this.pos);
+		let desired = p5.Vector.sub(target, this.position);
 		desired.setMag(this.topSpeed);
 		let steer = p5.Vector.sub(desired, this.vel);
 		return steer.limit(this.maxForce);
 	}
 
 	flee(target) {
-		let desired = p5.Vector.sub(target, this.pos);
+		let desired = p5.Vector.sub(target, this.position);
 		if (desired.mag() < 90) {
 			desired.setMag(this.topSpeed);
 			// Reverse direction
@@ -66,7 +66,7 @@ class Anchor {
 	}
 
 	arrive(target) {
-		let desired = p5.Vector.sub(target, this.pos);
+		let desired = p5.Vector.sub(target, this.position);
 		let distance = desired.mag();
 		let speed = this.topSpeed;
 		if (distance < 100) {

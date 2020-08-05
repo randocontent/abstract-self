@@ -1,7 +1,7 @@
 class Paramaterize {
 	constructor() {
 		this.scene = 2;
-		this.framesToRecord = 20;
+		this.framesToRecord = 50;
 		this.shapeStrokeWeight = 2;
 		this.mississippi = 26; // about 260
 		this.roundness = 95;

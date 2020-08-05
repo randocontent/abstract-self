@@ -118,15 +118,15 @@ function bodyNet(pose) {
 				break;
 			case 'leftEye':
 			case 'rightEye':
-				newArr.push([p.pos.x, p.pos.y]); // no expansion
+				newArr.push([p.position.x, p.position.y]); // no expansion
 				break;
 			// Arms
 			case 'leftShoulder':
-				l1 = createVector(p.pos.x, p.pos.y);
+				l1 = createVector(p.position.x, p.position.y);
 				newArr = newArr.concat(expandEllipse(p, 50, 50, 54));
 				break;
 			case 'rightShoulder':
-				r1 = createVector(p.pos.x, p.pos.y);
+				r1 = createVector(p.position.x, p.position.y);
 				newArr = newArr.concat(expandEllipse(p, 50, 50, 54));
 				break;
 			// case 'leftElbow':
@@ -134,11 +134,11 @@ function bodyNet(pose) {
 			// case 'leftWrist':
 			// case 'rightWrist':
 			case 'leftHip':
-				l2 = createVector(p.pos.x, p.pos.y);
+				l2 = createVector(p.position.x, p.position.y);
 				newArr = newArr.concat(expandEllipse(p, 50, 50, 54));
 				break;
 			case 'rightHip':
-				r2 = createVector(p.pos.x, p.pos.y);
+				r2 = createVector(p.position.x, p.position.y);
 				newArr = newArr.concat(expandEllipse(p, 50, 50, 54));
 				break;
 			// case 'leftKnee':
@@ -146,7 +146,7 @@ function bodyNet(pose) {
 			// case 'leftAnkle':
 			// case 'rightAnkle':
 			default:
-				newArr.push([p.pos.x, p.pos.y]); // no expansion
+				newArr.push([p.position.x, p.position.y]); // no expansion
 				break;
 		}
 	});
@@ -193,9 +193,6 @@ function expandEllipse(point, minr, maxr, angles) {
 	if (point.position) {
 		px = point.position.x;
 		py = point.position.y;
-	} else if (point.pos) {
-		px = point.pos.x;
-		py = point.pos.y;
 	} else if (point[0]) {
 		px = point[0];
 		py = point[1];

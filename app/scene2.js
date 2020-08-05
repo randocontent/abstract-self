@@ -35,8 +35,8 @@ function scene02() {
 			} else if (full && expressionHistory[0]) {
 				// Play the recording	from this step (using the logic from the next step)
 				playHistoryShape2(
-					expressionHistory,
-					topExpression(detections[0].expressions)
+					poseHistory,
+					analyzeExpressions(expressionAggregate)
 				);
 				// playShape3(expressionHistory);
 			} else if (par.useSamplePose) {
@@ -59,6 +59,8 @@ function playLiveShape2(history) {
 }
 
 function drawLiveShape2(points) {
+	if (rec && detections[0]) recordExpression(points, detections[0].expressions);
+
 	retargetAnchorsFromPose(points);
 	let expression;
 	let expressions = [];
@@ -122,8 +124,6 @@ function drawLiveShape2(points) {
 		pop();
 	}
 
-	if (rec && detections[0])
-		recordExpression(expanded, detections[0].expressions);
 	hullSet = hull(expanded, par.roundness);
 
 	push();
@@ -143,17 +143,27 @@ function drawLiveShape2(points) {
 	pop();
 }
 
+// Play from a stored array of anchor positions and use the shaetype to determine how to expand them
 function playHistoryShape2(history, shapeType) {
+	if (!history[0]) history = samplePose
+	console.log('playHistoryShape2',history,shapeType)
 	let cp = frameCount % history.length;
-	drawShape3(history[cp], shapeType);
+	drawHistoryShape2(history[cp], shapeType);
 }
 
 function drawHistoryShape2(history, shapeType) {
-
-	hullSet = hull(history, par.roundness);
+	console.log('drawHistoryShape2',history,shapeType)
+	if (shapeType = 'softer') {
+		expanded = faceBodyNet(history,2);
+	} else {
+		expanded = starBodyNet(history,2);
+	}
+	// console.log('expanded ', expanded)
+	hullSet = hull(expanded, par.roundness);
+	// console.log('hullSet',hullSet)
 
 	push();
-	stroke(255);
+	stroke(0);
 	strokeWeight(par.shapeStrokeWeight);
 	noFill();
 	beginShape();
@@ -171,7 +181,7 @@ function drawHistoryShape2(history, shapeType) {
 
 function starBodyNet(pose, fExp) {
 	// [{pos,part}...]
-	// Needs an array of objects that have pos.x,pos.y,part
+	// Needs an array of objects that have postion.x,position.y,part
 	// Will add points around the skeleton to increase the surface area
 	let newArr = [];
 
@@ -183,7 +193,7 @@ function starBodyNet(pose, fExp) {
 			case 'nose':
 				// function expandBlob(point, angles, minr, maxr, maxx,maxy, maxoff, texp) {
 				newArr = newArr.concat(
-					star(p.pos.x, p.pos.y, par.innerStar, par.outerStar, par.starPoints)
+					star(p.position.x, p.position.y, par.innerStar, par.outerStar, par.starPoints)
 				);
 				break;
 			// case 'leftEar':
@@ -205,7 +215,7 @@ function starBodyNet(pose, fExp) {
 			default:
 				if (!par.noseOnly)
 					newArr = newArr.concat(
-						star(p.pos.x, p.pos.y, par.innerStar, par.outerStar, par.starPoints)
+						star(p.position.x, p.position.y, par.innerStar, par.outerStar, par.starPoints)
 					);
 				break;
 		}
@@ -238,8 +248,9 @@ function star(x, y, radius1, radius2, npoints) {
 }
 
 function faceBodyNet(pose, fExp) {
+	console.log('faceBodyNet ', pose, fExp)
 	// [{pos,part}...]
-	// Needs an array of objects that have pos.x,pos.y,part
+	// Needs an array of objects that have position.x,position.y,part
 	// Will add points around the skeleton to increase the surface area
 	let newArr = [];
 
@@ -258,15 +269,15 @@ function faceBodyNet(pose, fExp) {
 				break;
 			case 'leftEye':
 			case 'rightEye':
-				newArr.push([p.pos.x, p.pos.y]);
+				newArr.push([p.position.x, p.position.y]);
 				break;
 			// Arms
 			case 'leftShoulder':
-				l1 = createVector(p.pos.x, p.pos.y);
+				l1 = createVector(p.position.x, p.position.y);
 				newArr = newArr.concat(expandBlob(p, 5, 5, 150, 2, 4, 0.01, i, fExp));
 				break;
 			case 'rightShoulder':
-				r1 = createVector(p.pos.x, p.pos.y);
+				r1 = createVector(p.position.x, p.position.y);
 				newArr = newArr.concat(expandBlob(p, 5, 5, 150, 2, 4, -0.01, i, fExp));
 				break;
 			// case 'leftElbow':
@@ -274,11 +285,11 @@ function faceBodyNet(pose, fExp) {
 			// case 'leftWrist':
 			// case 'rightWrist':
 			case 'leftHip':
-				l2 = createVector(p.pos.x, p.pos.y);
+				l2 = createVector(p.position.x, p.position.y);
 				newArr = newArr.concat(expandBlob(p, 10, 5, 50, 2, 4, 0.02, i, fExp));
 				break;
 			case 'rightHip':
-				r2 = createVector(p.pos.x, p.pos.y);
+				r2 = createVector(p.position.x, p.position.y);
 				newArr = newArr.concat(expandBlob(p, 10, 5, 50, 2, 4, -0.02, i, fExp));
 				break;
 			// case 'leftKnee':
@@ -319,9 +330,6 @@ function expandBlob(point, angles, minR, maxR, maxX, maxY, maxOff, i, fExp) {
 	} else if (point.position) {
 		px = point.position.x;
 		py = point.position.y;
-	} else if (point.pos) {
-		px = point.pos.x;
-		py = point.pos.y;
 	} else if (point[0]) {
 		px = point[0];
 		py = point[1];
@@ -337,7 +345,7 @@ function expandBlob(point, angles, minR, maxR, maxX, maxY, maxOff, i, fExp) {
 		newArr.push([x, y]);
 	}
 	let pOff = map(noise(zoff), 0, 1, 0, maxOff * effect);
-	phase += pOff*par.phaseMultiplier;
+	phase += pOff * par.phaseMultiplier;
 	zoff += par.zNoiseOffset;
 	return newArr;
 }
@@ -378,10 +386,9 @@ function topExpression(unsorted) {
 function recordExpression(hist, exps) {
 	expressionHistory.push(hist);
 	expressionAggregate.push(topExpression(exps));
-	setCounter(par.framesToRecord-expressionHistory.length);
+	setCounter(par.framesToRecord - expressionHistory.length);
 	if (expressionHistory.length === par.framesToRecord) finishRecording();
 }
-
 
 function analyzeExpressions(exps) {
 	let softer = 0;
@@ -403,7 +410,11 @@ function analyzeExpressions(exps) {
 				break;
 		}
 	});
-	softer > sharper ? 'soft' : 'sharp';
+	if (softer > sharper) {
+		return 'softer';
+	} else {
+		return 'sharper';
+	}
 }
 
 function checkFaceApi() {
