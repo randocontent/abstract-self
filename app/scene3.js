@@ -26,6 +26,7 @@ function scene03() {
 
 	this.draw = function () {
 		micLevel = mic.getLevel()
+		let shapeStyle = analyzeExpressionHistory(expressionAggregate)
 
 		background('#f9f9f9');
 
@@ -33,7 +34,7 @@ function scene03() {
 		mirror(); // Mirror canvas to match mirrored video
 
 		if (!full) {
-			playLiveShape3(history2, analyzeExpressionHistory(expressionAggregate), micLevel);
+			playLiveShape3(history2, shapeStyle, micLevel);
 		}
 		if (full) playHistoryShape3(voiceHistory);
 		if (par.frameRate) fps();
