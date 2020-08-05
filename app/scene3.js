@@ -60,7 +60,7 @@ function voiceNet(points, level) {
 
 function recordVoice(history) {
 	voiceHistory.push(history);
-	setCounter(voiceHistory.length);
+	setCounter(par.framesToRecord-voiceHistory.length);
 	if (voiceHistory.length === par.framesToRecord) finishRecording();
 }
 

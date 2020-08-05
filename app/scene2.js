@@ -379,7 +379,7 @@ function topExpression(unsorted) {
 function recordExpression(hist, exps) {
 	expressionHistory.push(hist);
 	expressionAggregate.push(topExpression(exps));
-	setCounter(expressionHistory.length);
+	setCounter(par.framesToRecord-expressionHistory.length);
 	if (expressionHistory.length === par.framesToRecord) finishRecording();
 }
 

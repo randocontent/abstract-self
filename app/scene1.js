@@ -167,7 +167,7 @@ function bodyNet(pose) {
 
 function recordPose(points) {
 	poseHistory.push(points);
-	setCounter(poseHistory.length);
+	setCounter(par.framesToRecord-poseHistory.length);
 	if (poseHistory.length === par.framesToRecord) finishRecording();
 }
 
