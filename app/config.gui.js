@@ -4,19 +4,22 @@ class Paramaterize {
 		this.levelLow = -50;
 		this.levelHigh = 50;
 		this.effect = 1;
-		this.minR = 5;
-		this.maxR = 350; 
-		this.maxY = 20; 
-		this.maxX = 20; 
+		this.phase = 0.006;
+		this.minR = -100;
+		this.maxR = 200; 
+		this.maxY = 111; 
+		this.maxX = 111; 
 		this.minSoundLevel = 300;
 		this.maxSoundLevel = -10;
 		this.voiceScaleModifier = 1;
-		this.framesToRecord = 100; // 900 frames is about 15 seconds
+		this.framesToRecord = 200; // 900 frames is about 15 seconds
 		this.shapeStrokeWeight = 2;
 		this.mississippi = 24; // 240 frames is about 4 seconds
-		this.roundness2 = 120;
-		this.angles = 6;
-		this.phase = 0.0001
+		this.roundnessSharper = 80;
+		this.roundnessSofter = 120;
+		this.roundness1 = 150;
+		this.roundness3 = 150;
+		this.angles = 1;
 		this.emotionalScale = 0.5;
 		this.innerStar = 100;
 		this.outerStar = 200;
@@ -45,7 +48,7 @@ class Paramaterize {
 		this.topSpeed = 10;
 		this.maxAcc = 4;
 		this.radius = 50;
-		this.noseYOffset = 55;
+		this.noseYOffset = 155;
 		this.earRadius = 35;
 		this.wristRadius = 55;
 		this.autoRadius = true;
@@ -62,7 +65,8 @@ class Paramaterize {
 		this.audioResolution = 32; // bins
 		this.happy = 1;
 		this.angry = 1;
-		this.padding = 133;
+		this.padding = 200;
+		this.padding2 = 300;
 		this.sampleWidth = 627;
 		this.sampleHeight = 470;
 	}
@@ -75,12 +79,18 @@ sceneGui.onChange(() => {
 	gotoScene();
 });
 gui.add(par, 'debug')
+gui.add(par, 'showExpanded');
+gui.add(par, 'showCurves');
 gui.add(par, 'frameRate');
 gui.add(par, 'framesToRecord');
 gui.add(par, 'shapeStrokeWeight');
 gui.add(par, 'mississippi');
-gui.add(par, 'roundness2');
+gui.add(par, 'roundness1');
+gui.add(par, 'roundness3');
+gui.add(par, 'roundnessSofter');
+gui.add(par, 'roundnessSharper');
 gui.add(par, 'padding');
+gui.add(par, 'padding2');
 gui.add(par, 'sampleWidth');
 gui.add(par, 'sampleHeight');
 gui.add(par, 'angles');
@@ -94,7 +104,7 @@ gui.add(par, 'maxY');
 gui.add(par, 'maxX');
 gui.add(par, 'levelLow');
 gui.add(par, 'levelHigh');
-gui.add(par, 'showCurves');
 gui.add(par, 'topSpeed');
 gui.add(par, 'maxAcc');
+gui.add(par, 'noseYOffset');
 gui.close()

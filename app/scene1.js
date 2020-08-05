@@ -86,7 +86,7 @@ function drawShape(points) {
 	// console.log('drawShape',points)
 	retargetAnchorsFromPose(points);
 	expanded = bodyNet(anchors);
-	hullSet = hull(expanded, 150);
+	hullSet = hull(expanded, par.roundness1);
 
 	// Looks better than endShape(CLOSE)
 	hullSet.push(hullSet[1]);

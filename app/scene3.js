@@ -82,7 +82,7 @@ function drawLiveShape3(history, type, level) {
 	} else {
 		expanded = sharperBody(anchors);
 	}
-	hullSet = hull(expanded, par.roundness);
+	hullSet = hull(expanded, par.roundness3);
 
 	let padded = [];
 

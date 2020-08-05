@@ -83,14 +83,19 @@ function drawLiveShape2(points) {
 		pop();
 	}
 
-	hullSet = hull(expanded, par.roundness2);
 
+
+	if (shapeType === 'softer') {
+	hullSet = hull(expanded, par.roundnessSofter);
+	} else {
+	hullSet = hull(expanded, par.roundnessSharper);
+	}
 	let padded = [];
 
 	hullSet.forEach(p => {
 		padded.push([
-			remap(p[0], par.sampleWidth, width, par.padding),
-			remap(p[1], par.sampleHeight, height, par.padding),
+			remap(p[0], par.sampleWidth, width, par.padding2),
+			remap(p[1], par.sampleHeight, height, par.padding2),
 		]);
 	});
 
@@ -100,11 +105,11 @@ function drawLiveShape2(points) {
 	noFill();
 	beginShape();
 	padded.forEach(p => {
-		if (par.showCurves) {
+	if (shapeType === 'softer') {
 			curveVertex(p[0], p[1]);
-		} else {
+	} else {
 			vertex(p[0], p[1]);
-		}
+	}
 	});
 
 	endShape(CLOSE);
@@ -128,14 +133,18 @@ function drawHistoryShape2(history, shapeType) {
 		expanded = sharperBody(anchors);
 	}
 
-	hullSet = hull(expanded, par.roundness2);
+	if (shapeType === 'softer') {
+	hullSet = hull(expanded, par.roundnessSofter);
+} else {
+	hullSet = hull(expanded, par.roundnessSharper);
+	}
 
 	let padded = [];
 
 	hullSet.forEach(p => {
 		padded.push([
-			remap(p[0], par.sampleWidth, width, par.padding),
-			remap(p[1], par.sampleHeight, height, par.padding),
+			remap(p[0], par.sampleWidth, width, par.padding2),
+			remap(p[1], par.sampleHeight, height, par.padding2),
 		]);
 	});
 
@@ -145,11 +154,11 @@ function drawHistoryShape2(history, shapeType) {
 	noFill();
 	beginShape();
 	padded.forEach(p => {
-		if (par.showCurves) {
+	if (shapeType === 'softer') {
 			curveVertex(p[0], p[1]);
-		} else {
+	} else {
 			vertex(p[0], p[1]);
-		}
+	}
 	});
 
 	endShape(CLOSE);
@@ -270,7 +279,8 @@ function softerBody(pose) {
 	pose.forEach((p, i) => {
 		switch (p.part) {
 			case 'nose':
-				newArr = newArr.concat(expandBlob(p, 1, 10, 200));
+				let tempNose = {}
+				newArr = newArr.concat(expandBlob(p, 1, 10, 100));
 				break;
 			case 'leftEar':
 			case 'rightEar':
@@ -283,16 +293,16 @@ function softerBody(pose) {
 			// Arms
 			case 'leftShoulder':
 				l1 = createVector(p.position.x, p.position.y);
-				newArr = newArr.concat(expandBlob(p, 1, 10, 200, 50, 20, -1));
+				newArr = newArr.concat(expandBlob(p, 1, 10, 50, 50, 20, -1));
 				break;
 			case 'rightShoulder':
 				r1 = createVector(p.position.x, p.position.y);
-				newArr = newArr.concat(expandBlob(p, 1, 10, 200, 50, 20, -1));
+				newArr = newArr.concat(expandBlob(p, 1, 10, 50, 50, 20, -1));
 				break;
-			// case 'leftElbow':
-			// case 'rightElbow':
-			// case 'leftWrist':
-			// case 'rightWrist':
+			case 'leftElbow':
+			case 'rightElbow':
+			case 'leftWrist':
+			case 'rightWrist':
 			case 'leftHip':
 				l2 = createVector(p.position.x, p.position.y);
 				newArr = newArr.concat(expandBlob(p));
