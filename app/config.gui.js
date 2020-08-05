@@ -1,6 +1,11 @@
 class Paramaterize {
 	constructor() {
-		this.scene = 3;
+		this.scene = 2;
+		this.effect = 1;
+		this.minR = 40;
+		this.maxR = 150; 
+		this.maxY = 20; 
+		this.maxX = 20; 
 		this.minSoundLevel = 300;
 		this.maxSoundLevel = -10;
 		this.voiceScaleModifier = 1;
@@ -8,8 +13,8 @@ class Paramaterize {
 		this.shapeStrokeWeight = 2;
 		this.mississippi = 24; // 240 frames is about 4 seconds
 		this.roundness = 95;
-		this.angles = 20;
-		this.phase = 0.01
+		this.angles = 6;
+		this.phase = 1
 		this.emotionalScale = 0.5;
 		this.innerStar = 100;
 		this.outerStar = 200;
@@ -20,8 +25,6 @@ class Paramaterize {
 		this.frameRate = false;
 		this.phaseMultiplier = 0.1;
 		this.emotionalIntensity = 10;
-		this.minR = 44;
-		this.maxR = 66; 
 		this.noiseMax = 1; 
 		this.xNoiseMax = 1; 
 		this.yNoiseMax = 1;
@@ -48,7 +51,7 @@ class Paramaterize {
 		this.manualRadiusRatio = 1;
 		this.noseExpandRatio = 3.5;
 		this.noiseLevel = 0.001;
-		this.showExpanded = false;
+		this.showExpanded = true;
 		this.showAnchors = false;
 		this.showPose = false;
 		this.showHull = false;
@@ -82,4 +85,9 @@ gui.add(par, 'angles');
 gui.add(par, 'phase');
 gui.add(par, 'minSoundLevel');
 gui.add(par, 'maxSoundLevel');
-gui.hide()
+gui.add(par, 'effect');
+gui.add(par, 'minR');
+gui.add(par, 'maxR');
+gui.add(par, 'maxY');
+gui.add(par, 'maxX');
+// gui.hide()

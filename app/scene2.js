@@ -72,6 +72,16 @@ function drawLiveShape2(points) {
 		expanded = sharperBody(anchors);
 	}
 
+				// Draw expanded points for reference
+				if (par.showExpanded) {
+					push();
+					stroke('paleturquoise');
+					strokeWeight(5);
+					expanded.forEach(p => {
+						point(p[0], p[1]);
+					});
+					pop();
+				}
 	// Show expansions for reference
 	if (par.showExpanded) {
 		push();
@@ -100,11 +110,7 @@ function drawLiveShape2(points) {
 	noFill();
 	beginShape();
 	padded.forEach(p => {
-		if (par.showCurves) {
-			curveVertex(p[0], p[1]);
-		} else {
 			vertex(p[0], p[1]);
-		}
 	});
 
 	endShape(CLOSE);
@@ -243,7 +249,15 @@ function softerBody(pose) {
 
 	/*  
 
-	expandBlob(point, angles, minR, maxR, maxX, maxY, maxOff, i, effect)
+	point,
+	i = 0,
+	angles = par.angles,
+	minR = 5,
+	maxR = 100,
+	maxX = 2,
+	maxY = 2,
+	maxOff = par.phase,
+	effect = par.effect
 
 	First argument is the point to expand. 
 	Second argument is the distance between
@@ -263,21 +277,12 @@ function softerBody(pose) {
 		switch (p.part) {
 			case 'nose':
 				newArr = newArr.concat(
-					expandBlob(
-						p,
-						10, // angle increments
-						10, // minimum radius
-						200, // maxium radius
-						2, // x offset in noise space
-						6, // y offset in noise space
-						0.09, // phase shift
-						i
-					)
+					expandBlob(p,1,10,200)
 				);
 				break;
 			case 'leftEar':
 			case 'rightEar':
-				newArr = newArr.concat(expandBlob(p, 5, 5, 50, 2, 4, 0.01, i));
+				newArr.push([p.position.x, p.position.y]);
 				break;
 			case 'leftEye':
 			case 'rightEye':
@@ -286,11 +291,11 @@ function softerBody(pose) {
 			// Arms
 			case 'leftShoulder':
 				l1 = createVector(p.position.x, p.position.y);
-				newArr = newArr.concat(expandBlob(p, 5, 5, 150, 2, 4, 0.01, i));
+				newArr = newArr.concat(expandBlob(p,1,10,200,50,20,-1));
 				break;
 			case 'rightShoulder':
 				r1 = createVector(p.position.x, p.position.y);
-				newArr = newArr.concat(expandBlob(p, 5, 5, 150, 2, 4, -0.01, i));
+				newArr = newArr.concat(expandBlob(p,1,10,200,50,20,-1));
 				break;
 			// case 'leftElbow':
 			// case 'rightElbow':
@@ -298,18 +303,18 @@ function softerBody(pose) {
 			// case 'rightWrist':
 			case 'leftHip':
 				l2 = createVector(p.position.x, p.position.y);
-				newArr = newArr.concat(expandBlob(p, 10, 5, 50, 2, 4, 0.02, i));
+				newArr = newArr.concat(expandBlob(p));
 				break;
 			case 'rightHip':
 				r2 = createVector(p.position.x, p.position.y);
-				newArr = newArr.concat(expandBlob(p, 10, 5, 50, 2, 4, -0.02, i));
+				newArr = newArr.concat(expandBlob(p));
 				break;
 			// case 'leftKnee':
 			// case 'rightKnee':
 			// case 'leftAnkle':
 			// case 'rightAnkle':
 			default:
-				newArr = newArr.concat(expandBlob(p, 5, 5, 100, 2, 4, 0.01, i));
+				newArr.push([p.position.x, p.position.y])
 				break;
 		}
 	});
@@ -320,24 +325,23 @@ function softerBody(pose) {
 	let middle1 = p5.Vector.lerp(l1, r1, 0.5);
 	let middle2 = p5.Vector.lerp(l2, r2, 0.5);
 
-	newArr = newArr.concat(expandBlob(leftSide, -1));
-	newArr = newArr.concat(expandBlob(rightSide, -2));
-	newArr = newArr.concat(expandBlob(middle1, -3));
-	newArr = newArr.concat(expandBlob(middle2, -4));
+	newArr = newArr.concat(expandBlob(leftSide));
+	newArr = newArr.concat(expandBlob(rightSide));
+	newArr = newArr.concat(expandBlob(middle1));
+	newArr = newArr.concat(expandBlob(middle2));
 
 	return newArr;
 }
 
 function expandBlob(
 	point,
-	i = random(10),
 	angles = par.angles,
 	minR = 5,
 	maxR = 100,
-	maxX = 5,
-	maxY = 5,
+	maxX = 2,
+	maxY = 2,
 	maxOff = par.phase,
-	effect = 1
+	effect = par.effect
 ) {
 	let x, y;
 	let px, py;
@@ -352,16 +356,16 @@ function expandBlob(
 		px = point[0];
 		py = point[1];
 	}
-	for (let a = 0; a < 360; a += angles) {
-		let xoff = map(cos(a + phase), -1, 1, 0, maxX * effect) + i;
-		let yoff = map(sin(a + phase), -1, 1, 0, maxY * effect) + i;
-		let r = map(noise(xoff, yoff, zoff), 0, 1, minR * effect, maxR * effect);
+	for (let a = 0; a < 360; a += par.angles) {
+		let xoff = map(cos(a + phase), -1, 1, 0, par.maxY * par.effect);
+		let yoff = map(sin(a + phase), -1, 1, 0, par.maxX * par.effect);
+		let r = map(noise(xoff, yoff, zoff), 0, 1, par.minR * par.effect, par.maxR * par.effect);
 		x = px + r * cos(a);
 		y = py + r * sin(a);
 		newArr.push([x, y]);
 	}
-	let pOff = map(noise(zoff), 0, 1, 0, maxOff * effect);
-	phase += pOff * par.phaseMultiplier;
+	let pOff = map(noise(zoff), 0, 1, 0, par.phase * par.effect);
+	phase += pOff;
 	zoff += par.zNoiseOffset;
 	return newArr;
 }
