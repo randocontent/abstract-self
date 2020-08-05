@@ -7,7 +7,6 @@ function scene03() {
 		}
 		faceapiStandby = true;
 		startMic();
-		ampl = new p5.Amplitude();
 		vf.hide();
 
 		resetRecVariables();
@@ -26,15 +25,15 @@ function scene03() {
 	// --3draw
 
 	this.draw = function () {
-		ampl.setInput(mic);
+		micLevel = mic.getLevel()
 
 		background('#f9f9f9');
 
-		if (par.debug) graphVoice(ampl.getLevel());
+		if (par.debug) graphVoice(micLevel);
 		mirror(); // Mirror canvas to match mirrored video
 
 		if (!full) {
-			playLiveShape3(history2, ampl.getLevel());
+			playLiveShape3(history2, analyzeExpressionHistory(expressionAggregate), micLevel);
 		}
 		if (full) playHistoryShape3(voiceHistory);
 		if (par.frameRate) fps();
@@ -68,29 +67,39 @@ function recordVoice(history) {
 
 function playLiveShape3(history, type, level) {
 	if (!history[0]) {
-		// history = samplePose;
+		history = samplePose;
 	}
 	let cp = frameCount % history.length;
 	drawLiveShape3(history[cp], type, level);
 }
 
 function drawLiveShape3(history, type, level) {
-	let scale = map(level, 0, 1, 0.5, 3.5);
+	let scale = map(level, 0, 1, 300, -800);
 	retargetAnchorsFromPose(history);
 	if (type === 'softer') {
-		expanded = softerBody(anchors, 1, scale * par.voiceScaleModifier);
+		expanded = softerBody(anchors);
 	} else {
-		expanded = sharperBody(anchors, 1, scale * par.voiceScaleModifier);
+		expanded = sharperBody(anchors);
 	}
 	hullSet = hull(expanded, par.roundness);
-	if (rec) recordVoice(hullSet);
+
+	let padded = [];
+
+	hullSet.forEach(p => {
+		padded.push([
+			remap(p[0], par.sampleWidth, width, scale),
+			remap(p[1], par.sampleHeight, height, scale),
+		]);
+	});
+
+	if (rec) recordVoice(padded);
 
 	push();
 	stroke(0);
 	strokeWeight(par.shapeStrokeWeight);
 	noFill();
 	beginShape();
-	hullSet.forEach(p => {
+	padded.forEach(p => {
 		if (par.showCurves) {
 			curveVertex(p[0], p[1]);
 		} else {

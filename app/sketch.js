@@ -40,6 +40,8 @@ let expressionAggregate = [];
 let voiceHistory = [];
 let options = { maxPoseDetections: 1 };
 
+let micLevel;
+
 let noseAnchor;
 let anchors = [];
 let expanded = [];
