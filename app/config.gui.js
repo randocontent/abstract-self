@@ -51,7 +51,7 @@ class Paramaterize {
 		this.manualRadiusRatio = 1;
 		this.noseExpandRatio = 3.5;
 		this.noiseLevel = 0.001;
-		this.showExpanded = true;
+		this.showExpanded = false;
 		this.showAnchors = false;
 		this.showPose = false;
 		this.showHull = false;
@@ -90,4 +90,4 @@ gui.add(par, 'minR');
 gui.add(par, 'maxR');
 gui.add(par, 'maxY');
 gui.add(par, 'maxX');
-// gui.hide()
+gui.close()
