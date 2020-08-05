@@ -1,11 +1,15 @@
 class Paramaterize {
 	constructor() {
-		this.scene = 0;
+		this.scene = 3;
+		this.minSoundLevel = 300;
+		this.maxSoundLevel = -10;
 		this.voiceScaleModifier = 1;
 		this.framesToRecord = 100; // 900 frames is about 15 seconds
 		this.shapeStrokeWeight = 2;
 		this.mississippi = 24; // 240 frames is about 4 seconds
 		this.roundness = 95;
+		this.angles = 20;
+		this.phase = 0.01
 		this.emotionalScale = 0.5;
 		this.innerStar = 100;
 		this.outerStar = 200;
@@ -36,7 +40,6 @@ class Paramaterize {
 		this.topSpeed = 10;
 		this.maxAcc = 4;
 		this.radius = 50;
-		this.angles = 20;
 		this.noseYOffset = 55;
 		this.earRadius = 35;
 		this.wristRadius = 55;
@@ -75,4 +78,8 @@ gui.add(par, 'roundness');
 gui.add(par, 'padding');
 gui.add(par, 'sampleWidth');
 gui.add(par, 'sampleHeight');
+gui.add(par, 'angles');
+gui.add(par, 'phase');
+gui.add(par, 'minSoundLevel');
+gui.add(par, 'maxSoundLevel');
 gui.hide()

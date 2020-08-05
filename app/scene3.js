@@ -75,7 +75,7 @@ function playLiveShape3(history, type, level) {
 }
 
 function drawLiveShape3(history, type, level) {
-	let scale = map(level, 0, 1, 300, -800);
+	let scale = map(level, 0, 1, par.minSoundLevel, par.maxSoundLevel);
 	retargetAnchorsFromPose(history);
 	if (type === 'softer') {
 		expanded = softerBody(anchors);

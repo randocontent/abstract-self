@@ -162,13 +162,12 @@ function sharperBody(pose) {
 	// Will add points around the skeleton to increase the surface area
 	let newArr = [];
 
-
 	pose.forEach((p, i) => {
 		switch (p.part) {
 			case 'nose':
 				newArr = newArr.concat(
 					star(
-						p.position.x, 
+						p.position.x,
 						p.position.y,
 						par.innerStar, // radius for inner circle
 						par.outerStar, // radius for external circle
@@ -265,14 +264,15 @@ function softerBody(pose) {
 			case 'nose':
 				newArr = newArr.concat(
 					expandBlob(
-						p, 
+						p,
 						10, // angle increments
-						10, // minimum radius 
+						10, // minimum radius
 						200, // maxium radius
 						2, // x offset in noise space
 						6, // y offset in noise space
 						0.09, // phase shift
-						i)
+						i
+					)
 				);
 				break;
 			case 'leftEar':
@@ -320,19 +320,25 @@ function softerBody(pose) {
 	let middle1 = p5.Vector.lerp(l1, r1, 0.5);
 	let middle2 = p5.Vector.lerp(l2, r2, 0.5);
 
-	newArr = newArr.concat(
-		expandBlob(leftSide, 5, 1, 100, 2, 4, 0.01, -1)
-	);
-	newArr = newArr.concat(
-		expandBlob(rightSide, 5, 1, 100, 2, 4, 0.01, -2)
-	);
-	newArr = newArr.concat(expandBlob(middle1, 5, 1, 100, 2, 4, 0.01, -3));
-	newArr = newArr.concat(expandBlob(middle2, 5, 1, 100, 2, 4, 0.01, -4));
+	newArr = newArr.concat(expandBlob(leftSide, -1));
+	newArr = newArr.concat(expandBlob(rightSide, -2));
+	newArr = newArr.concat(expandBlob(middle1, -3));
+	newArr = newArr.concat(expandBlob(middle2, -4));
 
 	return newArr;
 }
 
-function expandBlob(point, angles, minR, maxR, maxX, maxY, maxOff, i, effect=1) {
+function expandBlob(
+	point,
+	i = random(10),
+	angles = par.angles,
+	minR = 5,
+	maxR = 100,
+	maxX = 5,
+	maxY = 5,
+	maxOff = par.phase,
+	effect = 1
+) {
 	let x, y;
 	let px, py;
 	let newArr = [];
