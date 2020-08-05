@@ -138,7 +138,10 @@ main .webcam-monitor-container {
 }
 .scene .abstract {
 	height: 100%;
+	border-radius: 10px;
+	background: white;
 }
+
 .fullscreen {
 	display: grid;
 	grid-template-columns: 500px 820px;
