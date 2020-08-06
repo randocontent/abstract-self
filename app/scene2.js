@@ -27,6 +27,7 @@ function scene02() {
 		mirror(); // Mirror canvas to match mirrored video
 		// The preview is 500x470 but the cam feed is 627x470
 		if (sample) vf.image(sample, -50, 0);
+		if (par.showHUD) expressionReference();
 		if (faceapiLoaded) {
 			// First just the graph
 			if (detections[0] && par.debug) graphExpressions();
@@ -494,12 +495,3 @@ function getShapeType() {
 	}
 	return type;
 }
-
-// // soft = expressions[0][1] + expressions[1][1] + expressions[6][1];
-// // sharp =
-// // 	expressions[2][1] +
-// // 	expressions[3][1] +
-// // 	expressions[4][1] +
-// // 	expressions[5][1];
-
-// expression = topExpression(expressions);

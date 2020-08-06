@@ -36,7 +36,7 @@ function scene01() {
 				let pose = poses[0].pose.keypoints;
 
 				// Draw skeleton in vf
-				if (!preroll) previewSkeleton(poses[0]);
+				if (!preroll && par.showHUD) previewSkeleton(poses[0]);
 
 				// Draw pose for reference
 				// if (par.showPose) {

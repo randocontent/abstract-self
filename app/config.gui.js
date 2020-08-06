@@ -1,10 +1,11 @@
 class Paramaterize {
 	constructor() {
-		this.scene = 0;
+		this.scene = 2;
+		this.showHUD = true;
 		this.levelLow = -50;
 		this.levelHigh = 50;
 		this.effect = 1;
-		this.phase = 0.006;
+		this.phase = 0.003;
 		this.minR = -100;
 		this.maxR = 200; 
 		this.maxY = 111; 
@@ -13,7 +14,7 @@ class Paramaterize {
 		this.maxSoundLevel = -550;
 		this.voiceScaleModifier = 1;
 		this.framesToRecord = 900; // 900 frames is about 15 seconds
-		this.shapeStrokeWeight = 3;
+		this.shapeStrokeWeight = 3.5;
 		this.mississippi = 240; // 240 frames is about 4 seconds
 		this.roundnessSharper = 80;
 		this.roundnessSofter = 120;
@@ -79,6 +80,7 @@ sceneGui.onChange(() => {
 	gotoScene();
 });
 gui.add(par, 'debug')
+gui.add(par, 'showHUD');
 gui.add(par, 'showExpanded');
 gui.add(par, 'showCurves');
 gui.add(par, 'frameRate');
