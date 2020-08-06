@@ -13,7 +13,7 @@ class Paramaterize {
 		this.maxSoundLevel = -550;
 		this.voiceScaleModifier = 1;
 		this.framesToRecord = 900; // 900 frames is about 15 seconds
-		this.shapeStrokeWeight = 2;
+		this.shapeStrokeWeight = 3;
 		this.mississippi = 240; // 240 frames is about 4 seconds
 		this.roundnessSharper = 80;
 		this.roundnessSofter = 120;
@@ -66,7 +66,7 @@ class Paramaterize {
 		this.happy = 1;
 		this.angry = 1;
 		this.padding = 200;
-		this.padding2 = 300;
+		this.padding2 = 210;
 		this.sampleWidth = 627;
 		this.sampleHeight = 470;
 	}
@@ -107,4 +107,5 @@ gui.add(par, 'levelHigh');
 gui.add(par, 'topSpeed');
 gui.add(par, 'maxAcc');
 gui.add(par, 'noseYOffset');
+gui.add(par, 'shapeStrokeWeight');
 gui.hide()
