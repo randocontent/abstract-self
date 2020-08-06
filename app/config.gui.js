@@ -1,6 +1,6 @@
 class Paramaterize {
 	constructor() {
-		this.scene = 2;
+		this.scene = o;
 		this.showHUD = true;
 		this.levelLow = -50;
 		this.levelHigh = 50;
