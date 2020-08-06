@@ -5,7 +5,7 @@ class Paramaterize {
 		this.levelLow = -50;
 		this.levelHigh = 50;
 		this.effect = 1;
-		this.phase = 0.001;
+		this.phase = 0.0001;
 		this.minR = -100;
 		this.maxR = 200; 
 		this.maxY = 111; 

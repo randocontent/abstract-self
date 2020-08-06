@@ -27,7 +27,7 @@ function scene02() {
 		mirror(); // Mirror canvas to match mirrored video
 		// The preview is 500x470 but the cam feed is 627x470
 		if (sample) vf.image(sample, -50, 0);
-		if (par.showHUD) expressionReference();
+		// if (par.showHUD) expressionReference();
 		if (faceapiLoaded) {
 			// First just the graph
 			if (detections[0] && par.debug) graphExpressions();
