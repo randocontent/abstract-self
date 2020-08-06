@@ -115,9 +115,13 @@ const PARTS = [
 	'rightAnkle',
 ];
 
-p5.disableFriendlyErrors = true;
-
+// p5.disableFriendlyErrors = true;
+function mousePressed() {
+  userStartAudio();
+}
 function setup() {
+	getAudioContext().suspend();
+
 	angleMode(DEGREES);
 	mgr = new SceneManager();
 

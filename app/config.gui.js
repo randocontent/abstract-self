@@ -10,7 +10,7 @@ class Paramaterize {
 		this.maxY = 111; 
 		this.maxX = 111; 
 		this.minSoundLevel = 300;
-		this.maxSoundLevel = -10;
+		this.maxSoundLevel = -550;
 		this.voiceScaleModifier = 1;
 		this.framesToRecord = 200; // 900 frames is about 15 seconds
 		this.shapeStrokeWeight = 2;
