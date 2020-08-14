@@ -1,6 +1,7 @@
 function scene03() {
 	// --enter
 	this.enter = function () {
+		frameRate(par.frameRate)
 		isFaceapiStandby = false
 	
 ;
