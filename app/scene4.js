@@ -5,28 +5,38 @@ function scene04() {
 			posenet.removeAllListeners();
 			poses = null;
 		}
-		faceapiStandby = true;
+		isFaceapiStandby = true;
+	full = false;
+	rec = false;
+	preroll = false;
+	play = false;
+	phase = 0.0;	
 		select('body').addClass('light');
 
-		resetRecVariables();
+		finalShapeType = analyzeExpressionHistory(history2);
 		chooseScene('#scene-04');
 		resizeCanvas(820, 820);
 		canvas.parent('#canvas-04');
-		button = select('#save-button');
-		button.removeClass('primary');
-		button.html('Download the abstract you');
-		button.mousePressed(() => {
-			saveAbstractYou();
-		});
+		recButton = select('#save-button');
+		recButton.hide();
+		restartButton = select('#restart-button');
+		restartButton.mousePressed(refreshPage);
 	};
 
 	// --4draw
 	this.draw = function () {
 		background('#f9f9f9');
 		mirror();
-		playHistoryShape3(voiceHistory);
+		playHistoryShape3(history3);
+		playHistoryShape3(history3, finalShapeType);
 		if (par.frameRate) fps();
 	};
 }
 
-function saveAbstractYou() {}
+function saveAbstractYou() {
+	save(canvas, 'abstract.png');
+}
+
+function refreshPage() {
+	location.replace('/');
+}

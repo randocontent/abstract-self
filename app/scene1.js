@@ -1,283 +1,219 @@
 function scene01() {
 	this.enter = function () {
+		dbg('scene01');
+		// ----- clean-up
 		noseAnchor = '';
-		resetRecVariables();
-		chooseScene('#scene-01');
-		canvas.parent('#canvas-01');
-		resizeCanvas(820, 820);
-		// resize video for a larger preview this time
-		sample.size(627, 470);
+		sample.size(668,500)
 		sample.hide();
-		vf.parent('#webcam-monitor-01');
-		vf.show();
-		button = select('#record-button-01');
-		button.mousePressed(() => {
-			startPreroll();
-		});
-		// if (par.debug) getNewVideo('assets/01.mp4')
+		isFaceapiStandby = true;
+		// ----- reset state vars
+		history1 = [];
+		full = false;
+		rec = false;
+		preroll = false;
+		// ----- page layout
+		sketchCanvas.parent('#canvas-01');
+		resizeCanvas(820, 820);
+		// show preview in secondary canvas
+		monitor.parent('#webcam-monitor-01');
+		monitor.resizeCanvas(500, 500);
+		monitor.show();
+		// ----- rewire ui
+		// rehook and reset and show record button
+		recButton = select('#record-button-01');
+		recButton.html('Record');
+		recButton.removeClass('rec');
+		recButton.mousePressed(() => startPreroll());
+		recButton.show();
+		// reset and show counter
+		counterButton = select('#counter-01');
+		// update recording time based on recording frames. assumes a recording time of less than 60 seconds...
+		counterButton.html('00:' + par.recordFrames / 60);
+		counterButton.show();
+		// rehook button for this scene, and hide for now
+		redoButton = select('#redo-01');
+		redoButton.mousePressed(() => mgr.showScene(scene01));
+		redoButton.hide();
+		// rehook next button for this scene, and hide for now
+		nextButton = select('#next-button-01');
+		nextButton.mousePressed(() => mgr.showScene(scene02));
+		nextButton.hide();
+		// ----- scene management
+		chooseScene('#scene-01');
 	};
 
-	this.setup = function () {};
-
-	// --1draw
 	this.draw = function () {
-		vf.background(0);
-		background('#f9f9f9');
-		translate(width, false);
-		scale(-1, 1);
-
+		// -----prepare the scene
+		background(colors.primary);
+		// show a dark background on the webcam monitor until the webcam feed starts
+		monitor.background(0);
+		// render video on the monitor canvas and center it
 		if (sample) {
-			// vs is 500x470 but feed is 627x470
-			vf.image(sample, -50, 0);
+			monitor.push();
+			mirror(monitor);
+			monitor.image(sample, 180+par.videoSync, 0);
+			monitor.pop();
 		}
-
+		// -----live poses
+		push();
+		mirror();
 		if (poses) {
 			if (poses[0]) {
 				let pose = poses[0].pose.keypoints;
+				let skeleton = poses[0].skeleton;
+				// Anchor.chasePose(pose);
 
-				// Draw skeleton in vf
-				if (!preroll && par.showHUD) previewSkeleton(poses[0]);
+				// -----setup
+				// show the posenet skeleton on the monitor canvas
+				if (skeleton[0] && !preroll) previewSkeleton();
+				// updates proportions in global variables
+				// deriveProportions(pose);
+				// -----
+				// -----record shape
+				// add frame to recording
+				if (rec) recordShape1(pose);
 
-				// Draw pose for reference
-				// if (par.showPose) {
-				// 	push();
-				// 	stroke('red');
-				// 	strokeWeight(10);
-				// 	pose.forEach(p => {
-				// 		point(p.position.x, p.position.y);
-				// 	});
-				// 	pop();
-				// }
-
-				// Draw expanded points for reference
-				if (par.showExpanded) {
-					push();
-					stroke('paleturquoise');
-					strokeWeight(5);
-					expanded.forEach(p => {
-						point(p[0], p[1]);
-					});
-					pop();
-				}
-
-				deriveProportions(pose);
-
-				if (rec) recordPose(pose);
-
-				if (!full) drawShape(pose);
+				// -----
+				// -----play live shape
+				// play a live shape when there is no recording
+				if (!full) makeShape1(pose);
 			}
 		}
+		// -----
+		// -----replay recorded shape
+		if (full && !preroll && !rec) replayShape1();
+		// -----preroll
+		// preroll plays a countdown on the monitor before recording starts
+		// loop recording (if available)
+		if (preroll) playPreroll();
+		pop();
 
-		playPreroll();
-
-		if (play && !preroll) playShape(history1);
-		if (par.frameRate) fps();
+		// -----admin
+		// shows framerate in the corner of the canvas for debugging purposes
+		if (par.frameRate || par.debug) fps();
 	};
 }
 
-function playShape(history) {
-	// Use the current frame counter as an iterator for looping through the recorded array
-	let cp = frameCount % history.length;
-	drawShape(history[cp]);
-}
-
-// Draws an outline based on posenet keypoints
-function drawShape(points) {
-	// console.log('drawShape',points)
-	retargetAnchorsFromPose(points);
-	expanded = bodyNet(anchors);
-	hullSet = hull(expanded, par.roundness1);
-
-	// Looks better than endShape(CLOSE)
+// -----shape pipeline: draw basic shape based on pose data
+// Anchors target points and stabilize jerky movements and posenet quirks.
+// Expanded shapes are drawn around anchors to form a body around the
+// skeleton, points based on those shapes are added to the array. Convex hull
+// is calculated from all points to determine outline path (Roundness is the
+// concavity paramater, how tightly the hull wraps around the points.)
+// TRY. Create additional expansion points around torso and between limb points
+function makeShape1(pose) {
+	Anchor.chasePose(pose);
+	let expanded = [];
+	expanded = expanded.concat(anchors.nose.ellipsify(3));
+	expanded = expanded.concat(anchors.leftEar.ellipsify());
+	expanded = expanded.concat(anchors.rightEar.ellipsify());
+	expanded = expanded.concat(anchors.leftShoulder.ellipsify(2));
+	expanded = expanded.concat(anchors.rightShoulder.ellipsify(2));
+	expanded = expanded.concat(anchors.leftElbow.ellipsify());
+	expanded = expanded.concat(anchors.rightElbow.ellipsify());
+	expanded = expanded.concat(anchors.leftWrist.ellipsify());
+	expanded = expanded.concat(anchors.rightWrist.ellipsify());
+	expanded = expanded.concat(anchors.leftHip.ellipsify(2));
+	expanded = expanded.concat(anchors.rightHip.ellipsify(2));
+	expanded = expanded.concat(anchors.leftKnee.ellipsify());
+	expanded = expanded.concat(anchors.rightKnee.ellipsify());
+	expanded = expanded.concat(anchors.leftAnkle.ellipsify());
+	expanded = expanded.concat(anchors.rightAnkle.ellipsify());
+	let hullSet = hull(expanded, par.step1Roundness);
+	// a hack, but it looks better than just doing endShape(CLOSE)
 	hullSet.push(hullSet[1]);
 	hullSet.push(hullSet[0]);
+	// remap to canvas and apply padding
+	let padded = remapFromPose(hullSet);
+	// -----
+	// -----final render call
+	if (!par.hideShape) renderShape1(padded);
+	// -----reference shapes
+	if (par.showExpanded || par.debug)
+		drawRef(remapFromPose(expanded), 'paleturquoise', 5);
+	if (par.showHullset || par.debug) drawRef(remapFromPose(hullSet), 'cyan', 5);
+	// (anchors draw their own reference after retaregtting)
+}
 
-	let padded = [];
-
-	hullSet.forEach(p => {
-		padded.push([
-			remap(p[0], par.sampleWidth, width, par.padding),
-			remap(p[1], par.sampleHeight, height, par.padding),
-		]);
-	});
-
+// draw final shape outline
+function renderShape1(shape) {
 	push();
 	stroke(0);
 	strokeWeight(par.shapeStrokeWeight);
 	noFill();
 	beginShape();
-	padded.forEach(p => {
+	shape.forEach(p => {
 		curveVertex(p[0], p[1]);
 	});
-
 	endShape();
 	pop();
 }
 
-function bodyNet(pose) {
-	let newArr = [];
-
-	// We'll use these later for the torso
-	let l1, l2, r1, r2;
-
-	// expandEllipse(point, 50, 50, 52)
-	//
-	// The first argument is the point to expand
-	// The next two arguments are the minimum and maximum radius for the circle
-	// (by default both are 50 so the size is fixed. If there's a range, it will
-	// slowly move between the two extremes at random)
-	// The last argument is the distance between each point in angles
-	// (for example, an angle distance of 1 will add 360 points)
-
-	pose.forEach((p, i) => {
-		switch (p.part) {
-			case 'nose':
-				newArr = newArr.concat(expandEllipse(p, 80,95,20));
-				break;
-			case 'leftEar':
-			case 'rightEar':
-				newArr = newArr.concat(expandEllipse(p, 20,35));
-				break;
-			case 'leftEye':
-			case 'rightEye':
-				break;
-			case 'leftShoulder':
-				l1 = createVector(p.position.x, p.position.y);
-				newArr = newArr.concat(expandEllipse(p, 20,35));
-				break;
-			case 'rightShoulder':
-				r1 = createVector(p.position.x, p.position.y);
-				newArr = newArr.concat(expandEllipse(p));
-				break;
-			case 'leftElbow':
-			case 'rightElbow':
-				newArr = newArr.concat(expandEllipse(p, 70, 96));
-				break;
-			case 'leftWrist':
-			case 'rightWrist':
-			case 'leftHip':
-				l2 = createVector(p.position.x, p.position.y);
-				newArr = newArr.concat(expandEllipse(p));
-				break;
-			case 'rightHip':
-				r2 = createVector(p.position.x, p.position.y);
-				newArr = newArr.concat(expandEllipse(p, 70, 96, 20));
-				break;
-			case 'leftKnee':
-			case 'rightKnee':
-				newArr = newArr.concat(expandEllipse(p, 70, 96, 20));
-				break;
-			case 'leftAnkle':
-			case 'rightAnkle':
-			default:
-				newArr = newArr.concat(expandEllipse(p));
-				break;
-		}
-	});
-
-	// fill in the torso area so the convex hull algorithm has more to work with
-	let leftSide = p5.Vector.lerp(l1, l2, 0.5);
-	let rightSide = p5.Vector.lerp(r1, r2, 0.5);
-	let middle1 = p5.Vector.lerp(l1, r1, 0.5);
-	let middle2 = p5.Vector.lerp(l2, r2, 0.5);
-
-	newArr = newArr.concat(expandEllipseXY(leftSide.x, leftSide.y, 50, 50, 54));
-	newArr = newArr.concat(expandEllipseXY(rightSide.x, rightSide.y, 50, 50, 54));
-	newArr = newArr.concat(expandEllipseXY(middle1.x, middle1.y, 50, 50, 54));
-	newArr = newArr.concat(expandEllipseXY(middle2.x, middle2.y, 50, 50, 54));
-
-	return newArr;
+// replays a shape from history
+// use frameCounter as an iterator for looping through the recorded array
+function replayShape1() {
+	// console.log('replayShape1:', history1)
+	let i = frameCount % history1.length;
+	// let pose = Object.entries(history1[i]);
+	makeShape1(history1[i]);
 }
 
-function recordPose(points) {
-	history1.push(points);
-	setCounter(par.framesToRecord - history1.length);
-	if (history1.length === par.framesToRecord) finishRecording();
-}
-
-function expandEllipseXY(px, py, minr, maxr, angles) {
-	if (!angles) angles = 30;
-	let newX, newY;
-	let newArr = [];
-	for (let a = 0; a < 360; a += angles) {
-		let r = random(minr, maxr);
-		newX = px + r * cos(a);
-		newY = py + r * sin(a);
-		newArr.push([newX, newY]);
-	}
-	// cl(newArr)
-	return newArr;
-}
-
-function expandEllipse(point, minr = 50, maxr = 50, inc = 60) {
-	// console.log('expandEllipse ', point, minr, maxr, inc);
-	let x, y;
-	let px, py;
-	let newArr = [];
-	if (point.position) {
-		px = point.position.x;
-		py = point.position.y;
-	} else if (point[0]) {
-		px = point[0];
-		py = point[1];
-	}
-	for (let a = 0; a < 360; a += inc) {
-		let offset = (frameCount % 10) / 1000;
-		let r = map(noise(offset), 0, 1, minr, maxr);
-		x = px + r * cos(a);
-		y = py + r * sin(a);
-		newArr.push([x, y]);
-	}
-	// cl(newArr)
-	return newArr;
-}
-
-function previewSkeleton(pose) {
-	let skeleton;
-	if (pose) {
-		if (pose.skeleton[0]) {
-			skeleton = pose.skeleton;
-
-			// For every skeleton, loop through all body connections
-			for (let j = 0; j < skeleton.length; j++) {
-				let partA = skeleton[j][0];
-				let partB = skeleton[j][1];
-				vf.push();
-				vf.translate(-50, 0);
-				vf.stroke('#AFEEEE');
-				vf.line(
-					partA.position.x,
-					partA.position.y,
-					partB.position.x,
-					partB.position.y
-				);
-				vf.ellipse(partA.position.x, partA.position.y, 5);
-				vf.ellipse(partB.position.x, partB.position.y, 5);
-				vf.pop();
-			}
-		}
+// stores pose in history1, this will be the base for the shape in later steps
+// updates counter with remaining frames
+// stops recording when recordFrames is reached
+function recordShape1(data) {
+	history1.push(data);
+	updateCounter(par.recordFrames - history1.length);
+	if (history1.length > par.recordFrames) {
+		dbg('recorded ' + par.recordFrames + ' frames');
+		finishRecording();
 	}
 }
 
-// Shows a 3...2..1... animation on the second canvas
+// Shows a posenet skeleton on the webcam monitor
+// TRY. either figure out how to make posenet show the skeleton with lower confidence,
+// or build it manually based on the points that are alawys available. Plus some basic
+// paramaters like minimum/maximum bone length (relative to some general proportion?)
+function previewSkeleton() {
+	let skeleton = poses[0].skeleton
+	// For every skeleton, loop through all body connections
+	for (let i = 0; i < skeleton.length; i++) {
+		let partA = skeleton[i][0];
+		let partB = skeleton[i][1];
+		monitor.push();
+		mirror(monitor)
+		// realign with mirrored video
+		monitor.translate(200,0);
+		monitor.stroke('#AFEEEE');
+		monitor.line(
+			partA.position.x,
+			partA.position.y,
+			partB.position.x,
+			partB.position.y
+		);
+		monitor.ellipse(partA.position.x, partA.position.y, 5);
+		monitor.ellipse(partB.position.x, partB.position.y, 5);
+		monitor.pop();
+	}
+}
+
+// shows a 3...2..1... animation on the second canvas
+// crude animation timing based on modulo of the frameCounter, but seems to work well enough
 function playPreroll() {
-	if (preroll) {
-		let counter = floor(map(prerollCounter, 0, par.mississippi, 4, 0));
-		if (counter > 0) {
-			vf.push();
-			vf.translate(vf.width, 0);
-			vf.scale(-1, 1);
-			vf.noStroke();
-			vf.fill(0, 200);
-			vf.rect(0, 0, vf.width, vf.height);
-			vf.fill(255);
-			vf.textSize(180);
-			vf.textAlign(CENTER, CENTER);
-			vf.text(counter, vf.width / 2, vf.height / 2);
-			vf.pop();
-			prerollCounter++;
-		} else {
-			startRecording();
-		}
+	let counter = floor(map(prerollCounter, 0, par.preRecCounterFrames, 3.9, 0));
+	if (counter > 0) {
+		monitor.push();
+		monitor.noStroke();
+		monitor.fill(0, 200);
+		monitor.rect(0, 0, monitor.width, monitor.height);
+		monitor.fill(255);
+		monitor.textSize(180);
+		monitor.textAlign(CENTER, CENTER);
+		monitor.text(counter, monitor.width / 2, monitor.height / 2);
+		monitor.pop();
+		prerollCounter++;
+	} else {
+		dbg('preroll calling startRecording()');
+		startRecording();
 	}
 }
