@@ -5,8 +5,8 @@ class Paramaterize {
 		this.preRecCounterFrames = 240; // 240 frames is about 4 seconds
 
 		// ----- general
-		this.frameRate = 60; // TODO do I still need this?
-		this.showFrameRate = true; // TODO do I still need this?
+		this.frameRate = 60; 
+		this.showFrameRate = true; 
 		this.videoSync = 0;
 
 		// -----anchors
@@ -63,7 +63,7 @@ class Paramaterize {
 		this.emotionalScale = 0.5;
 		this.noseOnly = false;
 		this.useSamplePose = true;
-		this.debug = true;
+		this.debug = false;
 		this.phaseMultiplier = 0.1;
 		this.emotionalIntensity = 10;
 		this.noiseMax = 1;
