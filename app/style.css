@@ -259,6 +259,18 @@ button.counter {
 	border-color: var(--black);
 }
 
+.light button.primary {
+	background-color: var(--dark) !important;
+	color: var(--light);
+	border-color: var(--dark);
+}
+
+.light button.primary:hover {
+	background-color: var(--dark) !important;
+	color: var(--primary) !important;
+	border-color: var(--dark);
+}
+
 /* ==Helpers ************************************************* */
 /* ************************************************************** */
 

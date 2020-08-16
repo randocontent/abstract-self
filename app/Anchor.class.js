@@ -7,11 +7,13 @@ class Anchor {
 		this.referenceShapeRadius = 12;
 		this.part = part;
 		this.zoff = 0.0;
-		this.phase = 0.0;
+		this.starPhase = 0.0;
+		this.blobPhase = 0.0
 		this.starXOff = 0.0;
 		this.starYOff = 0.0;
 		this.ellipseXOff = 0.0;
 		this.ellipseYOff = 0.0;
+		this.seed = random(1000);
 		this.blobSeed = random(1000);
 		this.starSeed1 = random(1000);
 		this.starSeed2 = random(1000);
@@ -115,6 +117,7 @@ class Anchor {
 	}
 
 	blobify(modifier=1) {
+		if (modifier === 0) { return []}
 		modifier = modifier * par.blobModifier
 		let px = this.position.x;
 		let py = this.position.y;
@@ -122,10 +125,10 @@ class Anchor {
 		let newArr = [];
 
 		for (let a = 0; a < 360; a += par.blobAngleInc) {
-			let xoff = map(cos(a + this.phase), -1, 1, 0, par.blobMaxXNoise);
-			let yoff = map(sin(a + this.phase), -1, 1, 0, par.blobMaxYNoise);
+			let xoff = map(cos(a + this.blobPhase), -1, 1, 0, par.blobMaxXNoise);
+			let yoff = map(sin(a + this.blobPhase), -1, 1, 0, par.blobMaxYNoise);
 
-			noiseSeed(this.blobSeed);
+			noiseSeed(this.seed);
 			let n = noise(xoff, yoff, this.zoff);
 
 			let r = map(n, 0, 1, par.blobMinRadius, par.blobMaxRadius)*modifier; 
@@ -134,12 +137,13 @@ class Anchor {
 
 			newArr.push([x, y]);
 		}
-		this.phase += par.blobPhaseShift;
-		this.zoff = par.blobZOff;
+		this.blobPhase += par.blobPhaseShift;
+		this.zoff += par.blobZOff;
 		return newArr;
 	}
 
 	starify(modifier = 1) {
+		if (modifier === 0) { return []}
 		modifier = modifier * par.starModifier
 		let x = this.position.x;
 		let y = this.position.y;
@@ -155,13 +159,13 @@ class Anchor {
 		let angle = TWO_PI / npoints;
 		let halfAngle = angle / 2.0;
 		for (let a = 0; a < TWO_PI; a += angle) {
-			noiseSeed(this.starSeed1);
+			noiseSeed(this.seed);
 			let sx =
 				map(noise(this.starXOff, this.starYOff), 0, 1, -par.starNoiseRange, par.starNoiseRange) +
 				x +
 				cos(a) * radius2;
 			this.starXOff += offStep;
-			noiseSeed(this.starSeed2);
+			noiseSeed(this.seed);
 			let sy =
 				map(noise(this.starXOff, this.starYOff), 0, 1, -par.starNoiseRange, par.starNoiseRange) +
 				y +

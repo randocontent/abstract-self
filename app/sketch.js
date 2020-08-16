@@ -14,8 +14,8 @@ let history2 = [];
 // a final shape type is required for drawing
 let history3 = [];
 // the final shape type is the most common expression from history2
-// TODO should this be a global variable?
 let finalShapeType;
+let finalScale;
 
 // will hold the canvas
 // contains the canvas DOM element in .canvas
@@ -190,7 +190,7 @@ function setup() {
 	select('#begin-button').mousePressed(() => {
 		mgr.showScene(scene01);
 	});
-	frameRate(par.frameRate)
+	frameRate(par.frameRate);
 	// Very basic routing
 	sceneRouter();
 }
@@ -269,42 +269,6 @@ function gotFaces(error, result) {
 	if (!isFaceapiStandby) faceapi.detect(gotFaces);
 }
 
-// // Gets a posenet pose and returns distance between two points
-// function poseDist(pose, a, b) {
-// 	let left = createVector(pose[a].position.x, pose[a].position.y);
-// 	let right = createVector(pose[b].position.x, pose[b].position.y);
-// 	return p5.Vector.dist(left, right);
-// }
-
-// // Gets a posenet pose and returns eye distance
-// function checkEyeDist(pose) {
-// 	// Pose will look like [{part:'nose',position: {x: 0,y:0},score:.99}]
-// 	// 1	leftEye, 2	rightEye
-// 	let left = createVector(pose[1].position.x, pose[1].position.y);
-// 	let right = createVector(pose[2].position.x, pose[2].position.y);
-// 	return p5.Vector.dist(left, right);
-// }
-
-function drawAbstractShape() {
-	if (par.fillShape) {
-		stroke(0);
-		strokeWeight(par.shapeStrokeWeight);
-		fill(255);
-	} else {
-		stroke(0);
-		strokeWeight(par.shapeStrokeWeight);
-		noFill();
-	}
-	beginShape();
-	anchors.forEach(a => {
-		if (par.showCurves) {
-			curveVertex(a.position.x, a.position.y);
-		} else {
-			vertex(a.position.x, a.position.y);
-		}
-	});
-	endShape(CLOSE);
-}
 
 function startPreroll() {
 	preroll = true;
@@ -318,34 +282,18 @@ function noPreroll() {
 	startRecording();
 }
 
-// TODO: make sure cancel still works though...
-// function cancelRecording() {
-// 	resetRecVariables();
-// 	recButton.removeClass('rec');
-// 	recButton.html('Record');
-// 	if (mgr.isCurrent(scene01)) {
-// 		recButton.mousePressed(() => {
-// 			startPreroll();
-// 		});
-// 	} else {
-// 		recButton.mousePressed(() => {
-// 			noPreroll();
-// 		});
-// 	}
-// }
-
 function startRecording() {
 	full = false;
 	preroll = false;
 	prerollCounter = 0;
 	rec = true;
-	redoButton.hide()
-	nextButton.hide()
-	recButton.show()
+	redoButton.hide();
+	nextButton.hide();
+	recButton.show();
 	recButton.addClass('rec');
 	recButton.html('Stop');
 	recButton.mousePressed(finishRecording);
-	counterButton.show()
+	counterButton.show();
 }
 
 function updateCounter(remainingFrames) {
@@ -354,7 +302,6 @@ function updateCounter(remainingFrames) {
 }
 
 function finishRecording() {
-	// TODO localStorage?
 	preroll = false;
 	prerollCounter = 0;
 	rec = false;
@@ -367,7 +314,6 @@ function finishRecording() {
 
 // Used when stopping during the preroll, before there's any recording at all
 function cancelRecording() {
-	// TODO localStorage?
 	preroll = false;
 	prerollCounter = 0;
 	rec = false;
@@ -406,7 +352,7 @@ function fps() {
 	push();
 	textSize(14);
 	fill(200);
-	text(floor(frameRate()), width-20, height - 20);
+	text(floor(frameRate()), width - 20, height - 20);
 	pop();
 }
 
@@ -445,14 +391,19 @@ function dbg(message) {
 
 // remaps points from the sample dimensions to the canvas dimensions
 // applies padding, which also centers and scales the shape
-function remapFromPose(pointArr) {
+function remapFromPose(pointArr,padding) {
 	let sampleWidth = sample.width ? sample.width : 640;
 	let sampleHeight = sample.height ? sample.height : 480;
-	let padding = par.padding ? par.padding : 50;
+	let pad
+	if (padding) {
+		pad = padding
+	} else {
+		pad = par.padding;
+	}
 	let remapped = pointArr.map(point => {
 		return [
-			remap(point[0], sampleWidth, width, padding),
-			remap(point[1], sampleHeight, height, padding),
+			remap(point[0], sampleWidth, width, pad),
+			remap(point[1], sampleHeight, height, pad),
 		];
 	});
 	return remapped;
@@ -461,4 +412,30 @@ function remapFromPose(pointArr) {
 // remaps a single number
 function remap(point, range, target, padding) {
 	return map(point, 0, range, padding, target - padding);
+}
+
+function rewireUI(sceneIndex) {
+	if (!sceneIndex) {
+		sceneIndex = mgr.findSceneIndex(mgr.scene.fnScene);
+	}
+	// rehook and reset and show record button
+	recButton = select('#record-button-0' + sceneIndex);
+	recButton.html('Record');
+	recButton.removeClass('rec');
+	recButton.mousePressed(() => startRecording());
+	recButton.show();
+	// reset and show counter
+	counterButton = select('#counter-0' + sceneIndex);
+	// update recording time based on recording frames. assumes a recording time
+	// of less than 60 seconds...
+	counterButton.html('00:' + par.recordFrames / 60);
+	counterButton.show();
+	// rehook button for this scene, and hide for now
+	redoButton = select('#redo-0' + sceneIndex);
+	redoButton.mousePressed(() => mgr.showScene(mgr.scene.fnScene));
+	redoButton.hide();
+	// rehook next button for this scene, and hide for now
+	nextButton = select('#next-button-0' + sceneIndex);
+	nextButton.mousePressed(() => mgr.showNextScene());
+	nextButton.hide();
 }
