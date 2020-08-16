@@ -85,7 +85,7 @@ function scene00() {
 			monitor.textAlign(CENTER, CENTER);
 			// monitor.text('Loading', width / 2, height - 34);
 		}
-		if (par.frameRate || par.debug) {
+		if (par.showFrameRate || par.debug) {
 			// mirror();
 			fps();
 			// mirror(); // Yeah, perfectly reasonable solution...

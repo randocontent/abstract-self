@@ -25,7 +25,7 @@ class Paramaterize {
 		this.showHull = false;
 		this.fillShape = false;
 		this.showCurves = true;
-		this.showFrameRate = true;
+		this.showFrameRate = false;
 
 
 		// -----01 ellipse
