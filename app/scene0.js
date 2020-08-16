@@ -78,14 +78,14 @@ function scene00() {
 			fill('#595959');
 			textAlign(CENTER, CENTER);
 			// text('Loading', width / 2, height -34);
-			monitor.background(color.dark);
+			monitor.background(colors.dark);
 			monitor.fill('#393939');
 			monitor.ellipse(width / 2, height / 2, l);
 			monitor.fill('#595959');
 			monitor.textAlign(CENTER, CENTER);
 			// monitor.text('Loading', width / 2, height - 34);
 		}
-		if (par.frameRate|| par.debug) {
+		if (par.frameRate || par.debug) {
 			// mirror();
 			fps();
 			// mirror(); // Yeah, perfectly reasonable solution...

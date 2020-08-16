@@ -150,7 +150,7 @@ const RKNEE = 14;
 const LANKLE = 15;
 const RANKLE = 16;
 
-const colors = {
+let colors = {
 	primary: '#f9f9f9',
 	dark: '#101010'
 };

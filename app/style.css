@@ -171,6 +171,7 @@ button.counter {
 	display: grid;
 	grid-template-columns: 350px 200px 350px;
 	grid-template-areas:
+		'header header header'
 		'sidebar . abstract'
 		'controls controls controls';
 }
@@ -189,6 +190,30 @@ button.counter {
 	height: 100%;
 }
 
+.nav-header {
+	grid-area: header;
+}
+
+.nav-header {
+	display: flex;
+	justify-items: stretch;
+	align-content: space-between;
+	min-width: 100%;
+}
+
+
+.nav-header section {
+width: 50%;
+font-size: 14px;
+font-weight: bold;
+margin-left: -100px;
+}
+
+.nav-header section:last-child {
+	text-align: right;
+	margin-left: 200px;
+	margin-right: -100px;
+}
 #scene-00 .sidebar {
 	grid-area: sidebar;
 	margin-bottom: 5rem;

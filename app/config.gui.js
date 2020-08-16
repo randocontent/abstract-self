@@ -1,6 +1,6 @@
 class Paramaterize {
 	constructor() {
-		this.scene = '4';
+		this.scene = '0';
 		this.debug = false;
 
 		// ----- general
@@ -219,4 +219,4 @@ f003.add(par, 'voiceScaleModifier');
 f003.add(par, 'voiceMinPadding');
 f003.add(par, 'voiceMaxPadding');
 
-gui.close();
+gui.hide()
