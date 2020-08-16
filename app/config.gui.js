@@ -1,7 +1,7 @@
 class Paramaterize {
 	constructor() {
 		this.scene = '4';
-		this.debug = true;
+		this.debug = false;
 
 		// ----- general
 		this.frameRate = 60;
@@ -11,24 +11,22 @@ class Paramaterize {
 		this.videoSync = 0;
 		this.shapeStrokeWeight = 3.5;
 		this.padding = 200;
-
-		// TODO
+		this.gifFrames = 100
 		this.noseYOffset = 155;
-
-		// -----anchors
 		this.topSpeed = 20;
 		this.maxAcc = 10;
 
-		// -----referenc shapes
+		// -----reference shapes
 		this.hideShape = false;
 		this.referenceAnchorRadius = 10;
-		this.shapeStrokeWeight = 3.5;
 		this.showExpanded = false;
 		this.showAnchors = false;
 		this.showPose = false;
 		this.showHull = false;
 		this.fillShape = false;
 		this.showCurves = true;
+		this.showFrameRate = true;
+
 
 		// -----01 ellipse
 		this.s01UseBlob = false;
@@ -122,15 +120,20 @@ sceneGui.onChange(() => sceneRouter());
 gui.add(par, 'debug');
 
 let f00 = gui.addFolder('General');
-f00.add(par, 'frameRate', 1);
-// gui.add(par, 'showFrameRate');
-f00.add(par, 'recordFrames');
-f00.add(par, 'preRecCounterFrames');
-f00.add(par, 'videoSync');
-f00.add(par, 'topSpeed');
-f00.add(par, 'maxAcc');
+f00.add(par, 'frameRate')
+f00.add(par, 'recordFrames')
+f00.add(par, 'preRecCounterFrames')
+f00.add(par, 'showFrameRate')
+f00.add(par, 'videoSync')
+f00.add(par, 'shapeStrokeWeight')
+f00.add(par, 'padding')
+f00.add(par, 'gifFrames')
+f00.add(par, 'noseYOffset')
+f00.add(par, 'topSpeed')
+f00.add(par, 'maxAcc')
 
 let fr = gui.addFolder('Reference');
+fr.add(par,'showFrameRate')
 fr.add(par, 'hideShape');
 fr.add(par, 'showExpanded');
 fr.add(par, 'showAnchors');

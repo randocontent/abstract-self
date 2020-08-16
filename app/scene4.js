@@ -23,26 +23,26 @@ function scene04() {
 		}
 
 		// check results of previous steps
-		if (history2) {
-			finalShapeType = analyzeExpressionHistory(history2);
-		} else {
-			finalShapeType = 'softer'
-		}
-		if (history3) {
-			finalScale = analyzeVoiceHistory(history3)
-		} else {
-			finalScale = .2
-		}
+		history2
+			? (finalShapeType = analyzeExpressionHistory(history2))
+			: (finalShapeType = 'softer');
+		history3
+			? (finalScale = analyzeVoiceHistory(history3))
+			: (finalScale = 0.2);
 
 		// -----page
 		select('body').addClass('light');
 		sketchCanvas.parent('#canvas-04');
 		resizeCanvas(820, 820);
+		background(colors.primary);
+
+		gifc = createGraphics(400, 400);
+		gifc.id('gif-canvas');
+		gifc.hide()
 
 		// -----ui
 		recButton = select('#save-button');
-		// recButton.addClass('primary')
-		// recButton.hide();
+		recButton.mousePressed(startGifRecording);
 		restartButton = select('#restart-button');
 		restartButton.mousePressed(refreshPage);
 
@@ -58,8 +58,22 @@ function scene04() {
 		translate(width, 0);
 		scale(-1, 1);
 
-		// Replay the final resulting shape
-		replayShape3(history1, finalShapeType, finalScale);
+		// -----replay final shape
+		
+		if (rec) {
+			replayShape3(history1, finalShapeType, finalScale, true);
+			capturer.capture(document.getElementById('gif-canvas'));
+			gifFrames++;
+		} else {
+			replayShape3(history1, finalShapeType, finalScale);
+		}
+
+		if (gifFrames >= par.gifFrames) {
+			rec = false;
+			capturer.stop()
+			capturer.save();
+			mgr.showScene(mgr.scene.fnScene);
+		}
 
 		// -----admin
 		if (par.frameRate || par.debug) {
@@ -73,4 +87,34 @@ function scene04() {
 
 function refreshPage() {
 	location.replace('/');
+}
+
+function startGifRecording() {
+	rec = true;
+	gifFrames++;
+	// -----gif recorder
+	capturer.start();
+	capturer.capture(document.getElementById('gif-canvas'));
+}
+
+function renderGifShape(shape, shapeType) {
+	gifc.background(colors.primary)
+	gifc.push();
+	gifc.stroke(0);
+	gifc.strokeWeight(par.shapeStrokeWeight/2);
+	gifc.noFill();
+	gifc.beginShape();
+	if (shapeType === 'softer') {
+		shape.forEach(p => {
+			gifc.curveVertex(p[0] / 2, p[1] / 2);
+		});
+	} else if (shapeType === 'sharper') {
+		shape.forEach(p => {
+			gifc.vertex(p[0] / 2, p[1] / 2);
+		});
+	} else {
+		console.error('bad shape type from renderShape2');
+	}
+	gifc.endShape();
+	gifc.pop();
 }

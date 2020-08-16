@@ -69,7 +69,7 @@ function scene00() {
 			}
 		} else {
 			// loading animation while we wait
-			background('#101010');
+			background(colors.dark);
 			let r = cos(frameCount) * 50;
 			let l = sin(frameCount) * 50;
 			fill('#393939');
@@ -77,7 +77,7 @@ function scene00() {
 			fill('#595959');
 			textAlign(CENTER, CENTER);
 			// text('Loading', width / 2, height -34);
-			monitor.background('#101010');
+			monitor.background(color.dark);
 			monitor.fill('#393939');
 			monitor.ellipse(width / 2, height / 2, l);
 			monitor.fill('#595959');

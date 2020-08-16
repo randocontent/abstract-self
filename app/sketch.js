@@ -1,6 +1,11 @@
-let colors = {
-	primary: '#f9f9f9',
-};
+let capturer = new CCapture({
+	framerate: 24, // TODO: investigate further
+	verbose: false,
+	format: 'gif',
+	workersPath: './lib/',
+});
+let gifFrames = 0;
+let gifc;
 
 // scene manager
 let mgr;
@@ -26,8 +31,6 @@ let sketchCanvas;
 let monitor;
 // webcam video feed
 let sample;
-// let sampleWidth;
-// let sampleHeight;
 
 let phase = 0.0;
 let zoff = 0.0;
@@ -66,7 +69,7 @@ let posenetOptions = {
 	maxPoseDetections: 1,
 };
 
-// ratios for shape calibration (TODO)
+// ratios for shape calibration
 let eyeDist;
 let shoulderDist;
 let hipDist;
@@ -89,16 +92,9 @@ let micLevel;
 let spectrum;
 let ampl;
 
-// let gifc = new CCapture({
-// 	framerate: 24, // TODO: investigate further
-// 	verbose: true,
-// 	format: 'gif',
-// 	workersPath: './lib/',
-// });
 
 // anchors with a basic physics engine to build the shape around
 // the anchors object stores anchors keyed by part name
-// TODO: do we still need the name in the anchor itself?
 let anchors = {
 	nose: '',
 	leftEye: '',
@@ -120,8 +116,6 @@ let anchors = {
 };
 let noseAnchor;
 
-// TODO: use to build a skeleton when posenet doesn't provide one
-// (TODO: is there a setting to tweak in posenet to fix that?)
 const SKELETON = [
 	[11, 5],
 	[7, 5],
@@ -156,12 +150,14 @@ const RKNEE = 14;
 const LANKLE = 15;
 const RANKLE = 16;
 
+const colors = {
+	primary: '#f9f9f9',
+	dark: '#101010'
+};
+
 p5.disableFriendlyErrors = true;
 
 function setup() {
-	// required for making audio work for the microphone (in scene3)
-	getAudioContext().suspend();
-	// ----- dat.gui
 	// ----- scenemanager
 	mgr = new SceneManager();
 	mgr.addScene(scene00);
@@ -193,6 +189,8 @@ function setup() {
 	frameRate(par.frameRate);
 	// Very basic routing
 	sceneRouter();
+	// required for making audio work for the microphone (in scene3)
+	getAudioContext().suspend();
 }
 
 function draw() {
@@ -236,7 +234,6 @@ function startMic() {
 
 function startWebcam() {
 	sample = createCapture(VIDEO, webcamReady);
-	// TODO - too ugly
 }
 
 function webcamReady() {

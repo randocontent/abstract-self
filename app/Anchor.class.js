@@ -8,7 +8,7 @@ class Anchor {
 		this.part = part;
 		this.zoff = 0.0;
 		this.starPhase = 0.0;
-		this.blobPhase = 0.0
+		this.blobPhase = 0.0;
 		this.starXOff = 0.0;
 		this.starYOff = 0.0;
 		this.ellipseXOff = 0.0;
@@ -29,8 +29,8 @@ class Anchor {
 
 	show() {
 		// Probably a very bad idea...
-	let sampleWidth = sample.width ? sample.width : 640;
-	let sampleHeight = sample.height ? sample.height : 480;
+		let sampleWidth = sample.width ? sample.width : 640;
+		let sampleHeight = sample.height ? sample.height : 480;
 		let x = remap(this.position.x, sampleWidth, width, par.padding);
 		let y = remap(this.position.y, sampleHeight, height, par.padding);
 		push();
@@ -48,13 +48,11 @@ class Anchor {
 		this.target = v;
 	}
 
-	// Runs behaviors
 	behaviors() {
 		let goto = this.arrive(this.target);
 		this.applyForce(goto);
 	}
 
-	// Applies forces returned by the bejavior functions
 	applyForce(f) {
 		this.acc.add(f);
 	}
@@ -116,9 +114,11 @@ class Anchor {
 		return newArr;
 	}
 
-	blobify(modifier=1) {
-		if (modifier === 0) { return []}
-		modifier = modifier * par.blobModifier
+	blobify(modifier = 1) {
+		if (modifier === 0) {
+			return [];
+		}
+		modifier = modifier * par.blobModifier;
 		let px = this.position.x;
 		let py = this.position.y;
 		let x, y;
@@ -131,7 +131,7 @@ class Anchor {
 			noiseSeed(this.seed);
 			let n = noise(xoff, yoff, this.zoff);
 
-			let r = map(n, 0, 1, par.blobMinRadius, par.blobMaxRadius)*modifier; 
+			let r = map(n, 0, 1, par.blobMinRadius, par.blobMaxRadius) * modifier;
 			x = px + r * cos(a);
 			y = py + r * sin(a);
 
@@ -143,13 +143,15 @@ class Anchor {
 	}
 
 	starify(modifier = 1) {
-		if (modifier === 0) { return []}
-		modifier = modifier * par.starModifier
+		if (modifier === 0) {
+			return [];
+		}
+		modifier = modifier * par.starModifier;
 		let x = this.position.x;
 		let y = this.position.y;
 		let newArr = [];
 
-		let offStep = par.starNoiseStep
+		let offStep = par.starNoiseStep;
 		let radius1 = par.starInternalRadius * modifier;
 		let radius2 = par.starExternalRadius * modifier;
 		let npoints = par.starPoints;
@@ -161,13 +163,25 @@ class Anchor {
 		for (let a = 0; a < TWO_PI; a += angle) {
 			noiseSeed(this.seed);
 			let sx =
-				map(noise(this.starXOff, this.starYOff), 0, 1, -par.starNoiseRange, par.starNoiseRange) +
+				map(
+					noise(this.starXOff, this.starYOff),
+					0,
+					1,
+					-par.starNoiseRange,
+					par.starNoiseRange
+				) +
 				x +
 				cos(a) * radius2;
 			this.starXOff += offStep;
 			noiseSeed(this.seed);
 			let sy =
-				map(noise(this.starXOff, this.starYOff), 0, 1, -par.starNoiseRange, par.starNoiseRange) +
+				map(
+					noise(this.starXOff, this.starYOff),
+					0,
+					1,
+					-par.starNoiseRange,
+					par.starNoiseRange
+				) +
 				y +
 				sin(a) * radius2;
 			this.starYOff += offStep;

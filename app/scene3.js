@@ -91,7 +91,7 @@ function scene03() {
 // around anchors based on the shape type (4) Convex hull is calculated from all
 // points to determine outline path. Roundness is set based on shape type (5)
 // Mic level is applied to padding to scale the shape
-function makeShape3(pose, shapeType, micLevel) {
+function makeShape3(pose, shapeType, micLevel, gif = false) {
 	Anchor.chasePose(pose);
 	// expand and get hull based on live shape type
 	let expanded = [];
@@ -115,17 +115,20 @@ function makeShape3(pose, shapeType, micLevel) {
 	let scale = map(micLevel, 0, 1, par.voiceMinPadding, par.voiceMaxPadding);
 	let padded = remapFromPose(hullSet, scale);
 
-	if (!par.hideShape) renderShape2(padded, shapeType);
+	if (gif) {
+		renderGifShape(padded,shapeType)
+	} else {
+		if (!par.hideShape) renderShape2(padded, shapeType);
+	}
 	// -----reference shapes
 	if (par.showExpanded || par.debug)
 		drawRef(remapFromPose(expanded), 'paleturquoise', 5);
 	if (par.showHullset || par.debug) drawRef(remapFromPose(hullSet), 'cyan', 5);
 }
 
-
-function replayShape3(history, shapeType, micLevel) {
+function replayShape3(history, shapeType, micLevel, gif) {
 	let cp = frameCount % history.length;
-	makeShape3(history[cp], shapeType, micLevel);
+	makeShape3(history[cp], shapeType, micLevel, gif);
 }
 
 function recordVoice(history) {
