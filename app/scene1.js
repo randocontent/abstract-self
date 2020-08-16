@@ -7,6 +7,7 @@ function scene01() {
 		sample.size(668, 500);
 		sample.hide();
 		isFaceapiStandby = true;
+		select('body').removeClass('light');
 		// ----- reset state vars
 		history1 = [];
 		full = false;

@@ -61,6 +61,12 @@ function scene04() {
 		// -----replay final shape
 		
 		if (rec) {
+		push();
+		mirror(); // Unmirror so we can write in the right direction
+		textAlign(CENTER,CENTER);
+		textSize(24);
+		text('CREATING GIF', width / 2, height /2 );
+		pop();
 			replayShape3(history1, finalShapeType, finalScale, true);
 			capturer.capture(document.getElementById('gif-canvas'));
 			gifFrames++;
@@ -69,9 +75,9 @@ function scene04() {
 		}
 
 		if (gifFrames >= par.gifFrames) {
-			rec = false;
 			capturer.stop()
 			capturer.save();
+			//TODO: stop CCapture and resume animation
 			mgr.showScene(mgr.scene.fnScene);
 		}
 
@@ -97,6 +103,9 @@ function startGifRecording() {
 	capturer.capture(document.getElementById('gif-canvas'));
 }
 
+// Gets called by replayShape3 when recording a gif
+// Renders gif to a smaller canvas
+// No fancy mapping, just halve every value
 function renderGifShape(shape, shapeType) {
 	gifc.background(colors.primary)
 	gifc.push();

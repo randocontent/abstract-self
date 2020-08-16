@@ -5,6 +5,7 @@ function scene00() {
 		// -----clean-up
 		sample.size(668,500)
 		sample.hide();
+		select('body').removeClass('light');
 		// -----page layout
 		sketchCanvas.parent('#canvas-00');
 		resizeCanvas(350, 350);

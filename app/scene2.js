@@ -11,6 +11,8 @@ function scene02() {
 		}
 		sample.size(668, 500);
 		sample.hide();
+		select('body').removeClass('light');
+
 		// -----load a prerecordeded dataset if there's nothing from step 1
 		// dancer.js should be a posenet recording of a person dancing. It
 		// also stores skeleton data so first we're extracting just the poses
