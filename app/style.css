@@ -1,8 +1,13 @@
-/* Space Mono is a fixed-width font with four weights: 400, 400 Italic, 700, 700 Italic */
 @import url('https://fonts.googleapis.com/css2?family=Lora&family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap');
 
-body,input,button {
+body,
+input,
+button {
 	font-family: 'Space Mono', monospace;
+}
+
+#scene-03 .prompter {
+	font-family: 'Lora', serif;
 }
 
 /* ===colors */
@@ -35,6 +40,11 @@ body.light {
 	color: var(--dark);
 }
 
+p {
+	padding: 0;
+	margin: 0;
+}
+
 a,
 a:visited {
 	color: inherit;
@@ -49,11 +59,7 @@ main.container {
 	width: 1440px;
 }
 
-.intro-scene {
-	/* display: flex; */
-}
-
-.intro-scene .scene-header {
+.nav-header {
 	display: flex;
 	width: 100%;
 	font-size: 13px;
@@ -62,12 +68,12 @@ main.container {
 	letter-spacing: 3px;
 }
 
-.intro-scene .scene-header section {
-	margin: 40px;
+.nav-header section {
+	margin: 38px 40px;
 	width: 50%;
 }
 
-.intro-scene .scene-header section:last-child {
+.nav-header section:last-child {
 	text-align: right;
 }
 
@@ -87,8 +93,8 @@ main.container {
 .intro-scene .pretitle {
 	display: flex;
 	align-items: flex-end;
-	height: 125px;
-	margin-bottom: 20px;
+	height: 105px;
+	margin-bottom: 38px;
 }
 
 .intro-scene .scene-footer {
@@ -105,7 +111,7 @@ main.container {
 }
 
 .scene .sidebar .title {
-	margin-top: 26px;
+	margin-top: 38px;
 	display: flex;
 	justify-content: space-between;
 	font-size: 13px;
@@ -115,27 +121,65 @@ main.container {
 }
 
 .scene .sidebar .directions {
-	margin-top: 10px;
-	padding: 10px 40px;
+	margin-top: 22px;
+	padding: 29px 40px 31px;
 	background: var(--dark);
 	border-radius: 10px;
+	letter-spacing: 1px;
+}
+
+.light .scene .sidebar .directions {
+	background: var(--primary);
+}
+
+#scene-04 .directions {
+	padding: 41px 51px;
+	letter-spacing: normal;
+	height: 516px;
+}
+
+#scene-04 .directions p {
+	margin-bottom: 1.9rem;
 }
 
 .scene .sidebar .webcam-monitor-container {
-	margin-top: 42px;
+	margin-top: 40px;
 }
-
 
 .scene .sidebar .webcam-monitor-container div {
 	border-radius: 10px;
 }
 
+#scene-03 .prompter {
+	background-color: var(--primary);
+	color: var(--black);
+	padding: 38px 40px 42px;
+	border-radius: 10px;
+	height: 390px;
+	font-size: 20px;
+	line-height: 30px;
+	letter-spacing: 0.5px;
+}
+
+#scene-03 .prompter p {
+	margin-bottom: 1.9rem;
+}
+
 .scene .sidebar .controls {
 	display: flex;
 	justify-content: space-between;
-	margin-top: 42px
+	margin-top: 42px;
 }
 
+#scene-04 .controls {
+	flex-direction: column;
+	justify-content: flex-end;
+}
+
+#scene-04 .controls button {
+	height: 70px;
+	margin-bottom: 20px;
+}
 
 .scene .abstract {
 	margin-top: 40px;
@@ -143,6 +187,72 @@ main.container {
 
 canvas {
 	border-radius: 10px;
+}
+
+#about-page article {
+	margin: 65px 250px;
+	display: flex;
+	justify-content: space-between;
+}
+
+#about-page article .abstract {
+	width: 460px;
+	color: #f9f9f9;
+	font-family: 'Space Mono';
+	font-size: 14px;
+	font-weight: bold;
+	letter-spacing: 0.2px;
+	line-height: 22px;
+}
+
+#about-page article h1 {
+	text-transform: uppercase;
+	font-size: 18px;
+	letter-spacing: 4.15px;
+	margin-bottom: 30px;
+}
+
+#about-page article p {
+	margin-bottom: 22px;
+}
+
+#about-page hr {
+	margin: 61px 0 59px;
+}
+
+dl,
+dd,
+dt {
+	margin: 0;
+	padding: 0;
+}
+
+dd {
+	margin-bottom: 22px;
+}
+
+#about-page .sidebar {
+	display: flex;
+	flex-direction: column;
+	width: 300px;
+	margin-top: 77px;
+}
+
+#about-page .sidebar img {
+	width: 301px;
+	height: 198px;
+}
+
+figure {
+	margin: 0;
+	padding: 0;
+	margin-bottom: 110px;
+}
+
+figcaption {
+	margin-top: 9px;
+	font-size: 12px;
+	letter-spacing: 1.2px;
 }
 
 /* ===controls */
@@ -163,6 +273,10 @@ button {
 	text-align: center;
 	text-transform: uppercase;
 }
+
+.light button {
+}
+
 /* 
 button:hover {
 	background-color: var(--dark);
@@ -194,15 +308,23 @@ button.primary:hover {
 	color: var(--secondary);
 }
 
-.counter,.counter:hover {
-	width: 164px;
+.rec-button.rec,
+.rec-button.rec:hover {
+	background-color: var(--recording);
+	border-color: var(--recording);
+	color: var(--primary);
+}
+
+.counter,
+.counter:hover {
+	width: 200px;
 	background-color: var(--black) !important;
 	border-color: var(--black) !important;
-	color: var(--secondary)
+	color: var(--secondary);
 }
 
 .redo-button {
-	width: 164px;
+	width: 160px;
 	background-color: var(--black);
 	border-color: var(--black);
 }

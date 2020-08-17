@@ -334,7 +334,7 @@ function fps() {
 	push();
 	textSize(14);
 	fill(200);
-	text(floor(frameRate()), width - 20, height - 20);
+	text(floor(frameRate()), width - 38, height - 20);
 	pop();
 }
 

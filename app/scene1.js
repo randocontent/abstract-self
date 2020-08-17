@@ -4,8 +4,8 @@ function scene01() {
 		frameRate(par.frameRate);
 		// ----- clean-up
 		noseAnchor = '';
-		sample.size(par.webcamWidth,par.webcamHeight);
-		sample.hide()
+		sample.size(par.webcamWidth, par.webcamHeight);
+		sample.hide();
 		isFaceapiStandby = true;
 		select('body').removeClass('light');
 		// ----- reset state vars
@@ -22,7 +22,7 @@ function scene01() {
 		monitor.show();
 		// ----- rewire ui
 		rewireUI();
-	recButton.mousePressed(() => startPreroll());
+		recButton.mousePressed(() => startPreroll());
 		// ----- scene management
 		chooseScene('#scene-01');
 	};
@@ -218,7 +218,7 @@ function noPreroll() {
 // shows a 3...2..1... animation on the second canvas
 // crude animation timing based on modulo of the frameCounter, but seems to work well enough
 function playPreroll() {
-	console.log('playPreroll')
+	console.log('playPreroll');
 	let counter = floor(map(prerollCounter, 0, par.preRecCounterFrames, 3.9, 0));
 	if (counter > 0) {
 		monitor.push();

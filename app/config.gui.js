@@ -1,9 +1,9 @@
 class Paramaterize {
 	constructor() {
-		this.scene = '1';
+		this.scene = '0';
 		this.debug = false;
 
-		// 500x500
+		// 500x470
 		// this.dx = 320;
 		// this.dy = 0;
 		// this.dwidth = 500;
