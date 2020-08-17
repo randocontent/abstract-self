@@ -189,18 +189,26 @@ canvas {
 	border-radius: 10px;
 }
 
+#about-page .nav-header {
+	position: fixed;
+	top: 0;
+	width: 1440px;
+}
+
 #about-page article {
-	margin: 65px 250px;
+	margin: 172px 250px 65px;
 	display: flex;
 	justify-content: space-between;
 }
 
+#about-page article section {
+	margin-bottom: 60px;
+}
+
 #about-page article .abstract {
 	width: 460px;
-	color: #f9f9f9;
 	font-family: 'Space Mono';
 	font-size: 14px;
-	font-weight: bold;
 	letter-spacing: 0.2px;
 	line-height: 22px;
 }
@@ -212,12 +220,19 @@ canvas {
 	margin-bottom: 30px;
 }
 
+#about-page article h2 {
+	font-size: 14px;
+	text-transform: uppercase;
+	margin-bottom: 0;
+}
+
 #about-page article p {
 	margin-bottom: 22px;
 }
 
 #about-page hr {
 	margin: 61px 0 59px;
+	border-color: var(--secondary);
 }
 
 dl,
@@ -227,6 +242,10 @@ dt {
 	padding: 0;
 }
 
+dt {
+	font-weight: bold;
+	text-transform: uppercase;
+}
 dd {
 	margin-bottom: 22px;
 }
