@@ -10,7 +10,7 @@ function scene03() {
 			isPosenetReady = false;
 		}
 		isFaceapiStandby = true;
-		sample.size(668, 500);
+		sample.size(par.webcamWidth,par.webcamHeight);
 		sample.hide();
 		select('body').removeClass('light');
 		// -----load a prerecordeded dataset if there's nothing from step 1

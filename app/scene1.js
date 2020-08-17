@@ -4,8 +4,8 @@ function scene01() {
 		frameRate(par.frameRate);
 		// ----- clean-up
 		noseAnchor = '';
-		sample.size(668, 500);
-		sample.hide();
+		sample.size(par.webcamWidth,par.webcamHeight);
+		sample.hide()
 		isFaceapiStandby = true;
 		select('body').removeClass('light');
 		// ----- reset state vars
@@ -18,11 +18,11 @@ function scene01() {
 		resizeCanvas(820, 820);
 		// show preview in secondary canvas
 		monitor.parent('#webcam-monitor-01');
-		monitor.resizeCanvas(500, 500);
+		monitor.resizeCanvas(500, 470);
 		monitor.show();
 		// ----- rewire ui
-		rewireUI()
-		
+		rewireUI();
+	recButton.mousePressed(() => startPreroll());
 		// ----- scene management
 		chooseScene('#scene-01');
 	};
@@ -36,7 +36,19 @@ function scene01() {
 		if (sample) {
 			monitor.push();
 			mirror(monitor);
-			monitor.image(sample, 180 + par.videoSync, 0);
+
+			monitor.image(
+				sample,
+				par.dx,
+				par.dy,
+				par.dwidth,
+				par.dheight,
+				par.sx,
+				par.sy,
+				par.swidth,
+				par.sheight
+			);
+
 			monitor.pop();
 		}
 		// -----live poses
@@ -62,9 +74,9 @@ function scene01() {
 				// -----play live shape
 				// play a live shape when there is no recording
 				if (par.s01UseStar) {
-					makeShape2(pose,'sharper')
+					makeShape2(pose, 'sharper');
 				} else if (par.s01UseBlob) {
-					makeShape2(pose,'softer')
+					makeShape2(pose, 'softer');
 				} else if (!full) {
 					makeShape1(pose);
 				}
@@ -91,7 +103,7 @@ function scene01() {
 // skeleton, points based on those shapes are added to the array. (3) Convex
 // hull is calculated from all points to determine outline path (Roundness is
 // the concavity paramater, how tightly the hull wraps around the points.) (4)
-// Padding is addded to keep the shape centered 
+// Padding is addded to keep the shape centered
 function makeShape1(pose) {
 	Anchor.chasePose(pose);
 	let expanded = [];
@@ -191,9 +203,22 @@ function previewSkeleton() {
 	}
 }
 
+function startPreroll() {
+	preroll = true;
+	full = false;
+	recButton.addClass('rec');
+	recButton.html('Stop');
+	recButton.mousePressed(cancelRecording);
+}
+
+function noPreroll() {
+	startRecording();
+}
+
 // shows a 3...2..1... animation on the second canvas
 // crude animation timing based on modulo of the frameCounter, but seems to work well enough
 function playPreroll() {
+	console.log('playPreroll')
 	let counter = floor(map(prerollCounter, 0, par.preRecCounterFrames, 3.9, 0));
 	if (counter > 0) {
 		monitor.push();

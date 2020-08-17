@@ -92,7 +92,6 @@ let micLevel;
 let spectrum;
 let ampl;
 
-
 // anchors with a basic physics engine to build the shape around
 // the anchors object stores anchors keyed by part name
 let anchors = {
@@ -152,7 +151,7 @@ const RANKLE = 16;
 
 let colors = {
 	primary: '#f9f9f9',
-	dark: '#101010'
+	dark: '#101010',
 };
 
 p5.disableFriendlyErrors = true;
@@ -238,8 +237,6 @@ function startWebcam() {
 
 function webcamReady() {
 	isWebcamReady = true;
-	// sampleWidth = sample.width;
-	// sampleHeight = sample.height;
 	posenet = ml5.poseNet(sample, posenetOptions, modelReady);
 	posenet.on('pose', function (results) {
 		poses = results;
@@ -266,18 +263,6 @@ function gotFaces(error, result) {
 	if (!isFaceapiStandby) faceapi.detect(gotFaces);
 }
 
-
-function startPreroll() {
-	preroll = true;
-	full = false;
-	recButton.addClass('rec');
-	recButton.html('Stop');
-	recButton.mousePressed(cancelRecording);
-}
-
-function noPreroll() {
-	startRecording();
-}
 
 function startRecording() {
 	full = false;
@@ -358,7 +343,6 @@ function getNewVideo(loc) {
 	sample = createVideo(loc, videoReady);
 	sample.volume(0);
 	sample.loop();
-	// sample.size(627, 470);
 	sample.hide();
 }
 
@@ -388,19 +372,19 @@ function dbg(message) {
 
 // remaps points from the sample dimensions to the canvas dimensions
 // applies padding, which also centers and scales the shape
-function remapFromPose(pointArr,padding) {
-	let sampleWidth = sample.width ? sample.width : 640;
-	let sampleHeight = sample.height ? sample.height : 480;
-	let pad
+function remapFromPose(pointArr, padding) {
+	let webcamWidth = sample.width ? sample.width : 640;
+	let webcamHeight = sample.height ? sample.height : 480;
+	let pad;
 	if (padding) {
-		pad = padding
+		pad = padding;
 	} else {
 		pad = par.padding;
 	}
 	let remapped = pointArr.map(point => {
 		return [
-			remap(point[0], sampleWidth, width, pad),
-			remap(point[1], sampleHeight, height, pad),
+			remap(point[0], webcamWidth, width, pad),
+			remap(point[1], webcamHeight, height, pad),
 		];
 	});
 	return remapped;
@@ -425,7 +409,7 @@ function rewireUI(sceneIndex) {
 	counterButton = select('#counter-0' + sceneIndex);
 	// update recording time based on recording frames. assumes a recording time
 	// of less than 60 seconds...
-	counterButton.html('00:' + par.recordFrames / 60);
+	counterButton.html('0:' + par.recordFrames / 60);
 	counterButton.show();
 	// rehook button for this scene, and hide for now
 	redoButton = select('#redo-0' + sceneIndex);

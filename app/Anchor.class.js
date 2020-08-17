@@ -29,10 +29,10 @@ class Anchor {
 
 	show() {
 		// Probably a very bad idea...
-		let sampleWidth = sample.width ? sample.width : 640;
-		let sampleHeight = sample.height ? sample.height : 480;
-		let x = remap(this.position.x, sampleWidth, width, par.padding);
-		let y = remap(this.position.y, sampleHeight, height, par.padding);
+		let webcamWidth = sample.width ? sample.width : 640;
+		let webcamHeight = sample.height ? sample.height : 480;
+		let x = remap(this.position.x, webcamWidth, width, par.padding);
+		let y = remap(this.position.y, webcamHeight, height, par.padding);
 		push();
 		noStroke();
 		fill('pink');

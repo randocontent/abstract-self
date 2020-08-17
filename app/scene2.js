@@ -9,7 +9,7 @@ function scene02() {
 			poses = null;
 			isPosenetReady = false;
 		}
-		sample.size(668, 500);
+		sample.size(par.webcamWidth,par.webcamHeight);
 		sample.hide();
 		select('body').removeClass('light');
 
@@ -63,7 +63,17 @@ function scene02() {
 		if (sample) {
 			monitor.push();
 			mirror(monitor);
-			monitor.image(sample, 180 + par.videoSync, 0);
+			monitor.image(
+				sample,
+				par.dx,
+				par.dy,
+				par.dwidth,
+				par.dheight,
+				par.sx,
+				par.sy,
+				par.swidth,
+				par.sheight
+			);
 			monitor.pop();
 		}
 		

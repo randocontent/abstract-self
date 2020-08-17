@@ -1,7 +1,37 @@
 class Paramaterize {
 	constructor() {
-		this.scene = '0';
+		this.scene = '1';
 		this.debug = false;
+
+		// 500x500
+		// this.dx = 320;
+		// this.dy = 0;
+		// this.dwidth = 500;
+		// this.dheight = 470;
+		// this.sx = 80;
+		// this.sy = 0;
+		// this.swidth = 480;
+		// this.sheight = 480;
+
+		this.dx = 320;
+		this.dy = 0;
+		this.dwidth = 500;
+		this.dheight = 500;
+		this.sx = 80;
+		this.sy = 0;
+		this.swidth = 480;
+		this.sheight = 480;
+		this.webcamWidth = 627;
+		this.webcamHeight = 470;
+
+		// dx Number: the x-coordinate of the destination rectangle in which to draw the source image
+		// dy Number: the y-coordinate of the destination rectangle in which to draw the source image
+		// dWidth Number: the width of the destination rectangle
+		// dHeight Number: the height of the destination rectangle
+		// sx Number: the x-coordinate of the subsection of the source image to draw into the destination rectangle
+		// sy Number: the y-coordinate of the subsection of the source image to draw into the destination rectangle
+		// sWidth Number: the width of the subsection of the source image to draw into the destination rectangle (Optional)
+		// sHeight Number: the height of the subsection of the source image to draw into the destination rectangle (Optional)
 
 		// ----- general
 		this.frameRate = 60;
@@ -11,7 +41,7 @@ class Paramaterize {
 		this.videoSync = 0;
 		this.shapeStrokeWeight = 3.5;
 		this.padding = 200;
-		this.gifFrames = 100
+		this.gifFrames = 100;
 		this.noseYOffset = 155;
 		this.topSpeed = 20;
 		this.maxAcc = 10;
@@ -26,7 +56,6 @@ class Paramaterize {
 		this.fillShape = false;
 		this.showCurves = true;
 		this.showFrameRate = false;
-
 
 		// -----01 ellipse
 		this.s01UseBlob = false;
@@ -119,21 +148,23 @@ sceneGui.onChange(() => sceneRouter());
 // -----toggle debug
 gui.add(par, 'debug');
 
+// -----general
 let f00 = gui.addFolder('General');
-f00.add(par, 'frameRate')
-f00.add(par, 'recordFrames')
-f00.add(par, 'preRecCounterFrames')
-f00.add(par, 'showFrameRate')
-f00.add(par, 'videoSync')
-f00.add(par, 'shapeStrokeWeight')
-f00.add(par, 'padding')
-f00.add(par, 'gifFrames')
-f00.add(par, 'noseYOffset')
-f00.add(par, 'topSpeed')
-f00.add(par, 'maxAcc')
+f00.add(par, 'frameRate');
+f00.add(par, 'recordFrames');
+f00.add(par, 'preRecCounterFrames');
+f00.add(par, 'showFrameRate');
+f00.add(par, 'videoSync');
+f00.add(par, 'shapeStrokeWeight');
+f00.add(par, 'padding');
+f00.add(par, 'gifFrames');
+f00.add(par, 'noseYOffset');
+f00.add(par, 'topSpeed');
+f00.add(par, 'maxAcc');
 
+// -----reference
 let fr = gui.addFolder('Reference');
-fr.add(par,'showFrameRate')
+fr.add(par, 'showFrameRate');
 fr.add(par, 'hideShape');
 fr.add(par, 'showExpanded');
 fr.add(par, 'showAnchors');
@@ -219,4 +250,35 @@ f003.add(par, 'voiceScaleModifier');
 f003.add(par, 'voiceMinPadding');
 f003.add(par, 'voiceMaxPadding');
 
-gui.hide()
+// -----video sync
+let fvs = gui.addFolder('Video Sync');
+// fvs.add(par, 'dx');
+// fvs.add(par, 'dy');
+// fvs.add(par, 'dwidth');
+// fvs.add(par, 'dheight');
+fvs.add(par, 'sx');
+fvs.add(par, 'sy');
+fvs.add(par, 'swidth');
+fvs.add(par, 'sheight');
+fvs.add(par, 'webcamWidth');
+fvs.add(par, 'webcamHeight');
+
+gui.hide();
+
+// this.dx = 380;
+// this.dy = 0;
+// this.dwidth = 500;
+// this.dheight = 500;
+// this.sx = 0;
+// this.sy = 0;
+// this.swidth = 500;
+// this.sheight = 480;
+
+// gui.add(par, 'dx');
+// gui.add(par, 'dy');
+// gui.add(par, 'dwidth');
+// gui.add(par, 'dheight');
+// gui.add(par, 'sx');
+// gui.add(par, 'sy');
+// gui.add(par, 'swidth');
+// gui.add(par, 'sheight');
