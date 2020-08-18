@@ -296,12 +296,11 @@ button {
 .light button {
 }
 
-/* 
 button:hover {
 	background-color: var(--dark);
-	color: var(--primary);
+	color: var(--secondary);
 	text-decoration: none;
-} */
+}
 
 /* button.primary {
 	background-color: var(--primary) !important;
@@ -349,6 +348,7 @@ button.primary:hover {
 }
 
 .redo-button:hover {
+	width: 160px;
 	background-color: var(--dark) !important;
 	border-color: var(--dark) !important;
 }
@@ -358,6 +358,15 @@ button.primary:hover {
 	border-color: var(--dark);
 }
 
+#restart-button {
+	background-color: var(--primary);
+	border-color: var(--primary);
+	color: var(--dark);
+}
+
+#restart-button:hover {
+	border-color: var(--dark);
+}
 /* ===utilities */
 .hidden {
 	display: none !important;

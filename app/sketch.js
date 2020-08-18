@@ -1,6 +1,5 @@
 let capturer = new CCapture({
-	framerate: 24, // TODO: investigate further
-	verbose: false,
+	framerate: 20,
 	format: 'gif',
 	workersPath: './lib/',
 });
@@ -263,7 +262,6 @@ function gotFaces(error, result) {
 	if (!isFaceapiStandby) faceapi.detect(gotFaces);
 }
 
-
 function startRecording() {
 	full = false;
 	preroll = false;
@@ -280,7 +278,7 @@ function startRecording() {
 
 function updateCounter(remainingFrames) {
 	let secs = floor(remainingFrames / 60);
-	counterButton.html('00:' + secs);
+	counterButton.html('0:' + secs);
 }
 
 function finishRecording() {
