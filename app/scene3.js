@@ -10,8 +10,9 @@ function scene03() {
 			isPosenetReady = false;
 		}
 		isFaceapiStandby = true;
-		sample.size(par.webcamWidth,par.webcamHeight);
+		sample.size(par.webcamWidth, par.webcamHeight);
 		sample.hide();
+		stopWebcam(sample);
 		select('body').removeClass('light');
 		// -----load a prerecordeded dataset if there's nothing from step 1
 		// dancer.js should be a posenet recording of a person dancing. It
@@ -53,6 +54,7 @@ function scene03() {
 	// -----draw
 	this.draw = function () {
 		// -----prepare the frame
+		stopWebcam(sample);
 		background(colors.primary);
 		// mirror the canvas to match the mirrored video from the camera
 		translate(width, 0);
@@ -117,7 +119,7 @@ function makeShape3(pose, shapeType, micLevel, gif = false) {
 	let padded = remapFromPose(hullSet, scale);
 
 	if (gif) {
-		renderGifShape(padded,shapeType)
+		renderGifShape(padded, shapeType);
 	} else {
 		if (!par.hideShape) renderShape2(padded, shapeType);
 	}

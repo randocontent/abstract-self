@@ -3,7 +3,7 @@ function scene00() {
 		dbg('scene00');
 		frameRate(par.frameRate);
 		// -----clean-up
-		sample.size(par.webcamWidth,par.webcamHeight);
+		sample.size(par.webcamWidth, par.webcamHeight);
 		sample.hide();
 		select('body').removeClass('light');
 		// -----page layout

@@ -10,9 +10,9 @@ function scene04() {
 			isPosenetReady = false;
 		}
 		isFaceapiStandby = true;
-		sample.size(par.webcamWidth,par.webcamHeight);
+		sample.size(par.webcamWidth, par.webcamHeight);
 		sample.hide();
-
+		stopWebcam(sample);
 		// -----load a prerecordeded dataset if there's nothing from step 1
 		// dancer.js should be a posenet recording of a person dancing. It
 		// also stores skeleton data so we're extracting just the poses first
@@ -38,7 +38,7 @@ function scene04() {
 
 		gifc = createGraphics(400, 400);
 		gifc.id('gif-canvas');
-		gifc.hide()
+		gifc.hide();
 
 		// -----ui
 		recButton = select('#save-button');
@@ -53,20 +53,21 @@ function scene04() {
 	// --4draw
 	this.draw = function () {
 		// -----prepare the frame
+		stopWebcam(sample);
 		background(colors.primary);
 		// mirror the canvas to match the mirrored video from the camera
 		translate(width, 0);
 		scale(-1, 1);
 
 		// -----replay final shape
-		
+
 		if (rec) {
-		push();
-		mirror(); // Unmirror so we can write in the right direction
-		textAlign(CENTER,CENTER);
-		textSize(24);
-		text('CREATING GIF', width / 2, height /2 );
-		pop();
+			push();
+			mirror(); // Unmirror so we can write in the right direction
+			textAlign(CENTER, CENTER);
+			textSize(24);
+			text('CREATING GIF', width / 2, height / 2);
+			pop();
 			replayShape3(history1, finalShapeType, finalScale, true);
 			capturer.capture(document.getElementById('gif-canvas'));
 			gifFrames++;
@@ -75,7 +76,7 @@ function scene04() {
 		}
 
 		if (gifFrames >= par.gifFrames) {
-			capturer.stop()
+			capturer.stop();
 			capturer.save();
 			//TODO: stop CCapture and resume animation
 			mgr.showScene(mgr.scene.fnScene);
@@ -107,10 +108,10 @@ function startGifRecording() {
 // Renders gif to a smaller canvas
 // No fancy mapping, just halve every value
 function renderGifShape(shape, shapeType) {
-	gifc.background(colors.primary)
+	gifc.background(colors.primary);
 	gifc.push();
 	gifc.stroke(0);
-	gifc.strokeWeight(par.shapeStrokeWeight/2);
+	gifc.strokeWeight(par.shapeStrokeWeight / 2);
 	gifc.noFill();
 	gifc.beginShape();
 	if (shapeType === 'softer') {

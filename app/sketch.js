@@ -230,6 +230,13 @@ function startMic() {
 	userStartAudio();
 }
 
+function stopWebcam(webcam) {
+	if (webcam.elt.srcObject) {
+		webcam.elt.srcObject.getTracks().forEach(t => {
+			t.stop();
+		});
+	}
+}
 function startWebcam() {
 	sample = createCapture(VIDEO, webcamReady);
 }
