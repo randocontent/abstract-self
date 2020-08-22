@@ -368,10 +368,19 @@ button.primary:hover {
 	border-color: var(--dark);
 }
 /* ===utilities */
+
 .hidden {
 	display: none !important;
 }
 
 strong {
 	font-style: italic;
+}
+
+.bold {
+	font-weight: bold;
+}
+
+.uppercase {
+	text-transform: uppercase;
 }

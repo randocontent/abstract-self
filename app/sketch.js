@@ -10,15 +10,15 @@ let gifc;
 let mgr;
 
 // shape recording in three commulative steps
-// scene01 records anchor positions
+// step 1, anchor positions
 let history1 = [];
-// scene02 records top expressions
+// step 2, expression history
 let history2 = [];
-// scene03 records hull points
-// a final shape type is required for drawing
+// step 3, mic level history
 let history3 = [];
 // the final shape type is the most common expression from history2
 let finalShapeType;
+// the final scale is the average mic level from history3
 let finalScale;
 
 // will hold the canvas
@@ -171,9 +171,11 @@ function setup() {
 	monitor = createGraphics(500, 470);
 	monitor.textFont('Space Mono');
 	monitor.background(255);
-	startWebcam();
+	if (!par.demoMode) startWebcam();
+	if (par.demoMode) getNewVideo('app/demo.mp4');
 	// start getting faceapi ready
-	if (!isFaceApiReady) faceapi = ml5.faceApi(sample, faceOptions, faceLoaded);
+	if (!isFaceApiReady && !par.demoMode)
+		faceapi = ml5.faceApi(sample, faceOptions, faceLoaded);
 	// Prepare anchors to chase posenet points
 	Object.keys(anchors).forEach(partName => {
 		let anchor = new Anchor(width / 2, height / 2, partName);

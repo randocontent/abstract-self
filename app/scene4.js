@@ -17,9 +17,11 @@ function scene04() {
 		// dancer.js should be a posenet recording of a person dancing. It
 		// also stores skeleton data so we're extracting just the poses first
 		if (history1.length === 0) {
-			recordedPose.forEach(p => {
-				if (p) history1.push(p.pose.keypoints);
-			});
+			if (recordedPose) {
+				recordedPose.forEach(p => {
+					if (p) history1.push(p.pose.keypoints);
+				});
+			}
 		}
 
 		// check results of previous steps

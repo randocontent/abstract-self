@@ -1,7 +1,8 @@
 class Paramaterize {
 	constructor() {
 		this.scene = '0';
-		this.debug = false;
+		this.debug = true;
+		// this.demoMode = true;
 
 		// 500x470
 		// this.dx = 320;
