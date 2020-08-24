@@ -2,6 +2,7 @@ class Paramaterize {
 	constructor() {
 		this.scene = '0';
 		this.debug = false;
+		// this.demoMode = true;
 
 		// 500x470
 		// this.dx = 320;
@@ -71,16 +72,16 @@ class Paramaterize {
 		this.lockStar = false;
 
 		// -----02 softer
-		this.roundnessSofter = 250;
+		this.roundnessSofter = 210;
 		this.blobAngleInc = 24;
-		this.blobMinRadius = 1;
+		this.blobMinRadius = 10;
 		this.blobMaxRadius = 120;
-		this.blobMaxXNoise = 7;
-		this.blobMaxYNoise = 7;
-		this.blobPhaseShift = 0.01;
-		this.blobZOff = 0.07;
+		this.blobMaxXNoise = 25;
+		this.blobMaxYNoise = 25;
+		this.blobPhaseShift = 0.005;
+		this.blobZOff = 0.007;
 		this.blobModifier = 1;
-		this.blob0Nose = 2.5;
+		this.blob0Nose = 2;
 		this.blob1LeftEye = 0;
 		this.blob2RightEye = 0;
 		this.blob3LeftEar = 0.5;
@@ -99,7 +100,7 @@ class Paramaterize {
 		this.blob16RightAnkle = 1;
 
 		// -----02 sharper
-		this.roundnessSharper = 85;
+		this.roundnessSharper = 100;
 		this.starPoints = 7;
 		this.starInternalRadius = 35;
 		this.starExternalRadius = 70;
@@ -117,8 +118,8 @@ class Paramaterize {
 		this.star8RightElbow = 1;
 		this.star9LeftWrist = 1;
 		this.star10RightWrist = 1;
-		this.star11LeftHip = 1;
-		this.star12RightHip = 1;
+		this.star11LeftHip = 1.5;
+		this.star12RightHip = 1.5;
 		this.star13LeftKnee = 1;
 		this.star14RightKnee = 1;
 		this.star15LeftAnkle = 1;
