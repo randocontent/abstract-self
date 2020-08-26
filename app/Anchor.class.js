@@ -19,6 +19,7 @@ class Anchor {
 		this.starSeed2 = random(1000);
 		this.topSpeed = par.topSpeed;
 		this.maxAcc = par.maxAcc;
+		this.score = 1;
 	}
 
 	update() {
@@ -46,6 +47,12 @@ class Anchor {
 
 	setTarget(v) {
 		this.target = v;
+	}
+
+	setScore(s) {
+		// if (!this.part === 'nose') {
+		this.score = s;
+		// }
 	}
 
 	behaviors() {
@@ -90,7 +97,10 @@ class Anchor {
 		return steer.limit(par.maxAcc);
 	}
 
-	ellipsify(modifier = 1) {
+	neutralExpand(modifier = 1) {
+		if (modifier === 0 || this.score < par.minScore) {
+			return [];
+		}
 		let inc = par.ellipseIncrement ? par.ellipseIncrement : 30;
 		let px = this.position.x;
 		let py = this.position.y;
@@ -114,44 +124,46 @@ class Anchor {
 		return newArr;
 	}
 
-	blobify(modifier = 1) {
-		if (modifier === 0) {
+	boubaExpand(modifier = 1, inc = par.angleIncBouba) {
+		if (modifier === 0 || this.score < par.minScore) {
 			return [];
 		}
-		modifier = modifier * par.blobModifier;
+		modifier = modifier * par.modifierBouba;
 		let px = this.position.x;
 		let py = this.position.y;
 		let x, y;
 		let newArr = [];
 
-		for (let a = 0; a < 360; a += par.blobAngleInc) {
-			let xoff = map(cos(a + this.blobPhase), -1, 1, 0, par.blobMaxXNoise);
-			let yoff = map(sin(a + this.blobPhase), -1, 1, 0, par.blobMaxYNoise);
+		for (let a = 0; a < 360; a += inc) {
+			let xoff = map(cos(a + this.blobPhase), -1, 1, 0, par.maxXNoiseBouba);
+			let yoff = map(sin(a + this.blobPhase), -1, 1, 0, par.maxYNoiseBouba);
 
 			noiseSeed(this.seed);
-			let n = noise(xoff, yoff, this.zoff);
+			// let n = noise(xoff, yoff, this.zoff);
+			let n = osnoise.noise3D(xoff, yoff, this.zoff);
 
-			let r = map(n, 0, 1, par.blobMinRadius, par.blobMaxRadius) * modifier;
+			let r = map(n, 0, 1, par.minRadiusBouba, par.maxRadiusBouba) * modifier;
 			x = px + r * cos(a);
 			y = py + r * sin(a);
 
 			newArr.push([x, y]);
 		}
-		this.blobPhase += par.blobPhaseShift;
-		this.zoff += par.blobZOff;
+		this.blobPhase += par.phaseShiftBouba;
+		this.zoff += par.zOffBouba;
 		return newArr;
 	}
 
-	starify(modifier = 1) {
-		if (modifier === 0) {
+	kikiExpand(modifier = 1) {
+		if (modifier === 0 || this.score < par.minScore) {
 			return [];
 		}
-		modifier = modifier * par.starModifier;
+		modifier = modifier * par.modifierKiki;
 		let x = this.position.x;
 		let y = this.position.y;
 		let newArr = [];
 
-		let offStep = par.starNoiseStep;
+		let xOffStep = par.xNoiseStepKiki;
+		let yOffStep = par.yNoiseStepKiki;
 		let radius1 = par.starInternalRadius * modifier;
 		let radius2 = par.starExternalRadius * modifier;
 		let npoints = par.starPoints;
@@ -165,32 +177,36 @@ class Anchor {
 			let sx =
 				map(
 					noise(this.starXOff, this.starYOff),
-					0,
+					// osnoise.noise2D(this.starXOff, this.starYOff),
+					-1,
 					1,
-					-par.starNoiseRange,
-					par.starNoiseRange
+					-par.noiseRangeKiki,
+					par.noiseRangeKiki
 				) +
 				x +
-				cos(a) * radius2;
-			this.starXOff += offStep;
+				cos(a - this.starPhase / 2) * radius2;
+			this.starXOff += xOffStep;
 			noiseSeed(this.seed);
 			let sy =
 				map(
 					noise(this.starXOff, this.starYOff),
-					0,
+					// osnoise.noise2D(this.starXOff, this.starYOff),
+					-1,
 					1,
-					-par.starNoiseRange,
-					par.starNoiseRange
+					-par.noiseRangeKiki,
+					par.noiseRangeKiki
 				) +
 				y +
-				sin(a) * radius2;
-			this.starYOff += offStep;
+				sin(a - this.starPhase / 2) * radius2;
+			this.starYOff += yOffStep;
 			newArr.push([sx, sy]);
-			sx = x + cos(a + halfAngle) * radius1;
-			sy = y + sin(a + halfAngle) * radius1;
+			sx = x + cos(a + halfAngle + this.starPhase) * radius1;
+			sy = y + sin(a + halfAngle + this.starPhase) * radius1;
 			newArr.push([sx, sy]);
 		}
 		pop();
+		this.starPhase += par.phaseShiftKiki;
+
 		return newArr;
 	}
 
@@ -206,6 +222,7 @@ class Anchor {
 					createVector(targets[0].position.x, targets[0].position.y)
 				);
 			}
+			anchor.setScore(targets[i].score);
 			anchor.behaviors();
 			anchor.update();
 			if (par.showAnchors || par.debug) anchor.show();
