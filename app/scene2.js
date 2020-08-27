@@ -96,8 +96,12 @@ function scene02() {
 				// show detection feedback on the webcam monitor
 				if (detections[0]) previewExpression(detections);
 			}
-			// -----play live shape
-			if (!full) replayShape2(history1, currentShapeType);
+
+			// -----when not recording, disable shape feedback from expressions
+			if (!rec && !full) replayShape2(history1, 'neutral');
+
+			// -----while recording, show feedback on shape in real time
+			if (!full && rec) replayShape2(history1, currentShapeType);
 
 			// -----record shape
 			if (rec && !full) recordExpression(currentShapeType);
@@ -243,9 +247,10 @@ function previewExpression(faces) {
 	monitor.push();
 	// monitor.translate(monitor.width, 0);
 	// monitor.scale(-1, 1);
+	// monitor.textAlign(RIGHT, CENTER);
 	monitor.text(
 		current + ' (' + round(score, 2) + ')',
-		monitor.width - box.bottomLeft.x - box.width / 2,
+		monitor.width - box.bottomLeft.x,
 		box.bottomLeft.y + 20
 	);
 	monitor.pop();
@@ -354,10 +359,7 @@ function boubaFromAnchors() {
 	let newArr = [];
 	// boubaExpand()
 
-	// FIXME: This is a bug
-	// newArr = newArr.concat(anchors.rightAnkle.kikiExpand(0));
-
-	newArr = newArr.concat(anchors.nose.boubaExpand(par.bouba0, par.bouba0Steps));
+	newArr = newArr.concat(anchors.nose.boubaExpand(par.bouba0));
 	newArr = newArr.concat(anchors.leftEar.boubaExpand(par.bouba1));
 	newArr = newArr.concat(anchors.rightEar.boubaExpand(par.bouba2));
 	newArr = newArr.concat(anchors.rightEar.boubaExpand(par.bouba3));
