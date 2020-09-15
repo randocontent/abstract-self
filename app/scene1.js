@@ -73,9 +73,11 @@ function scene01() {
 				// -----
 				// -----play live shape
 				// play a live shape when there is no recording
-				if (par.s01UseStar) {
+				if (par.kikiStep1) {
+					makeShape1(pose, 200);
 					makeShape2(pose, 'kiki');
-				} else if (par.s01UseBlob) {
+				} else if (par.boubaStep1) {
+					makeShape1(pose, 200);
 					makeShape2(pose, 'bouba');
 				} else if (!full) {
 					makeShape1(pose);
@@ -104,9 +106,9 @@ function scene01() {
 // hull is calculated from all points to determine outline path (Roundness is
 // the concavity paramater, how tightly the hull wraps around the points.) (4)
 // Padding is addded to keep the shape centered
-function makeShape1(pose) {
+function makeShape1(pose, color) {
 	Anchor.chasePose(pose);
-	let expanded = kikiFromAnchors();
+	let expanded = neutralFromAnchors();
 	let hullSet = hull(expanded, par.roundnessNeutral);
 	// a hack, but it looks better than just doing endShape(CLOSE)
 	hullSet.push(hullSet[1]);
@@ -115,7 +117,7 @@ function makeShape1(pose) {
 	let padded = remapFromPose(hullSet);
 	// -----
 	// -----final render call
-	if (!par.hideShape) renderShape1(padded);
+	if (!par.hideShape) renderShape1(padded, color);
 	// -----reference shapes
 	if (par.showExpanded || par.debug)
 		drawRef(remapFromPose(expanded), 'paleturquoise', 5);
@@ -124,9 +126,9 @@ function makeShape1(pose) {
 }
 
 // draw final shape outline
-function renderShape1(shape) {
+function renderShape1(shape, color = 0) {
 	push();
-	stroke(0);
+	stroke(color);
 	strokeWeight(par.shapeStrokeWeight);
 	noFill();
 	beginShape();
@@ -223,22 +225,22 @@ function playPreroll() {
 
 function neutralFromAnchors() {
 	let newArr = [];
-	newArr = newArr.concat(anchors.nose.neutralExpand(3));
-	newArr = newArr.concat(anchors.leftEar.neutralExpand());
-	newArr = newArr.concat(anchors.rightEar.neutralExpand());
-	newArr = newArr.concat(anchors.rightEar.neutralExpand());
-	newArr = newArr.concat(anchors.rightEar.neutralExpand());
-	newArr = newArr.concat(anchors.leftShoulder.neutralExpand(2));
-	newArr = newArr.concat(anchors.rightShoulder.neutralExpand(2));
-	newArr = newArr.concat(anchors.leftElbow.neutralExpand(2));
-	newArr = newArr.concat(anchors.rightElbow.neutralExpand(2));
-	newArr = newArr.concat(anchors.leftWrist.neutralExpand(2));
-	newArr = newArr.concat(anchors.rightWrist.neutralExpand(2));
-	newArr = newArr.concat(anchors.leftHip.neutralExpand(2));
-	newArr = newArr.concat(anchors.rightHip.neutralExpand(2));
-	newArr = newArr.concat(anchors.leftKnee.neutralExpand(2));
-	newArr = newArr.concat(anchors.rightKnee.neutralExpand());
-	newArr = newArr.concat(anchors.leftAnkle.neutralExpand());
-	newArr = newArr.concat(anchors.rightAnkle.neutralExpand());
+	newArr = newArr.concat(anchors.nose.neutralExpand(par.neutral0));
+	newArr = newArr.concat(anchors.leftEar.neutralExpand(par.neutral1));
+	newArr = newArr.concat(anchors.rightEar.neutralExpand(par.neutral2));
+	newArr = newArr.concat(anchors.rightEar.neutralExpand(par.neutral3));
+	newArr = newArr.concat(anchors.rightEar.neutralExpand(par.neutral4));
+	newArr = newArr.concat(anchors.leftShoulder.neutralExpand(par.neutral5));
+	newArr = newArr.concat(anchors.rightShoulder.neutralExpand(par.neutral6));
+	newArr = newArr.concat(anchors.leftElbow.neutralExpand(par.neutral7));
+	newArr = newArr.concat(anchors.rightElbow.neutralExpand(par.neutral8));
+	newArr = newArr.concat(anchors.leftWrist.neutralExpand(par.neutral9));
+	newArr = newArr.concat(anchors.rightWrist.neutralExpand(par.neutral10));
+	newArr = newArr.concat(anchors.leftHip.neutralExpand(par.neutral11));
+	newArr = newArr.concat(anchors.rightHip.neutralExpand(par.neutral12));
+	newArr = newArr.concat(anchors.leftKnee.neutralExpand(par.neutral13));
+	newArr = newArr.concat(anchors.rightKnee.neutralExpand(par.neutral14));
+	newArr = newArr.concat(anchors.leftAnkle.neutralExpand(par.neutral15));
+	newArr = newArr.concat(anchors.rightAnkle.neutralExpand(par.neutral16));
 	return newArr;
 }

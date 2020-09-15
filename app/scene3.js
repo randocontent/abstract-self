@@ -72,7 +72,7 @@ function scene03() {
 		}
 
 		if (!full && !rec) {
-			replayShape3(history1, finalShapeType, 0);
+			replayShape3(history1, finalShapeType, par.defaultScale);
 		} else if (!full && rec) {
 			replayShape3(history1, finalShapeType, micLevel);
 		}
@@ -110,7 +110,7 @@ function makeShape3(pose, shapeType, micLevel, gif = false) {
 		// console.log(expanded)
 		hullSet = hull(expanded, par.roundnessKiki);
 	} else {
-		console.error('bad shape type from drawLiveShape3');
+		console.error(shapeType, ' bad shape type from drawLiveShape3');
 	}
 
 	hullSet.push(hullSet[1]);
