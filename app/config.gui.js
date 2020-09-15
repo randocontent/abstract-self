@@ -1,7 +1,7 @@
 class Paramaterize {
 	constructor() {
-		this.scene = '0';
-		this.debug = true;
+		this.scene = '3';
+		this.debug = false;
 		// this.demoMode = true;
 
 		// 500x470
@@ -37,7 +37,7 @@ class Paramaterize {
 		// ----- general
 		this.frameRate = 60;
 		this.recordFrames = 900; // 900 frames is about 15 seconds
-		this.preRecCounterFrames = 240; // 240 frames is about 4 seconds
+		this.preRecCounterFrames = 210; // 240 frames is about 4 seconds
 		this.videoSync = 0;
 		this.shapeStrokeWeight = 3.5;
 		this.padding = 200;
@@ -45,7 +45,7 @@ class Paramaterize {
 		this.noseYOffset = 155;
 		this.topSpeed = 20;
 		this.maxAcc = 10;
-		this.minScore = 0.5;
+		this.minScore = 0;
 
 		// -----reference shapes
 		this.hideShape = false;
@@ -64,7 +64,7 @@ class Paramaterize {
 		this.ellipseOffsetIncrement = 0.01;
 		this.ellipseMinRadius = 50;
 		this.ellipseMaxRadius = 50;
-		this.ellipseIncrement = 40;
+		this.ellipseIncrement = 60;
 		this.roundnessNeutral = 200;
 
 		// -----02
@@ -94,9 +94,9 @@ class Paramaterize {
 		this.roundnessBouba = 150;
 		this.angleIncBouba = 20;
 		this.minRadiusBouba = 70;
-		this.maxRadiusBouba = 90;
-		this.maxXNoiseBouba = 2;
-		this.maxYNoiseBouba = 2;
+		this.maxRadiusBouba = 120;
+		this.maxXNoiseBouba = 4;
+		this.maxYNoiseBouba = 3;
 		this.phaseShiftBouba = 0.01;
 		this.zOffBouba = 0.05;
 		this.bouba0 = 2;
@@ -176,7 +176,7 @@ class Paramaterize {
 let par = new Paramaterize();
 let gui = new dat.GUI({
 	autoPlace: true,
-	width: 350,
+	width: 400,
 	preset: 'Preset1',
 });
 gui.remember(par);

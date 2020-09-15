@@ -71,15 +71,18 @@ function scene03() {
 			if (rec && !full) recordVoice(micLevel);
 		}
 
-		// play live shape
-		if (!full) replayShape3(history1, finalShapeType, micLevel);
+		if (!full && !rec) {
+			replayShape3(history1, finalShapeType, 0);
+		} else if (!full && rec) {
+			replayShape3(history1, finalShapeType, micLevel);
+		}
 
 		// play recorded shape
 		if (full)
 			replayShape3(history1, finalShapeType, analyzeVoiceHistory(history3));
 
 		// -----admin
-		if (par.frameRate || par.debug) {
+		if (par.showFrameRate || par.debug) {
 			push();
 			mirror();
 			fps();
